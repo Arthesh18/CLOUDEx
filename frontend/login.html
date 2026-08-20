@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>Login | CLOUDEx</title>
+
+    <!-- Google Font -->
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
+        rel="stylesheet"
+    >
+
+    <!-- Login CSS -->
+    <link
+        rel="stylesheet"
+        href="css/login.css"
+    >
+</head>
+
+
+<body>
+
+    <main class="auth-page">
+
+        <!-- LEFT SIDE -->
+        <section class="auth-brand">
+
+            <div class="brand-logo">
+                <span class="cloud-icon">☁</span>
+                <span class="brand-cloud">CLOUD</span><span class="brand-ex">Ex</span>
+            </div>
+
+            <div class="brand-content">
+
+                <div class="brand-badge">
+                    ☁ AI-POWERED CLOUD ADVISOR
+                </div>
+
+                <h1>
+                    Find the cloud
+                    <span>that fits you.</span>
+                </h1>
+
+                <p>
+                    Compare cloud providers, explore their services
+                    and get AI-powered recommendations for your project.
+                </p>
+
+                <div class="brand-features">
+
+                    <div class="feature">
+                        <span>✦</span>
+                        <div>
+                            <strong>AI Recommendations</strong>
+                            <small>
+                                Get a cloud recommendation based on your project.
+                            </small>
+                        </div>
+                    </div>
+
+                    <div class="feature">
+                        <span>☁</span>
+                        <div>
+                            <strong>Cloud Comparison</strong>
+                            <small>
+                                Compare providers and services side-by-side.
+                            </small>
+                        </div>
+                    </div>
+
+                    <div class="feature">
+                        <span>✓</span>
+                        <div>
+                            <strong>Simple Decisions</strong>
+                            <small>
+                                Understand why a provider fits your needs.
+                            </small>
+                        </div>
+                    </div>
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <!-- RIGHT SIDE -->
+        <section class="auth-panel">
+
+            <div class="auth-card">
+
+                <div class="mobile-logo">
+                    <span class="cloud-icon">☁</span>
+                    <span class="brand-cloud">CLOUD</span><span class="brand-ex">Ex</span>
+                </div>
+
+
+                <div class="auth-heading">
+
+                    <span class="section-label">
+                        WELCOME BACK
+                    </span>
+
+                    <h2>
+                        Sign in to CLOUDEx
+                    </h2>
+
+                    <p>
+                        Continue exploring the cloud.
+                    </p>
+
+                </div>
+
+
+                <!-- LOGIN FORM -->
+                <form id="loginForm">
+
+                    <!-- EMAIL -->
+                    <div class="form-group">
+
+                        <label for="email">
+                            Email
+                        </label>
+
+                        <input
+                            type="email"
+                            id="email"
+                            name="email"
+                            placeholder="Enter your email"
+                            autocomplete="email"
+                            required
+                        >
+
+                    </div>
+
+
+                    <!-- PASSWORD -->
+                    <div class="form-group">
+
+                        <div class="password-label">
+
+                            <label for="password">
+                                Password
+                            </label>
+
+                        </div>
+
+                        <div class="password-wrapper">
+
+                            <input
+                                type="password"
+                                id="password"
+                                name="password"
+                                placeholder="Enter your password"
+                                autocomplete="current-password"
+                                required
+                            >
+
+                            <button
+                                type="button"
+                                id="togglePassword"
+                                class="password-toggle"
+                                aria-label="Show password"
+                            >
+                                👁
+                            </button>
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- ERROR MESSAGE -->
+                    <div
+                        id="loginMessage"
+                        class="auth-message"
+                    ></div>
+
+
+                    <!-- LOGIN BUTTON -->
+                    <button
+                        type="submit"
+                        id="loginButton"
+                        class="auth-button"
+                    >
+                        <span id="loginButtonText">
+                            Sign In
+                        </span>
+
+                        <span
+                            id="loginLoader"
+                            class="loader"
+                        ></span>
+                    </button>
+
+                </form>
+
+
+                <!-- SIGNUP -->
+                <div class="auth-footer">
+
+                    <span>
+                        Don't have an account?
+                    </span>
+
+                    <a href="signup.html">
+                        Create an account
+                    </a>
+
+                </div>
+
+
+                <!-- BACK -->
+                <a
+                    href="index.html"
+                    class="back-link"
+                >
+                    ← Back to CLOUDEx
+                </a>
+
+            </div>
+
+        </section>
+
+    </main>
+
+
+    <!-- Login JavaScript -->
+    <script src="js/login.js"></script>
+
+</body>
+
+</html>

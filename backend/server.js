@@ -4,7 +4,9 @@ const dotenv = require("dotenv");
 const mongoose = require("mongoose");
 const path = require("path");
 const Groq = require("groq-sdk");
-
+const authRoutes = require("./routes/authRoutes");
+const recommendationRoutes =
+    require("./routes/recommendationRoutes");
 const {
     cloudProviders,
     getAllProviders,
@@ -35,13 +37,17 @@ const groq = process.env.GROQ_API_KEY
 
 app.use(cors());
 app.use(express.json());
-
-
+app.use("/api/auth", authRoutes);
+app.use(
+    "/api/recommendations",
+    recommendationRoutes
+);
 // ==================================================
 // FRONTEND
 // ==================================================
 
-const frontendPath = path.join(__dirname, "..", "frontend");
+const frontendPath =
+    path.join(__dirname, "..", "frontend");
 
 app.use(express.static(frontendPath));
 
@@ -54,7 +60,8 @@ app.get("/api/health", (req, res) => {
 
     res.json({
         success: true,
-        message: "CLOUDEx backend is running successfully.",
+        message:
+            "CLOUDEx backend is running successfully.",
         status: "online"
     });
 
@@ -66,7 +73,8 @@ app.get("/api", (req, res) => {
     res.json({
         name: "CLOUDEx API",
         version: "1.0.0",
-        message: "Explore. Compare. Build Smarter."
+        message:
+            "Explore. Compare. Build Smarter."
     });
 
 });
@@ -76,163 +84,199 @@ app.get("/api", (req, res) => {
 // CLOUD PROVIDERS
 // ==================================================
 
-app.get("/api/cloud/providers", (req, res) => {
+app.get(
+    "/api/cloud/providers",
+    (req, res) => {
 
-    try {
+        try {
 
-        res.json({
-            success: true,
-            count: cloudProviders.length,
-            providers: getAllProviders()
-        });
+            res.json({
+                success: true,
+                count: cloudProviders.length,
+                providers: getAllProviders()
+            });
 
-    } catch (error) {
+        } catch (error) {
 
-        console.error("Provider API error:", error.message);
+            console.error(
+                "Provider API error:",
+                error.message
+            );
 
-        res.status(500).json({
-            success: false,
-            message: "Could not load cloud providers."
-        });
+            res.status(500).json({
+                success: false,
+                message:
+                    "Could not load cloud providers."
+            });
+
+        }
 
     }
-
-});
+);
 
 
 // ==================================================
 // SINGLE PROVIDER
 // ==================================================
 
-app.get("/api/providers/:id", (req, res) => {
+app.get(
+    "/api/providers/:id",
+    (req, res) => {
 
-    try {
+        try {
 
-        const provider = getProviderById(req.params.id);
+            const provider =
+                getProviderById(
+                    req.params.id
+                );
 
-        if (!provider) {
 
-            return res.status(404).json({
+            if (!provider) {
+
+                return res.status(404).json({
+                    success: false,
+                    message:
+                        "Cloud provider not found."
+                });
+
+            }
+
+
+            res.json({
+                success: true,
+                provider
+            });
+
+        } catch (error) {
+
+            console.error(
+                "Provider details error:",
+                error.message
+            );
+
+            res.status(500).json({
                 success: false,
-                message: "Cloud provider not found."
+                message:
+                    "Could not load provider details."
             });
 
         }
 
-        res.json({
-            success: true,
-            provider
-        });
-
-    } catch (error) {
-
-        console.error("Provider details error:", error.message);
-
-        res.status(500).json({
-            success: false,
-            message: "Could not load provider details."
-        });
-
     }
-
-});
+);
 
 
 // ==================================================
 // ALL SERVICES
 // ==================================================
 
-app.get("/api/services", (req, res) => {
+app.get(
+    "/api/services",
+    (req, res) => {
 
-    try {
+        try {
 
-        const services = getAllServices();
+            const services =
+                getAllServices();
 
-        res.json({
-            success: true,
-            count: services.length,
-            services
-        });
 
-    } catch (error) {
+            res.json({
+                success: true,
+                count: services.length,
+                services
+            });
 
-        console.error("Services API error:", error.message);
+        } catch (error) {
 
-        res.status(500).json({
-            success: false,
-            message: "Could not load cloud services."
-        });
+            console.error(
+                "Services API error:",
+                error.message
+            );
+
+            res.status(500).json({
+                success: false,
+                message:
+                    "Could not load cloud services."
+            });
+
+        }
 
     }
-
-});
+);
 
 
 // ==================================================
 // CLOUDEx AI ADVISOR
 // ==================================================
 
-app.post("/api/ai/chat", async (req, res) => {
+app.post(
+    "/api/ai/chat",
+    async (req, res) => {
 
-    try {
+        try {
 
-        const {
-            message,
-            conversation = []
-        } = req.body;
-
-
-        // ------------------------------------------
-        // Validate message
-        // ------------------------------------------
-
-        if (!message || message.trim() === "") {
-
-            return res.status(400).json({
-                success: false,
-                message: "Please enter a message."
-            });
-
-        }
+            const {
+                message,
+                conversation = []
+            } = req.body;
 
 
-        // ------------------------------------------
-        // Check Groq
-        // ------------------------------------------
+            // ------------------------------------------
+            // VALIDATE MESSAGE
+            // ------------------------------------------
 
-        if (!groq) {
+            if (
+                !message ||
+                message.trim() === ""
+            ) {
 
-            return res.status(500).json({
-                success: false,
-                message: "Groq API key is not configured."
-            });
+                return res.status(400).json({
+                    success: false,
+                    message:
+                        "Please enter a message."
+                });
 
-        }
-
-
-        console.log(
-            "Cloudex AI received:",
-            message
-        );
+            }
 
 
-        // ------------------------------------------
-        // Provider data
-        // ------------------------------------------
+            // ------------------------------------------
+            // CHECK GROQ
+            // ------------------------------------------
 
-        const providerContext =
-            JSON.stringify(
-                cloudProviders,
-                null,
-                2
+            if (!groq) {
+
+                return res.status(500).json({
+                    success: false,
+                    message:
+                        "Groq API key is not configured."
+                });
+
+            }
+
+
+            console.log(
+                "Cloudex AI received:",
+                message
             );
 
 
-        // ==================================================
-        // CLOUDEx AI SYSTEM PROMPT
-        // ==================================================
+            // ------------------------------------------
+            // PROVIDER DATA
+            // ------------------------------------------
 
-        const systemPrompt = `
+            const providerContext =
+                JSON.stringify(
+                    cloudProviders,
+                    null,
+                    2
+                );
+
+
+            // ==================================================
+            // CLOUDEx AI SYSTEM PROMPT
+            // ==================================================
+
+            const systemPrompt = `
 
 You are CLOUDEx AI.
 
@@ -244,6 +288,7 @@ recommend the cloud provider and services that make
 the most sense for THEM.
 
 You are a cloud advisor, not a questionnaire.
+
 
 ==================================================
 CONVERSATION STYLE
@@ -266,6 +311,7 @@ Therefore:
 Think technically.
 
 Speak simply.
+
 
 ==================================================
 QUESTIONS
@@ -300,6 +346,7 @@ Always allow the user to say:
 - Whatever is cheapest
 - I haven't decided
 
+
 ==================================================
 DISCUSS WITH THE USER
 ==================================================
@@ -318,6 +365,7 @@ Then ask the next 2–3 useful questions.
 
 The conversation should feel like the user is
 talking to a knowledgeable advisor.
+
 
 ==================================================
 USE PREVIOUS ANSWERS
@@ -339,6 +387,7 @@ do not ask those questions again.
 
 Use those answers when making decisions.
 
+
 ==================================================
 DO NOT ASK EVERYTHING
 ==================================================
@@ -356,6 +405,7 @@ Do not unnecessarily ask about:
 - multi-region systems
 
 unless the user's project actually needs them.
+
 
 ==================================================
 IMPORTANT REQUIREMENTS TO UNDERSTAND
@@ -382,6 +432,7 @@ Gradually try to understand relevant things such as:
 You do NOT need to ask all of these.
 
 Ask only what is necessary.
+
 
 ==================================================
 BUDGET
@@ -411,6 +462,7 @@ Never invent exact current prices.
 The CLOUDEx dataset contains pricing information
 and pricing models, but it may not represent
 live prices.
+
 
 ==================================================
 ONE PROVIDER VS MULTIPLE PROVIDERS
@@ -447,6 +499,7 @@ their requirements, strongly consider that option.
 However, if using multiple providers gives a
 major advantage, mention it as an alternative.
 
+
 ==================================================
 WHEN TO RECOMMEND
 ==================================================
@@ -466,6 +519,7 @@ compare the options for you."
 
 Then give the recommendation.
 
+
 ==================================================
 FINAL RECOMMENDATION LENGTH
 ==================================================
@@ -484,34 +538,152 @@ specifically asks for detailed comparison.
 The user should be able to understand the
 recommendation in less than a minute.
 
+
 ==================================================
 FINAL RECOMMENDATION FORMAT
 ==================================================
 
-Use this general structure:
+When you have enough information, use this
+structure.
 
 🥇 MY RECOMMENDATION
 
 Provider Name
 
-Why it fits:
-- Simple reason
-- Simple reason
-- Simple reason
+FIT SCORE: X.X / 10
 
-OTHER OPTIONS
+WHY THIS PROVIDER FITS YOUR PROJECT
 
-Provider B — one short explanation.
+Start with one short sentence directly connecting
+the user's requirements to the recommendation.
 
-Provider C — one short explanation.
+Then give 3–5 clear points.
 
-MY PICK:
-One short final sentence explaining why.
+Every point MUST follow this logic:
 
-Then optionally say:
+USER REQUIREMENT
+→ PROVIDER CAPABILITY
+→ WHY IT MATTERS
 
-"If you'd like, I can show you the exact services
-and architecture I'd use."
+
+Example:
+
+- 🗄️ You need a NoSQL database → Cloud Firestore
+  provides a managed NoSQL database → this keeps
+  your Node/Express application simple.
+
+- 💰 You want to keep costs low → the provider
+  offers suitable low-cost or free-tier options
+  → this makes it appropriate for a small
+  college project.
+
+- 📈 You expect the project to grow → the provider
+  supports scalable infrastructure → you can
+  handle more users later without rebuilding
+  everything.
+
+
+IMPORTANT:
+
+Do NOT give generic provider advantages.
+
+Only mention advantages that are relevant to
+what the user actually told you.
+
+Always connect the provider's capability to
+the user's requirement.
+
+
+==================================================
+WHY NOT THE OTHERS?
+==================================================
+
+Mention 1–2 strong alternative providers.
+
+For each alternative, explain ONE important
+reason why it was not the first choice for
+THIS particular project.
+
+Example:
+
+AWS — Excellent scalability, but it may be
+more complex than necessary for this project's
+current requirements.
+
+Azure — Strong enterprise capabilities, but
+those advantages may not be necessary for
+this project.
+
+
+==================================================
+MY PICK
+==================================================
+
+End with one clear sentence:
+
+"I recommend [Provider] because it gives you
+the best balance of [requirement], [requirement],
+and [requirement] for your project."
+
+
+==================================================
+PERSONALIZED REASONING
+==================================================
+
+The recommendation MUST be personalized.
+
+The user should understand WHY the provider
+was selected.
+
+Do not simply list provider features.
+
+Always explain why a provider capability matters
+for the user's project.
+
+Use the user's actual answers from the conversation.
+
+Do not invent requirements.
+
+Do not claim the user needs something they never said.
+
+Do not recommend a provider based only on its
+overall reputation.
+
+Base the recommendation on the user's needs.
+
+
+==================================================
+FIT SCORE
+==================================================
+
+The FIT SCORE represents how well the provider
+matches the user's specific requirements.
+
+It is NOT a universal ranking.
+
+Consider factors such as:
+
+- Cost
+- Simplicity
+- Required services
+- Technology
+- User count
+- Location
+- Scalability
+- Reliability
+- Security
+- Ease of management
+
+Give a reasonable score between 0 and 10.
+
+Use one decimal place.
+
+For example:
+
+8.7 / 10
+
+Do not give every provider the same score.
+
 
 ==================================================
 RECOMMENDATION LOGIC
@@ -536,6 +708,7 @@ Think about:
 Do not choose a provider simply because it has
 the largest number of features.
 
+
 ==================================================
 CLOUD PROVIDER DATA
 ==================================================
@@ -548,6 +721,7 @@ ${providerContext}
 
 Do not invent CLOUDEx-specific services or pricing
 information that is not contained in the dataset.
+
 
 ==================================================
 IMPORTANT
@@ -564,6 +738,7 @@ You are allowed to say:
 "It depends on how your project grows."
 
 Never pretend to know something that isn't known.
+
 
 ==================================================
 PERSONALITY
@@ -591,156 +766,176 @@ Speak simply.
 `;
 
 
-        // ==================================================
-        // BUILD CONVERSATION
-        // ==================================================
+            // ==================================================
+            // BUILD CONVERSATION
+            // ==================================================
 
-        const messages = [
+            const messages = [
 
-            {
-                role: "system",
-                content: systemPrompt
+                {
+                    role: "system",
+                    content: systemPrompt
+                }
+
+            ];
+
+
+            if (
+                Array.isArray(conversation)
+            ) {
+
+                conversation.forEach(item => {
+
+                    if (
+                        item &&
+                        (
+                            item.role === "user" ||
+                            item.role === "assistant"
+                        ) &&
+                        typeof item.content === "string"
+                    ) {
+
+                        messages.push({
+
+                            role: item.role,
+
+                            content:
+                                item.content
+
+                        });
+
+                    }
+
+                });
+
             }
 
-        ];
+
+            messages.push({
+
+                role: "user",
+
+                content:
+                    message.trim()
+
+            });
 
 
-        if (Array.isArray(conversation)) {
+            // ==================================================
+            // GROQ REQUEST
+            // ==================================================
 
-            conversation.forEach(item => {
+            const completion =
+                await groq.chat.completions.create({
 
-                if (
-                    item &&
-                    (
-                        item.role === "user" ||
-                        item.role === "assistant"
-                    ) &&
-                    typeof item.content === "string"
-                ) {
+                    messages,
 
-                    messages.push({
+                    model:
+                        "openai/gpt-oss-120b",
 
-                        role: item.role,
-                        content: item.content
+                    temperature:
+                        0.4,
 
-                    });
+                    max_tokens:
+                        900
 
+                });
+
+
+            // ==================================================
+            // GET RESPONSE
+            // ==================================================
+
+            const reply =
+                completion
+                    .choices?.[0]
+                    ?.message
+                    ?.content ||
+
+                "I couldn't generate a response right now.";
+
+
+            // ==================================================
+            // UPDATED CONVERSATION
+            // ==================================================
+
+            const updatedConversation = [
+
+                ...conversation,
+
+                {
+                    role: "user",
+                    content:
+                        message.trim()
+                },
+
+                {
+                    role: "assistant",
+                    content:
+                        reply
                 }
+
+            ];
+
+
+            // ==================================================
+            // RESPONSE
+            // ==================================================
+
+            res.json({
+
+                success: true,
+
+                reply,
+
+                conversation:
+                    updatedConversation
+
+            });
+
+
+        } catch (error) {
+
+            console.error(
+                "AI Advisor error:",
+                error.message
+            );
+
+
+            res.status(500).json({
+
+                success: false,
+
+                message:
+                    "Cloudex AI could not process your request."
 
             });
 
         }
 
-
-        messages.push({
-
-            role: "user",
-            content: message.trim()
-
-        });
-
-
-        // ==================================================
-        // GROQ REQUEST
-        // ==================================================
-
-        const completion =
-            await groq.chat.completions.create({
-
-                messages,
-
-                model: "openai/gpt-oss-120b",
-
-                temperature: 0.4,
-
-                max_tokens: 900
-
-            });
-
-
-        // ==================================================
-        // GET RESPONSE
-        // ==================================================
-
-        const reply =
-            completion
-                .choices?.[0]
-                ?.message
-                ?.content ||
-            "I couldn't generate a response right now.";
-
-
-        // ==================================================
-        // UPDATED CONVERSATION
-        // ==================================================
-
-        const updatedConversation = [
-
-            ...conversation,
-
-            {
-                role: "user",
-                content: message.trim()
-            },
-
-            {
-                role: "assistant",
-                content: reply
-            }
-
-        ];
-
-
-        // ==================================================
-        // RESPONSE
-        // ==================================================
-
-        res.json({
-
-            success: true,
-
-            reply,
-
-            conversation: updatedConversation
-
-        });
-
-
-    } catch (error) {
-
-        console.error(
-            "AI Advisor error:",
-            error.message
-        );
-
-        res.status(500).json({
-
-            success: false,
-
-            message:
-                "Cloudex AI could not process your request."
-
-        });
-
     }
-
-});
+);
 
 
 // ==================================================
 // FRONTEND FALLBACK
 // ==================================================
 
-app.get("*splat", (req, res) => {
+app.get(
+    "*splat",
+    (req, res) => {
 
-    res.sendFile(
-        path.join(
-            frontendPath,
-            "index.html"
-        )
-    );
+        res.sendFile(
 
-});
+            path.join(
+                frontendPath,
+                "index.html"
+            )
+
+        );
+
+    }
+);
 
 
 // ==================================================
@@ -757,6 +952,7 @@ const startServer = async () => {
                 process.env.MONGO_URI
             );
 
+
             console.log(
                 "MongoDB connected successfully."
             );
@@ -767,6 +963,7 @@ const startServer = async () => {
                 "MongoDB URI not configured yet."
             );
 
+
             console.log(
                 "Starting CLOUDEx in frontend/demo mode."
             );
@@ -774,33 +971,37 @@ const startServer = async () => {
         }
 
 
-        app.listen(PORT, () => {
+        app.listen(
+            PORT,
+            () => {
 
-            console.log(
-                "----------------------------------------"
-            );
+                console.log(
+                    "----------------------------------------"
+                );
 
-            console.log(
-                "       CLOUDEx Backend Started"
-            );
+                console.log(
+                    "       CLOUDEx Backend Started"
+                );
 
-            console.log(
-                "----------------------------------------"
-            );
+                console.log(
+                    "----------------------------------------"
+                );
 
-            console.log(
-                `Local URL: http://localhost:${PORT}`
-            );
+                console.log(
+                    `Local URL: http://localhost:${PORT}`
+                );
 
-            console.log(
-                `API URL:   http://localhost:${PORT}/api`
-            );
+                console.log(
+                    `API URL:   http://localhost:${PORT}/api`
+                );
 
-            console.log(
-                "----------------------------------------"
-            );
+                console.log(
+                    "----------------------------------------"
+                );
 
-        });
+            }
+        );
+
 
     } catch (error) {
 
@@ -808,21 +1009,27 @@ const startServer = async () => {
             "MongoDB connection failed:"
         );
 
+
         console.error(
             error.message
         );
+
 
         console.log(
             "Starting server without MongoDB..."
         );
 
-        app.listen(PORT, () => {
 
-            console.log(
-                `CLOUDEx running at http://localhost:${PORT}`
-            );
+        app.listen(
+            PORT,
+            () => {
 
-        });
+                console.log(
+                    `CLOUDEx running at http://localhost:${PORT}`
+                );
+
+            }
+        );
 
     }
 

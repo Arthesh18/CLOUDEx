@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>Sign Up | CLOUDEx</title>
+
+    <link
+        rel="preconnect"
+        href="https://fonts.googleapis.com"
+    >
+
+    <link
+        rel="preconnect"
+        href="https://fonts.gstatic.com"
+        crossorigin
+    >
+
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
+        rel="stylesheet"
+    >
+
+    <link
+        rel="stylesheet"
+        href="css/login.css"
+    >
+</head>
+
+<body>
+
+    <main class="auth-page">
+
+        <!-- =================================================
+             LEFT BRAND SECTION
+             ================================================= -->
+
+        <section class="auth-brand">
+
+            <div class="brand-logo">
+
+                <span class="cloud-icon">
+                    ☁
+                </span>
+
+                <span>
+                    CLOUD<span class="brand-ex">Ex</span>
+                </span>
+
+            </div>
+
+
+            <div class="brand-content">
+
+                <div class="brand-badge">
+                    ☁ CLOUD INTELLIGENCE PLATFORM
+                </div>
+
+                <h1>
+                    Build smarter.
+                    <span>Choose better.</span>
+                </h1>
+
+                <p>
+                    CLOUDEx helps you understand cloud
+                    providers, compare their services and
+                    get AI-powered recommendations for your
+                    projects.
+                </p>
+
+
+                <div class="brand-features">
+
+                    <div class="feature">
+
+                        <span>✦</span>
+
+                        <div>
+                            <strong>
+                                AI-powered recommendations
+                            </strong>
+
+                            <small>
+                                Get cloud suggestions based
+                                on your actual project needs.
+                            </small>
+                        </div>
+
+                    </div>
+
+
+                    <div class="feature">
+
+                        <span>⚖</span>
+
+                        <div>
+                            <strong>
+                                Compare cloud providers
+                            </strong>
+
+                            <small>
+                                Compare AWS, Azure, GCP and
+                                other providers side-by-side.
+                            </small>
+                        </div>
+
+                    </div>
+
+
+                    <div class="feature">
+
+                        <span>☁</span>
+
+                        <div>
+                            <strong>
+                                Explore cloud services
+                            </strong>
+
+                            <small>
+                                Understand which services
+                                are available and why they matter.
+                            </small>
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <!-- =================================================
+             RIGHT SIGNUP PANEL
+             ================================================= -->
+
+        <section class="auth-panel">
+
+            <div class="auth-card">
+
+                <!-- Mobile logo -->
+
+                <div class="mobile-logo">
+
+                    <span class="cloud-icon">
+                        ☁
+                    </span>
+
+                    <span>
+                        CLOUD<span class="brand-ex">Ex</span>
+                    </span>
+
+                </div>
+
+
+                <!-- Heading -->
+
+                <div class="auth-heading">
+
+                    <span class="section-label">
+                        CREATE ACCOUNT
+                    </span>
+
+                    <h2>
+                        Start exploring the cloud.
+                    </h2>
+
+                    <p>
+                        Create your CLOUDEx account to
+                        continue.
+                    </p>
+
+                </div>
+
+
+                <!-- Signup form -->
+
+                <form id="signupForm">
+
+                    <!-- Name -->
+
+                    <div class="form-group">
+
+                        <label for="name">
+                            Full name
+                        </label>
+
+                        <input
+                            type="text"
+                            id="name"
+                            name="name"
+                            placeholder="Enter your name"
+                            autocomplete="name"
+                            required
+                        >
+
+                    </div>
+
+
+                    <!-- Email -->
+
+                    <div class="form-group">
+
+                        <label for="email">
+                            Email address
+                        </label>
+
+                        <input
+                            type="email"
+                            id="email"
+                            name="email"
+                            placeholder="you@example.com"
+                            autocomplete="email"
+                            required
+                        >
+
+                    </div>
+
+
+                    <!-- Password -->
+
+                    <div class="form-group">
+
+                        <label for="password">
+                            Password
+                        </label>
+
+                        <div class="password-wrapper">
+
+                            <input
+                                type="password"
+                                id="password"
+                                name="password"
+                                placeholder="Create a password"
+                                autocomplete="new-password"
+                                minlength="6"
+                                required
+                            >
+
+                            <button
+                                type="button"
+                                class="password-toggle"
+                                id="togglePassword"
+                                aria-label="Show password"
+                            >
+                                👁
+                            </button>
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- Confirm password -->
+
+                    <div class="form-group">
+
+                        <label for="confirmPassword">
+                            Confirm password
+                        </label>
+
+                        <div class="password-wrapper">
+
+                            <input
+                                type="password"
+                                id="confirmPassword"
+                                name="confirmPassword"
+                                placeholder="Enter password again"
+                                autocomplete="new-password"
+                                minlength="6"
+                                required
+                            >
+
+                            <button
+                                type="button"
+                                class="password-toggle"
+                                id="toggleConfirmPassword"
+                                aria-label="Show password"
+                            >
+                                👁
+                            </button>
+
+                        </div>
+
+                    </div>
+
+
+                    <!-- Message -->
+
+                    <div
+                        id="signupMessage"
+                        class="auth-message"
+                    ></div>
+
+
+                    <!-- Signup button -->
+
+                    <button
+                        type="submit"
+                        class="auth-button"
+                        id="signupButton"
+                    >
+
+                        <span id="signupButtonText">
+                            Create account
+                        </span>
+
+                        <span class="loader"></span>
+
+                    </button>
+
+                </form>
+
+
+                <!-- Login link -->
+
+                <div class="auth-footer">
+
+                    <span>
+                        Already have an account?
+                    </span>
+
+                    <a href="login.html">
+                        Log in
+                    </a>
+
+                </div>
+
+
+                <!-- Back -->
+
+                <a
+                    href="login.html"
+                    class="back-link"
+                >
+                    ← Back to login
+                </a>
+
+            </div>
+
+        </section>
+
+    </main>
+
+
+    <script src="js/signup.js"></script>
+
+</body>
+
+</html>

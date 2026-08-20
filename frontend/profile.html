@@ -1,0 +1,789 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>CLOUDEx | Profile</title>
+
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
+        rel="stylesheet"
+    >
+
+    <link
+        rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
+    >
+
+    <style>
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: "Inter", sans-serif;
+            background: #f7f7fb;
+            color: #111225;
+            min-height: 100vh;
+        }
+
+        /* =========================
+           NAVBAR
+        ========================= */
+
+        .navbar {
+            height: 80px;
+            background: white;
+            border-bottom: 1px solid #e4e4ed;
+
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+
+            padding: 0 40px;
+
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .nav-brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+
+            font-size: 27px;
+            font-weight: 800;
+        }
+
+        .brand-icon {
+            width: 48px;
+            height: 48px;
+
+            border-radius: 14px;
+
+            display: flex;
+            align-items: center;
+            justify-content: center;
+
+            background: #5b5ce2;
+            color: white;
+
+            font-size: 25px;
+        }
+
+        .nav-brand span span {
+            color: #5b5ce2;
+        }
+
+        .nav-links {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .nav-links a {
+            text-decoration: none;
+            color: #68697d;
+
+            font-size: 16px;
+            font-weight: 600;
+
+            padding: 13px 18px;
+
+            border-radius: 13px;
+
+            transition: 0.2s;
+        }
+
+        .nav-links a:hover {
+            background: #f0efff;
+            color: #5b5ce2;
+        }
+
+        .nav-links a.active {
+            background: #eeedff;
+            color: #5b5ce2;
+        }
+
+        .nav-profile {
+            width: 48px;
+            height: 48px;
+
+            border-radius: 50%;
+
+            background: #f1f1f8;
+
+            border: none;
+
+            display: flex;
+            align-items: center;
+            justify-content: center;
+
+            color: #171827;
+            font-size: 19px;
+
+            text-decoration: none;
+
+            cursor: pointer;
+        }
+
+        /* =========================
+           MAIN
+        ========================= */
+
+        .profile-container {
+            max-width: 1050px;
+            margin: 0 auto;
+
+            padding: 70px 25px;
+        }
+
+        .profile-header {
+            margin-bottom: 35px;
+        }
+
+        .profile-label {
+            color: #5b5ce2;
+
+            font-size: 13px;
+            font-weight: 800;
+
+            letter-spacing: 1.5px;
+
+            margin-bottom: 12px;
+        }
+
+        .profile-header h1 {
+            font-size: 42px;
+            font-weight: 800;
+
+            margin-bottom: 10px;
+        }
+
+        .profile-header p {
+            color: #74758a;
+            font-size: 17px;
+        }
+
+        /* =========================
+           PROFILE CARD
+        ========================= */
+
+        .profile-card {
+            background: white;
+
+            border: 1px solid #e4e4ed;
+
+            border-radius: 24px;
+
+            padding: 35px;
+
+            box-shadow:
+                0 15px 40px rgba(25, 25, 60, 0.06);
+        }
+
+        .profile-top {
+            display: flex;
+            align-items: center;
+
+            gap: 25px;
+
+            padding-bottom: 30px;
+
+            border-bottom: 1px solid #eeeeF4;
+        }
+
+        .profile-avatar {
+            width: 90px;
+            height: 90px;
+
+            border-radius: 25px;
+
+            background: linear-gradient(
+                135deg,
+                #5b5ce2,
+                #7778f5
+            );
+
+            color: white;
+
+            display: flex;
+            align-items: center;
+            justify-content: center;
+
+            font-size: 38px;
+        }
+
+        .profile-name {
+            font-size: 27px;
+            font-weight: 800;
+
+            margin-bottom: 6px;
+        }
+
+        .profile-email {
+            color: #77788a;
+            font-size: 15px;
+        }
+
+        /* =========================
+           INFORMATION
+        ========================= */
+
+        .info-section {
+            margin-top: 30px;
+        }
+
+        .info-section h2 {
+            font-size: 19px;
+            margin-bottom: 20px;
+        }
+
+        .info-grid {
+            display: grid;
+
+            grid-template-columns:
+                repeat(2, 1fr);
+
+            gap: 18px;
+        }
+
+        .info-box {
+            background: #f8f8fc;
+
+            border: 1px solid #e8e8f1;
+
+            border-radius: 15px;
+
+            padding: 20px;
+        }
+
+        .info-label {
+            font-size: 12px;
+
+            color: #77788a;
+
+            font-weight: 700;
+
+            text-transform: uppercase;
+
+            letter-spacing: 0.8px;
+
+            margin-bottom: 7px;
+        }
+
+        .info-value {
+            font-size: 16px;
+
+            font-weight: 600;
+        }
+
+        /* =========================
+           ACTIONS
+        ========================= */
+
+        .profile-actions {
+            margin-top: 35px;
+
+            display: flex;
+
+            gap: 15px;
+        }
+
+        .action-button {
+            border: none;
+
+            border-radius: 13px;
+
+            padding: 14px 22px;
+
+            font-family: inherit;
+
+            font-size: 15px;
+
+            font-weight: 700;
+
+            cursor: pointer;
+
+            text-decoration: none;
+
+            display: inline-flex;
+
+            align-items: center;
+
+            justify-content: center;
+
+            gap: 9px;
+
+            transition: 0.2s;
+        }
+
+        .home-button {
+            background: #5b5ce2;
+            color: white;
+        }
+
+        .home-button:hover {
+            background: #4c4dcc;
+        }
+
+        .logout-button {
+            background: #fff0f0;
+            color: #dc4444;
+
+            border: 1px solid #ffdada;
+        }
+
+        .logout-button:hover {
+            background: #ffe4e4;
+        }
+
+        /* =========================
+           MOBILE
+        ========================= */
+
+        @media (max-width: 750px) {
+
+            .navbar {
+                padding: 0 18px;
+            }
+
+            .nav-links {
+                gap: 3px;
+            }
+
+            .nav-links a {
+                font-size: 0;
+                padding: 12px;
+            }
+
+            .nav-links a i {
+                font-size: 18px;
+            }
+
+            .profile-container {
+                padding: 45px 18px;
+            }
+
+            .profile-header h1 {
+                font-size: 34px;
+            }
+
+            .profile-card {
+                padding: 25px;
+            }
+
+            .profile-top {
+                align-items: flex-start;
+            }
+
+            .info-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .profile-actions {
+                flex-direction: column;
+            }
+
+            .action-button {
+                width: 100%;
+            }
+        }
+
+    </style>
+
+</head>
+
+
+<body>
+
+
+    <!-- =====================================================
+         NAVBAR
+    ===================================================== -->
+
+    <nav class="navbar">
+
+
+        <div class="nav-brand">
+
+            <div class="brand-icon">
+
+                <i class="fa-solid fa-cloud"></i>
+
+            </div>
+
+            <span>
+                CLOUD<span>Ex</span>
+            </span>
+
+        </div>
+
+
+        <div class="nav-links">
+
+            <a href="dashboard.html">
+
+                <i class="fa-solid fa-house"></i>
+
+                Home
+
+            </a>
+
+
+            <a href="advisor.html">
+
+                <i class="fa-solid fa-wand-magic-sparkles"></i>
+
+                AI Advisor
+
+            </a>
+
+
+            <a href="cloud-explorer.html">
+
+                <i class="fa-solid fa-cloud"></i>
+
+                Cloud Explorer
+
+            </a>
+
+        </div>
+
+
+        <a
+            href="profile.html"
+            class="nav-profile"
+            aria-label="Profile"
+        >
+
+            <i class="fa-solid fa-user"></i>
+
+        </a>
+
+
+    </nav>
+
+
+
+    <!-- =====================================================
+         PROFILE
+    ===================================================== -->
+
+    <main class="profile-container">
+
+
+        <section class="profile-header">
+
+            <div class="profile-label">
+                ACCOUNT
+            </div>
+
+            <h1>
+                Your Profile
+            </h1>
+
+            <p>
+                Manage your CLOUDEx account and preferences.
+            </p>
+
+        </section>
+
+
+
+        <section class="profile-card">
+
+
+            <div class="profile-top">
+
+
+                <div class="profile-avatar">
+
+                    <i class="fa-solid fa-user"></i>
+
+                </div>
+
+
+                <div>
+
+                    <div
+                        class="profile-name"
+                        id="profileName"
+                    >
+                        Loading...
+                    </div>
+
+                    <div
+                        class="profile-email"
+                        id="profileEmail"
+                    >
+                        Loading...
+                    </div>
+
+                </div>
+
+
+            </div>
+
+
+
+            <div class="info-section">
+
+                <h2>
+                    Account information
+                </h2>
+
+
+                <div class="info-grid">
+
+
+                    <div class="info-box">
+
+                        <div class="info-label">
+                            Full Name
+                        </div>
+
+                        <div
+                            class="info-value"
+                            id="infoName"
+                        >
+                            Loading...
+                        </div>
+
+                    </div>
+
+
+
+                    <div class="info-box">
+
+                        <div class="info-label">
+                            Email Address
+                        </div>
+
+                        <div
+                            class="info-value"
+                            id="infoEmail"
+                        >
+                            Loading...
+                        </div>
+
+                    </div>
+
+
+                </div>
+
+            </div>
+
+
+
+            <div class="profile-actions">
+
+
+                <a
+                    href="dashboard.html"
+                    class="action-button home-button"
+                >
+
+                    <i class="fa-solid fa-house"></i>
+
+                    Back to Dashboard
+
+                </a>
+
+
+                <button
+                    class="action-button logout-button"
+                    id="logoutButton"
+                >
+
+                    <i class="fa-solid fa-right-from-bracket"></i>
+
+                    Logout
+
+                </button>
+
+
+            </div>
+
+
+        </section>
+
+
+    </main>
+
+
+
+    <script>
+
+        // =====================================================
+        // LOAD USER INFORMATION
+        // =====================================================
+
+        function loadUser() {
+
+            let user = null;
+
+
+            /*
+             * Try the common localStorage keys.
+             * This makes the profile page work with the
+             * login system we have been building.
+             */
+
+            const possibleKeys = [
+
+                "user",
+                "cloudexUser",
+                "currentUser",
+                "loggedInUser"
+
+            ];
+
+
+            for (const key of possibleKeys) {
+
+                try {
+
+                    const stored =
+                        localStorage.getItem(key);
+
+                    if (stored) {
+
+                        const parsed =
+                            JSON.parse(stored);
+
+                        if (parsed) {
+
+                            user = parsed;
+
+                            break;
+
+                        }
+
+                    }
+
+                } catch (error) {
+
+                    console.log(
+                        "Could not read user:",
+                        error
+                    );
+
+                }
+
+            }
+
+
+            // ---------------------------------------------
+            // If no user is stored
+            // ---------------------------------------------
+
+            if (!user) {
+
+                document.getElementById(
+                    "profileName"
+                ).textContent = "User";
+
+                document.getElementById(
+                    "profileEmail"
+                ).textContent = "Not available";
+
+                document.getElementById(
+                    "infoName"
+                ).textContent = "Not available";
+
+                document.getElementById(
+                    "infoEmail"
+                ).textContent = "Not available";
+
+                return;
+
+            }
+
+
+            // ---------------------------------------------
+            // Get name
+            // ---------------------------------------------
+
+            const name =
+                user.name ||
+                user.fullName ||
+                user.username ||
+                "User";
+
+
+            // ---------------------------------------------
+            // Get email
+            // ---------------------------------------------
+
+            const email =
+                user.email ||
+                "Not available";
+
+
+            // ---------------------------------------------
+            // Display
+            // ---------------------------------------------
+
+            document.getElementById(
+                "profileName"
+            ).textContent = name;
+
+
+            document.getElementById(
+                "profileEmail"
+            ).textContent = email;
+
+
+            document.getElementById(
+                "infoName"
+            ).textContent = name;
+
+
+            document.getElementById(
+                "infoEmail"
+            ).textContent = email;
+
+        }
+
+
+
+        // =====================================================
+        // LOGOUT
+        // =====================================================
+    document
+        .getElementById("logoutButton")
+        .addEventListener(
+            "click",
+            () => {
+
+            cloudexLogout();
+
+        }
+    );
+
+
+
+        // =====================================================
+        // START
+        // =====================================================
+
+        loadUser();
+
+    </script>
+    <script src="js/auth.js"></script>
+
+</body>
+
+</html>

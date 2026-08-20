@@ -1,0 +1,635 @@
+/* =========================================================
+   CLOUDEX LOGIN
+   ========================================================= */
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+:root {
+    --primary: #5b5ce2;
+    --primary-dark: #4849c9;
+    --text: #151527;
+    --muted: #73738a;
+    --border: #e5e5ef;
+    --background: #f7f7fb;
+    --white: #ffffff;
+    --success: #15966f;
+    --danger: #d94b5b;
+}
+
+body {
+    font-family: "Inter", sans-serif;
+    background: var(--background);
+    color: var(--text);
+    min-height: 100vh;
+}
+
+
+/* =========================================================
+   MAIN PAGE
+   ========================================================= */
+
+.auth-page {
+    min-height: 100vh;
+    display: grid;
+    grid-template-columns: 1.05fr 0.95fr;
+}
+
+
+/* =========================================================
+   LEFT BRAND SECTION
+   ========================================================= */
+
+.auth-brand {
+    position: relative;
+    overflow: hidden;
+
+    background:
+        radial-gradient(
+            circle at 20% 20%,
+            rgba(91, 92, 226, 0.25),
+            transparent 35%
+        ),
+        linear-gradient(
+            145deg,
+            #101021,
+            #17172d 55%,
+            #20204a
+        );
+
+    color: white;
+
+    padding: 48px 8%;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+
+/* Decorative circles */
+
+.auth-brand::before {
+    content: "";
+    position: absolute;
+
+    width: 420px;
+    height: 420px;
+
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 50%;
+
+    right: -180px;
+    top: 80px;
+}
+
+.auth-brand::after {
+    content: "";
+    position: absolute;
+
+    width: 280px;
+    height: 280px;
+
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 50%;
+
+    left: -130px;
+    bottom: -80px;
+}
+
+
+/* =========================================================
+   LOGO
+   ========================================================= */
+
+.brand-logo {
+    position: relative;
+    z-index: 2;
+
+    display: flex;
+    align-items: center;
+
+    font-size: 25px;
+    font-weight: 800;
+    letter-spacing: -1px;
+}
+
+.cloud-icon {
+    width: 45px;
+    height: 45px;
+
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+
+    background: #5b5ce2;
+
+    border-radius: 13px;
+
+    margin-right: 12px;
+
+    font-size: 25px;
+}
+
+.brand-cloud {
+    color: white;
+}
+
+.brand-ex {
+    color: #6d6df0;
+}
+
+
+/* =========================================================
+   BRAND CONTENT
+   ========================================================= */
+
+.brand-content {
+    position: relative;
+    z-index: 2;
+
+    max-width: 590px;
+    margin: auto 0;
+}
+
+.brand-badge {
+    display: inline-flex;
+    align-items: center;
+
+    padding: 9px 15px;
+
+    border-radius: 30px;
+
+    background: rgba(101, 102, 235, 0.16);
+    border: 1px solid rgba(130, 130, 255, 0.2);
+
+    color: #a7a8ff;
+
+    font-size: 12px;
+    font-weight: 700;
+
+    letter-spacing: 1px;
+
+    margin-bottom: 25px;
+}
+
+.brand-content h1 {
+    font-size: clamp(42px, 5vw, 68px);
+    line-height: 1.02;
+    letter-spacing: -3px;
+
+    margin-bottom: 25px;
+}
+
+.brand-content h1 span {
+    display: block;
+    color: #6263ec;
+}
+
+.brand-content > p {
+    max-width: 540px;
+
+    color: #b7b7c9;
+
+    font-size: 17px;
+    line-height: 1.7;
+
+    margin-bottom: 40px;
+}
+
+
+/* =========================================================
+   FEATURES
+   ========================================================= */
+
+.brand-features {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.feature {
+    display: flex;
+    align-items: flex-start;
+    gap: 15px;
+}
+
+.feature > span {
+    width: 38px;
+    height: 38px;
+
+    flex-shrink: 0;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    background: rgba(96, 97, 230, 0.18);
+
+    border-radius: 10px;
+
+    color: #8e8fff;
+}
+
+.feature strong {
+    display: block;
+
+    font-size: 14px;
+
+    margin-bottom: 4px;
+}
+
+.feature small {
+    color: #9292aa;
+
+    font-size: 12px;
+    line-height: 1.5;
+}
+
+
+/* =========================================================
+   RIGHT AUTH PANEL
+   ========================================================= */
+
+.auth-panel {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    padding: 50px;
+}
+
+.auth-card {
+    width: 100%;
+    max-width: 470px;
+}
+
+
+/* =========================================================
+   MOBILE LOGO
+   ========================================================= */
+
+.mobile-logo {
+    display: none;
+}
+
+
+/* =========================================================
+   HEADING
+   ========================================================= */
+
+.auth-heading {
+    margin-bottom: 32px;
+}
+
+.section-label {
+    display: block;
+
+    color: #5b5ce2;
+
+    font-size: 12px;
+    font-weight: 800;
+
+    letter-spacing: 2px;
+
+    margin-bottom: 10px;
+}
+
+.auth-heading h2 {
+    font-size: 32px;
+    letter-spacing: -1.2px;
+
+    margin-bottom: 8px;
+}
+
+.auth-heading p {
+    color: var(--muted);
+
+    font-size: 14px;
+}
+
+
+/* =========================================================
+   FORM
+   ========================================================= */
+
+.form-group {
+    margin-bottom: 21px;
+}
+
+.form-group label {
+    display: block;
+
+    font-size: 13px;
+    font-weight: 600;
+
+    margin-bottom: 8px;
+}
+
+.form-group input {
+    width: 100%;
+
+    height: 54px;
+
+    padding: 0 16px;
+
+    border: 1px solid var(--border);
+    border-radius: 12px;
+
+    background: white;
+
+    color: var(--text);
+
+    font-family: inherit;
+    font-size: 14px;
+
+    outline: none;
+
+    transition:
+        border-color 0.2s ease,
+        box-shadow 0.2s ease;
+}
+
+.form-group input::placeholder {
+    color: #a4a4b4;
+}
+
+.form-group input:focus {
+    border-color: var(--primary);
+
+    box-shadow:
+        0 0 0 4px rgba(91, 92, 226, 0.1);
+}
+
+
+/* =========================================================
+   PASSWORD
+   ========================================================= */
+
+.password-wrapper {
+    position: relative;
+}
+
+.password-wrapper input {
+    padding-right: 52px;
+}
+
+.password-toggle {
+    position: absolute;
+
+    right: 8px;
+    top: 50%;
+
+    transform: translateY(-50%);
+
+    width: 38px;
+    height: 38px;
+
+    border: none;
+    border-radius: 9px;
+
+    background: transparent;
+
+    cursor: pointer;
+
+    font-size: 15px;
+
+    opacity: 0.55;
+
+    transition:
+        background 0.2s ease,
+        opacity 0.2s ease;
+}
+
+.password-toggle:hover {
+    background: #f1f1fa;
+    opacity: 1;
+}
+
+
+/* =========================================================
+   MESSAGE
+   ========================================================= */
+
+.auth-message {
+    min-height: 20px;
+
+    margin-bottom: 12px;
+
+    font-size: 13px;
+    line-height: 1.5;
+}
+
+.auth-message.error {
+    color: var(--danger);
+}
+
+.auth-message.success {
+    color: var(--success);
+}
+
+
+/* =========================================================
+   LOGIN BUTTON
+   ========================================================= */
+
+.auth-button {
+    width: 100%;
+    height: 54px;
+
+    border: none;
+    border-radius: 12px;
+
+    background: var(--primary);
+
+    color: white;
+
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: 700;
+
+    cursor: pointer;
+
+    box-shadow:
+        0 10px 25px rgba(91, 92, 226, 0.2);
+
+    transition:
+        transform 0.2s ease,
+        background 0.2s ease,
+        box-shadow 0.2s ease;
+}
+
+.auth-button:hover {
+    background: var(--primary-dark);
+
+    transform: translateY(-1px);
+
+    box-shadow:
+        0 13px 30px rgba(91, 92, 226, 0.25);
+}
+
+.auth-button:active {
+    transform: translateY(0);
+}
+
+.auth-button:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+    transform: none;
+}
+
+
+/* =========================================================
+   LOADER
+   ========================================================= */
+
+.loader {
+    display: none;
+
+    width: 18px;
+    height: 18px;
+
+    margin: auto;
+
+    border: 2px solid rgba(255, 255, 255, 0.4);
+    border-top-color: white;
+
+    border-radius: 50%;
+
+    animation: spin 0.7s linear infinite;
+}
+
+.auth-button.loading #loginButtonText {
+    display: none;
+}
+
+.auth-button.loading .loader {
+    display: block;
+}
+
+@keyframes spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+
+/* =========================================================
+   FOOTER
+   ========================================================= */
+
+.auth-footer {
+    display: flex;
+    justify-content: center;
+    gap: 5px;
+
+    margin-top: 26px;
+
+    color: var(--muted);
+
+    font-size: 13px;
+}
+
+.auth-footer a {
+    color: var(--primary);
+
+    font-weight: 700;
+
+    text-decoration: none;
+}
+
+.auth-footer a:hover {
+    text-decoration: underline;
+}
+
+
+/* =========================================================
+   BACK LINK
+   ========================================================= */
+
+.back-link {
+    display: block;
+
+    width: fit-content;
+
+    margin: 25px auto 0;
+
+    color: #88889b;
+
+    font-size: 12px;
+
+    text-decoration: none;
+
+    transition: color 0.2s ease;
+}
+
+.back-link:hover {
+    color: var(--primary);
+}
+
+
+/* =========================================================
+   RESPONSIVE
+   ========================================================= */
+
+@media (max-width: 950px) {
+
+    .auth-page {
+        grid-template-columns: 1fr;
+    }
+
+    .auth-brand {
+        display: none;
+    }
+
+    .auth-panel {
+        min-height: 100vh;
+
+        padding: 35px 25px;
+    }
+
+    .mobile-logo {
+        display: flex;
+        align-items: center;
+
+        justify-content: center;
+
+        margin-bottom: 45px;
+
+        font-size: 23px;
+        font-weight: 800;
+    }
+
+    .mobile-logo .cloud-icon {
+        width: 42px;
+        height: 42px;
+
+        font-size: 22px;
+    }
+
+    .mobile-logo .brand-cloud {
+        color: var(--text);
+    }
+
+    .mobile-logo .brand-ex {
+        color: var(--primary);
+    }
+}
+
+
+@media (max-width: 500px) {
+
+    .auth-panel {
+        padding: 25px 18px;
+    }
+
+    .auth-heading h2 {
+        font-size: 27px;
+    }
+
+    .auth-card {
+        max-width: 100%;
+    }
+}

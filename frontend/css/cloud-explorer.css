@@ -1603,3 +1603,275 @@ body {
     }
 
 }
+/* =====================================================
+   QUICK VERDICT
+===================================================== */
+
+.comparison-summary {
+    width: 100%;
+    box-sizing: border-box;
+    margin: 0 0 28px 0;
+    padding: 28px;
+    background: #ffffff;
+    border: 1px solid #e3e5ef;
+    border-radius: 22px;
+    box-shadow: 0 8px 30px rgba(30, 35, 70, 0.04);
+}
+
+
+/* =====================================================
+   HEADER
+===================================================== */
+
+.quick-verdict-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 24px;
+    margin-bottom: 24px;
+}
+
+
+.quick-verdict-title {
+    flex: 1;
+}
+
+
+.quick-verdict-title .chart-label {
+    display: block;
+    margin-bottom: 7px;
+    color: #5b5ce2;
+    font-size: 12px;
+    font-weight: 800;
+    letter-spacing: 1.5px;
+}
+
+
+.quick-verdict-title h3 {
+    margin: 0 0 6px;
+    color: #11152a;
+    font-size: 24px;
+    font-weight: 800;
+    line-height: 1.2;
+}
+
+
+.quick-verdict-title p {
+    margin: 0;
+    color: #777b90;
+    font-size: 14px;
+    line-height: 1.5;
+}
+
+
+/* =====================================================
+   BEST OVERALL
+===================================================== */
+
+.verdict-overall {
+    min-width: 190px;
+    padding: 17px 22px;
+    box-sizing: border-box;
+
+    background: #f2f2ff;
+    border: 1px solid #dedfff;
+    border-radius: 16px;
+
+    text-align: center;
+}
+
+
+.verdict-overall span {
+    display: block;
+    margin-bottom: 5px;
+
+    color: #5b5ce2;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+}
+
+
+.verdict-overall strong {
+    display: block;
+
+    color: #11152a;
+    font-size: 18px;
+    font-weight: 800;
+    line-height: 1.3;
+}
+
+
+.verdict-overall small {
+    display: block;
+    margin-top: 4px;
+
+    color: #666a80;
+    font-size: 13px;
+    font-weight: 600;
+}
+
+
+/* =====================================================
+   VERDICT GRID
+===================================================== */
+
+.verdict-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 14px;
+}
+
+
+/* =====================================================
+   VERDICT CARD
+===================================================== */
+
+.verdict-card {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+
+    min-width: 0;
+    padding: 17px;
+
+    background: #fafaff;
+    border: 1px solid #e5e6ef;
+    border-radius: 16px;
+
+    transition:
+        transform 0.2s ease,
+        box-shadow 0.2s ease,
+        border-color 0.2s ease;
+}
+
+
+.verdict-card:hover {
+    transform: translateY(-2px);
+
+    border-color: #d4d5f7;
+
+    box-shadow:
+        0 8px 20px
+        rgba(55, 58, 120, 0.08);
+}
+
+
+/* =====================================================
+   ICON
+===================================================== */
+
+.verdict-icon {
+    width: 44px;
+    height: 44px;
+
+    flex: 0 0 44px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    background: #eeeeff;
+    border-radius: 12px;
+
+    color: #5b5ce2;
+    font-size: 17px;
+}
+
+
+/* =====================================================
+   CONTENT
+===================================================== */
+
+.verdict-content {
+    min-width: 0;
+    flex: 1;
+}
+
+
+.verdict-category {
+    display: block;
+
+    margin-bottom: 4px;
+
+    color: #7a7d90;
+
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 0.8px;
+    line-height: 1.3;
+
+    text-transform: uppercase;
+}
+
+
+.verdict-content strong {
+    display: block;
+
+    overflow: hidden;
+
+    color: #11152a;
+
+    font-size: 15px;
+    font-weight: 800;
+    line-height: 1.35;
+
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+
+.verdict-score {
+    display: block;
+
+    margin-top: 4px;
+
+    color: #5b5ce2;
+
+    font-size: 12px;
+    font-weight: 700;
+}
+
+
+/* =====================================================
+   TABLET
+===================================================== */
+
+@media (max-width: 950px) {
+
+    .verdict-grid {
+        grid-template-columns:
+            repeat(2, minmax(0, 1fr));
+    }
+
+}
+
+
+/* =====================================================
+   MOBILE
+===================================================== */
+
+@media (max-width: 650px) {
+
+    .comparison-summary {
+        padding: 20px;
+    }
+
+
+    .quick-verdict-header {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+
+    .verdict-overall {
+        width: 100%;
+    }
+
+
+    .verdict-grid {
+        grid-template-columns: 1fr;
+    }
+
+}
