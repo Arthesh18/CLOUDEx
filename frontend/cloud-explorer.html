@@ -1,0 +1,769 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>CLOUDEx | Cloud Explorer</title>
+
+    <link
+        rel="stylesheet"
+        href="css/cloud-explorer.css"
+    >
+
+    <!-- Google Font -->
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
+        rel="stylesheet"
+    >
+
+    <!-- Font Awesome -->
+    <link
+        rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
+    >
+
+</head>
+
+
+<body>
+
+
+<!-- =====================================================
+     NAVBAR
+===================================================== -->
+
+<nav class="navbar">
+
+    <div class="nav-brand">
+
+        <div class="brand-icon">
+            <i class="fa-solid fa-cloud"></i>
+        </div>
+
+        <span>
+            CLOUD<span>Ex</span>
+        </span>
+
+    </div>
+
+
+    <div class="nav-links">
+
+        <a href="dashboard.html">
+            <i class="fa-solid fa-house"></i>
+            Home
+        </a>
+
+
+        <a href="advisor.html">
+            <i class="fa-solid fa-wand-magic-sparkles"></i>
+            AI Advisor
+        </a>
+
+
+        <a
+            href="cloud-explorer.html"
+            class="active"
+        >
+            <i class="fa-solid fa-cloud"></i>
+            Cloud Explorer
+        </a>
+
+    </div>
+
+
+    <div class="nav-right">
+
+        <button
+            class="nav-profile"
+            id="profileButton"
+        >
+
+            <i class="fa-solid fa-user"></i>
+
+        </button>
+
+    </div>
+
+</nav>
+
+
+
+<!-- =====================================================
+     MAIN
+===================================================== -->
+
+<main class="explorer-container">
+
+
+
+<!-- =====================================================
+     HERO
+===================================================== -->
+
+<section class="explorer-hero">
+
+    <div class="hero-text">
+
+        <div class="hero-badge">
+
+            <i class="fa-solid fa-compass"></i>
+
+            EXPLORE THE CLOUD
+
+        </div>
+
+
+        <h1>
+
+            Find the cloud
+
+            <span>
+                that fits you.
+            </span>
+
+        </h1>
+
+
+        <p>
+
+            Explore cloud providers, understand their
+            services and compare them side-by-side.
+
+        </p>
+
+    </div>
+
+
+
+    <div class="hero-visual">
+
+        <div class="floating-cloud cloud-one">
+
+            <i class="fa-solid fa-cloud"></i>
+
+        </div>
+
+
+        <div class="floating-cloud cloud-two">
+
+            <i class="fa-solid fa-cloud"></i>
+
+        </div>
+
+
+        <div class="hero-orbit">
+
+            <div class="orbit-dot dot-one"></div>
+
+            <div class="orbit-dot dot-two"></div>
+
+            <div class="orbit-dot dot-three"></div>
+
+
+            <div class="orbit-center">
+
+                <i class="fa-solid fa-cloud"></i>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</section>
+
+
+
+<!-- =====================================================
+     EXPLORE SECTION
+===================================================== -->
+
+<section class="explore-section">
+
+
+    <div class="section-heading">
+
+        <div>
+
+            <span class="section-label">
+                EXPLORE
+            </span>
+
+
+            <h2>
+                Cloud providers
+            </h2>
+
+        </div>
+
+
+        <span
+            id="providerCount"
+            class="provider-count"
+        >
+            Loading...
+        </span>
+
+    </div>
+
+
+
+    <!-- SEARCH -->
+
+    <div class="explorer-tools">
+
+        <div class="search-box">
+
+            <i class="fa-solid fa-magnifying-glass"></i>
+
+
+            <input
+                type="text"
+                id="providerSearch"
+                placeholder="Search cloud providers..."
+                autocomplete="off"
+            >
+
+        </div>
+
+
+
+        <div class="filter-buttons">
+
+            <button
+                class="filter-btn active"
+                data-filter="all"
+            >
+                All
+            </button>
+
+
+            <button
+                class="filter-btn"
+                data-filter="beginner"
+            >
+                Beginner Friendly
+            </button>
+
+
+            <button
+                class="filter-btn"
+                data-filter="ai"
+            >
+                AI / ML
+            </button>
+
+
+            <button
+                class="filter-btn"
+                data-filter="enterprise"
+            >
+                Enterprise
+            </button>
+
+        </div>
+
+    </div>
+
+
+
+    <!-- PROVIDERS -->
+
+    <div
+        id="providerGrid"
+        class="provider-grid"
+    >
+
+        <div class="loading-state">
+
+            <div class="loading-spinner"></div>
+
+            <p>
+                Loading cloud providers...
+            </p>
+
+        </div>
+
+    </div>
+
+</section>
+
+
+
+<!-- =====================================================
+     COMPARISON SECTION
+===================================================== -->
+
+<section
+    class="comparison-section"
+    id="comparisonSection"
+>
+
+
+    <div class="section-heading">
+
+        <div>
+
+            <span class="section-label">
+                COMPARE
+            </span>
+
+
+            <h2>
+                Compare cloud providers
+            </h2>
+
+
+            <p class="section-description">
+
+                Select two or more providers to compare
+                their capabilities and services.
+
+            </p>
+
+        </div>
+
+
+        <span
+            id="selectedCount"
+            class="selected-count"
+        >
+            0 selected
+        </span>
+
+    </div>
+
+
+
+    <!-- =================================================
+         PROVIDER SELECTOR
+    ================================================= -->
+
+    <div class="comparison-selector">
+
+
+        <div class="selector-header">
+
+            <div>
+
+                <h3>
+                    Choose providers
+                </h3>
+
+                <p>
+                    Select 2–4 providers
+                </p>
+
+            </div>
+
+
+            <button
+                id="compareButton"
+                class="compare-button"
+                disabled
+            >
+
+                <i class="fa-solid fa-scale-balanced"></i>
+
+                Compare
+
+            </button>
+
+        </div>
+
+
+
+        <div
+            id="providerSelector"
+            class="provider-selector"
+        >
+
+            <!-- Providers inserted by JavaScript -->
+
+        </div>
+
+    </div>
+
+
+
+    <!-- =================================================
+         COMPARISON RESULTS
+    ================================================= -->
+
+    <div
+        id="comparisonResults"
+        class="comparison-results hidden"
+    >
+
+
+        <!-- =================================================
+             NEW: COMPARISON SUMMARY
+        ================================================= -->
+
+        <div
+            id="comparisonSummary"
+            class="comparison-summary"
+        >
+
+            <!-- Summary cards inserted by JavaScript -->
+
+        </div>
+
+
+
+        <!-- =================================================
+             OVERALL COMPARISON
+        ================================================= -->
+
+        <div class="comparison-card overall-card">
+
+            <div class="comparison-card-header">
+
+                <div>
+
+                    <span class="chart-label">
+                        OVERALL COMPARISON
+                    </span>
+
+
+                    <h3>
+                        Provider strengths
+                    </h3>
+
+                </div>
+
+            </div>
+
+
+            <div class="chart-container large-chart">
+
+                <canvas
+                    id="overallChart"
+                ></canvas>
+
+            </div>
+
+        </div>
+
+
+
+        <!-- =================================================
+             INDIVIDUAL CHARTS
+        ================================================= -->
+
+        <div class="comparison-card">
+
+            <div class="comparison-card-header">
+
+                <div>
+
+                    <span class="chart-label">
+                        BEGINNER FRIENDLY
+                    </span>
+
+
+                    <h3>
+                        Ease of getting started
+                    </h3>
+
+                </div>
+
+            </div>
+
+
+            <div class="chart-container">
+
+                <canvas
+                    id="beginnerChart"
+                ></canvas>
+
+            </div>
+
+        </div>
+
+
+
+        <div class="comparison-card">
+
+            <div class="comparison-card-header">
+
+                <div>
+
+                    <span class="chart-label">
+                        AFFORDABILITY
+                    </span>
+
+
+                    <h3>
+                        Cost comparison
+                    </h3>
+
+                </div>
+
+            </div>
+
+
+            <div class="chart-container">
+
+                <canvas
+                    id="priceChart"
+                ></canvas>
+
+            </div>
+
+        </div>
+
+
+
+        <div class="comparison-card">
+
+            <div class="comparison-card-header">
+
+                <div>
+
+                    <span class="chart-label">
+                        SCALABILITY
+                    </span>
+
+
+                    <h3>
+                        Ability to grow
+                    </h3>
+
+                </div>
+
+            </div>
+
+
+            <div class="chart-container">
+
+                <canvas
+                    id="scalabilityChart"
+                ></canvas>
+
+            </div>
+
+        </div>
+
+
+
+        <div class="comparison-card">
+
+            <div class="comparison-card-header">
+
+                <div>
+
+                    <span class="chart-label">
+                        AI / ML
+                    </span>
+
+
+                    <h3>
+                        Artificial intelligence capabilities
+                    </h3>
+
+                </div>
+
+            </div>
+
+
+            <div class="chart-container">
+
+                <canvas
+                    id="aiChart"
+                ></canvas>
+
+            </div>
+
+        </div>
+
+
+
+        <div class="comparison-card">
+
+            <div class="comparison-card-header">
+
+                <div>
+
+                    <span class="chart-label">
+                        ENTERPRISE
+                    </span>
+
+
+                    <h3>
+                        Enterprise capabilities
+                    </h3>
+
+                </div>
+
+            </div>
+
+
+            <div class="chart-container">
+
+                <canvas
+                    id="enterpriseChart"
+                ></canvas>
+
+            </div>
+
+        </div>
+
+
+
+        <div class="comparison-card">
+
+            <div class="comparison-card-header">
+
+                <div>
+
+                    <span class="chart-label">
+                        GLOBAL REACH
+                    </span>
+
+
+                    <h3>
+                        Global availability
+                    </h3>
+
+                </div>
+
+            </div>
+
+
+            <div class="chart-container">
+
+                <canvas
+                    id="globalChart"
+                ></canvas>
+
+            </div>
+
+        </div>
+
+
+
+        <!-- =================================================
+             SERVICE COMPARISON
+        ================================================= -->
+
+        <div class="comparison-card service-comparison-card">
+
+
+            <div class="comparison-card-header">
+
+                <div>
+
+                    <span class="chart-label">
+                        SERVICES
+                    </span>
+
+
+                    <h3>
+                        Service-by-service comparison
+                    </h3>
+
+
+                    <p>
+                        See which provider offers each service.
+                    </p>
+
+                </div>
+
+            </div>
+
+
+            <div
+                id="serviceComparison"
+                class="service-comparison"
+            >
+
+                <!-- Service comparison inserted by JavaScript -->
+
+            </div>
+
+        </div>
+
+
+    </div>
+
+</section>
+
+
+
+</main>
+
+
+
+<!-- =====================================================
+     PROVIDER DETAILS MODAL
+===================================================== -->
+
+<div
+    id="providerModal"
+    class="modal-overlay"
+>
+
+    <div class="provider-modal">
+
+
+        <button
+            class="modal-close"
+            id="modalClose"
+            aria-label="Close"
+        >
+
+            <i class="fa-solid fa-xmark"></i>
+
+        </button>
+
+
+
+        <div
+            id="modalContent"
+            class="modal-content"
+        >
+
+            <!-- Provider details inserted here -->
+
+        </div>
+
+
+    </div>
+
+</div>
+
+
+
+<!-- =====================================================
+     SCRIPTS
+===================================================== -->
+
+<!-- Chart.js -->
+
+<script
+    src="https://cdn.jsdelivr.net/npm/chart.js"
+></script>
+
+
+<!-- Comparison charts -->
+
+<script src="charts.js"></script>
+
+
+<!-- Explorer logic -->
+
+<script src="cloud-explorer.js"></script>
+
+
+</body>
+
+</html>
