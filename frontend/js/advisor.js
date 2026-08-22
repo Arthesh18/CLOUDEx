@@ -296,7 +296,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
             const response =
                 await fetch(
-                    "/api/recommendations/save",
+                    "https://cloudex-o2xm.onrender.com/api/recommendations/save",
                     {
                         method: "POST",
 
@@ -706,7 +706,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
             const response =
                 await fetch(
-                    "/api/ai/chat",
+                    "https://cloudex-o2xm.onrender.com/api/ai/chat",
                     {
 
                         method:

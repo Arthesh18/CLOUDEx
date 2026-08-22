@@ -111,7 +111,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
                 const response =
                     await fetch(
-                        "/api/auth/login",
+                        "https://cloudex-o2xm.onrender.com/api/auth/login",
                         {
                             method: "POST",
 
