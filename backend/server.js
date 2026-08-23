@@ -4,9 +4,12 @@ const dotenv = require("dotenv");
 const mongoose = require("mongoose");
 const path = require("path");
 const Groq = require("groq-sdk");
+const ChatHistory = require("./models/ChatHistory");
 const authRoutes = require("./routes/authRoutes");
 const recommendationRoutes =
     require("./routes/recommendationRoutes");
+const chatRoutes =
+    require("./routes/chatRoutes");
 const {
     cloudProviders,
     getAllProviders,
@@ -41,6 +44,10 @@ app.use("/api/auth", authRoutes);
 app.use(
     "/api/recommendations",
     recommendationRoutes
+);
+app.use(
+    "/api/chat",
+    chatRoutes
 );
 // ==================================================
 // FRONTEND
@@ -216,9 +223,11 @@ app.post(
         try {
 
             const {
-                message,
-                conversation = []
-            } = req.body;
+    message,
+    conversation = [],
+    userId,
+    chatId
+} = req.body;
 
 
             // ------------------------------------------
@@ -876,7 +885,40 @@ Speak simply.
                 }
 
             ];
+            // ==================================================
+// SAVE CHAT HISTORY
+// ==================================================
 
+if (userId && chatId) {
+
+    const chat = await ChatHistory.findOne({
+        _id: chatId,
+        userId: userId
+    });
+
+    if (chat) {
+
+        chat.messages.push(
+            {
+                role: "user",
+                content: message.trim()
+            },
+            {
+                role: "assistant",
+                content: reply
+            }
+        );
+
+        await chat.save();
+
+    } else {
+
+        console.log(
+            "Chat not found or does not belong to user."
+        );
+
+    }
+}
 
             // ==================================================
             // RESPONSE

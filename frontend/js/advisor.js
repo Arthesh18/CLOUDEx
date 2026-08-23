@@ -2,7 +2,44 @@
 // CLOUDEX AI ADVISOR
 // =========================================================
 
-document.addEventListener("DOMContentLoaded", () => {
+const API_BASE_URL =
+    window.location.hostname === "localhost"
+        ? "http://localhost:5000"
+        : "https://cloudex-o2xm.onrender.com";
+
+let conversation = [];
+let currentChatId = null;
+let currentUserId = null;
+
+
+// =========================================================
+// INITIALIZE ADVISOR
+// =========================================================
+
+document.addEventListener("DOMContentLoaded", async () => {
+
+    const storedUser =
+        localStorage.getItem("cloudexUser");
+
+    if (!storedUser) {
+        window.location.href = "login.html";
+        return;
+    }
+
+    const user = JSON.parse(storedUser);
+
+    if (!user.id) {
+        console.error("User ID not found.");
+        window.location.href = "login.html";
+        return;
+    }
+
+    currentUserId = user.id;
+
+
+    // =====================================================
+    // GET HTML ELEMENTS
+    // =====================================================
 
     const chatForm =
         document.getElementById("chatForm");
@@ -27,10 +64,116 @@ document.addEventListener("DOMContentLoaded", () => {
 
 
     // =====================================================
-    // CONVERSATION MEMORY
+    // LOAD EXISTING CHAT OR CREATE NEW CHAT
     // =====================================================
 
-    let conversation = [];
+    try {
+
+        const historyResponse =
+            await fetch(
+                `${API_BASE_URL}/api/chat/user/${currentUserId}`
+            );
+
+        const historyData =
+            await historyResponse.json();
+
+
+        if (
+            historyResponse.ok &&
+            historyData.success &&
+            Array.isArray(historyData.chats) &&
+            historyData.chats.length > 0
+        ) {
+
+            // Use the most recently updated chat
+            currentChatId =
+                historyData.chats[0]._id;
+
+
+            const chatResponse =
+                await fetch(
+                    `${API_BASE_URL}/api/chat/${currentChatId}`
+                );
+
+            const chatData =
+                await chatResponse.json();
+
+
+            if (
+                chatResponse.ok &&
+                chatData.success &&
+                chatData.chat
+            ) {
+
+                conversation =
+                    Array.isArray(
+                        chatData.chat.messages
+                    )
+                        ? chatData.chat.messages.map(
+                            (message) => ({
+                                role: message.role,
+                                content: message.content
+                            })
+                        )
+                        : [];
+
+            }
+
+        } else {
+
+            // No previous chat exists
+            const chatResponse =
+                await fetch(
+                    `${API_BASE_URL}/api/chat`,
+                    {
+                        method: "POST",
+
+                        headers: {
+                            "Content-Type":
+                                "application/json"
+                        },
+
+                        body: JSON.stringify({
+                            userId:
+                                currentUserId
+                        })
+                    }
+                );
+
+
+            const chatData =
+                await chatResponse.json();
+
+
+            if (
+                !chatResponse.ok ||
+                !chatData.success
+            ) {
+
+                console.error(
+                    "Could not create chat."
+                );
+
+                return;
+            }
+
+
+            currentChatId =
+                chatData.chat._id;
+
+            conversation = [];
+
+        }
+
+    } catch (error) {
+
+        console.error(
+            "Could not load chat history:",
+            error
+        );
+
+        return;
+    }
 
 
     // =====================================================
@@ -99,6 +242,43 @@ document.addEventListener("DOMContentLoaded", () => {
 
 
     // =====================================================
+    // BASIC TEXT FORMATTING
+    // =====================================================
+
+    function formatMessage(text) {
+
+        if (!text) {
+            return "";
+        }
+
+        return text
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;")
+            .replace(
+                /\*\*(.*?)\*\*/g,
+                "<strong>$1</strong>"
+            )
+            .replace(/\n/g, "<br>");
+
+    }
+
+
+    // =====================================================
+    // SCROLL CHAT
+    // =====================================================
+
+    function scrollToBottom() {
+
+        chatMessages.scrollTo({
+            top: chatMessages.scrollHeight,
+            behavior: "smooth"
+        });
+
+    }
+
+
+    // =====================================================
     // DETECT RECOMMENDED PROVIDER
     // =====================================================
 
@@ -108,14 +288,8 @@ document.addEventListener("DOMContentLoaded", () => {
             return null;
         }
 
-
         const lowerText =
             text.toLowerCase();
-
-
-        /*
-         * Look for recommendation-style phrases first.
-         */
 
         const recommendationPatterns = [
 
@@ -129,7 +303,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
         ];
 
-
         let recommendationArea =
             lowerText;
 
@@ -142,22 +315,17 @@ document.addEventListener("DOMContentLoaded", () => {
             const match =
                 lowerText.match(pattern);
 
-
             if (match) {
 
                 recommendationArea =
                     match[0];
 
                 break;
-
             }
-
         }
 
 
-        // -------------------------------------------------
         // Check recommendation area first
-        // -------------------------------------------------
 
         for (
             const key in providerMap
@@ -165,7 +333,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
             const provider =
                 providerMap[key];
-
 
             for (
                 const alias
@@ -179,17 +346,12 @@ document.addEventListener("DOMContentLoaded", () => {
                 ) {
 
                     return provider;
-
                 }
-
             }
-
         }
 
 
-        // -------------------------------------------------
         // Fallback: search complete response
-        // -------------------------------------------------
 
         for (
             const key in providerMap
@@ -197,7 +359,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
             const provider =
                 providerMap[key];
-
 
             for (
                 const alias
@@ -211,11 +372,8 @@ document.addEventListener("DOMContentLoaded", () => {
                 ) {
 
                     return provider;
-
                 }
-
             }
-
         }
 
 
@@ -235,46 +393,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
         try {
 
-            // ---------------------------------------------
-            // Get logged-in user
-            // ---------------------------------------------
-
-            const storedUser =
-                localStorage.getItem(
-                    "cloudexUser"
-                );
-
-
-            if (!storedUser) {
-
-                console.warn(
-                    "No logged-in CLOUDEx user found."
-                );
-
-                return;
-
-            }
-
-
-            const user =
-                JSON.parse(storedUser);
-
-
-            if (!user.id) {
-
-                console.warn(
-                    "CLOUDEx user ID not found."
-                );
-
-                return;
-
-            }
-
-
-            // ---------------------------------------------
-            // Detect provider
-            // ---------------------------------------------
-
             const provider =
                 detectProvider(aiReply);
 
@@ -282,21 +400,16 @@ document.addEventListener("DOMContentLoaded", () => {
             if (!provider) {
 
                 console.log(
-                    "No cloud provider detected. Recommendation not saved."
+                    "No cloud provider detected."
                 );
 
                 return;
-
             }
 
 
-            // ---------------------------------------------
-            // Save recommendation
-            // ---------------------------------------------
-
             const response =
                 await fetch(
-                    "https://cloudex-o2xm.onrender.com/api/recommendations/save",
+                    `${API_BASE_URL}/api/recommendations/save`,
                     {
                         method: "POST",
 
@@ -308,7 +421,7 @@ document.addEventListener("DOMContentLoaded", () => {
                         body: JSON.stringify({
 
                             userId:
-                                user.id,
+                                currentUserId,
 
                             userMessage:
                                 userMessage,
@@ -320,7 +433,6 @@ document.addEventListener("DOMContentLoaded", () => {
                                 aiReply
 
                         })
-
                     }
                 );
 
@@ -340,7 +452,6 @@ document.addEventListener("DOMContentLoaded", () => {
                 );
 
                 return;
-
             }
 
 
@@ -348,13 +459,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 "Recommendation saved successfully."
             );
 
-
         } catch (error) {
-
-            /*
-             * Saving history should NOT break
-             * the AI Advisor.
-             */
 
             console.error(
                 "Recommendation save error:",
@@ -418,6 +523,61 @@ document.addEventListener("DOMContentLoaded", () => {
 
 
     // =====================================================
+    // PROVIDER ACTION BUTTONS
+    // =====================================================
+
+    function setupProviderButtons(container) {
+
+        const exploreButton =
+            container.querySelector(
+                ".explore-provider-btn"
+            );
+
+        const compareButton =
+            container.querySelector(
+                ".compare-provider-btn"
+            );
+
+
+        if (exploreButton) {
+
+            exploreButton.addEventListener(
+                "click",
+                () => {
+
+                    const provider =
+                        exploreButton.dataset.provider;
+
+                    window.location.href =
+                        `cloud-explorer.html?provider=${encodeURIComponent(provider)}`;
+
+                }
+            );
+
+        }
+
+
+        if (compareButton) {
+
+            compareButton.addEventListener(
+                "click",
+                () => {
+
+                    const provider =
+                        compareButton.dataset.provider;
+
+                    window.location.href =
+                        `cloud-explorer.html?compare=${encodeURIComponent(provider)}`;
+
+                }
+            );
+
+        }
+
+    }
+
+
+    // =====================================================
     // ADD MESSAGE TO CHAT
     // =====================================================
 
@@ -460,13 +620,11 @@ document.addEventListener("DOMContentLoaded", () => {
                 ${avatar}
             </div>
 
-
             <div class="message-content">
 
                 <div class="message-name">
                     ${name}
                 </div>
-
 
                 <div class="message-bubble">
 
@@ -481,17 +639,9 @@ document.addEventListener("DOMContentLoaded", () => {
         `;
 
 
-        chatMessages.appendChild(
-            message
-        );
+        chatMessages.appendChild(message);
 
-
-        // Add button events
-
-        setupProviderButtons(
-            message
-        );
-
+        setupProviderButtons(message);
 
         scrollToBottom();
 
@@ -499,129 +649,23 @@ document.addEventListener("DOMContentLoaded", () => {
 
 
     // =====================================================
-    // PROVIDER ACTION BUTTONS
+    // LOAD SAVED MESSAGES INTO CHAT UI
     // =====================================================
 
-    function setupProviderButtons(
-        container
-    ) {
+    if (conversation.length > 0) {
 
-        const exploreButton =
-            container.querySelector(
-                ".explore-provider-btn"
-            );
+        chatMessages.innerHTML = "";
 
+        conversation.forEach(
+            (message) => {
 
-        const compareButton =
-            container.querySelector(
-                ".compare-provider-btn"
-            );
+                addMessage(
+                    message.role,
+                    message.content
+                );
 
-
-        // -------------------------------------------------
-        // Explore provider
-        // -------------------------------------------------
-
-        if (exploreButton) {
-
-            exploreButton.addEventListener(
-                "click",
-                () => {
-
-                    const provider =
-                        exploreButton.dataset.provider;
-
-
-                    window.location.href =
-                        `cloud-explorer.html?provider=${encodeURIComponent(provider)}`;
-
-                }
-            );
-
-        }
-
-
-        // -------------------------------------------------
-        // Compare providers
-        // -------------------------------------------------
-
-        if (compareButton) {
-
-            compareButton.addEventListener(
-                "click",
-                () => {
-
-                    const provider =
-                        compareButton.dataset.provider;
-
-
-                    window.location.href =
-                        `cloud-explorer.html?compare=${encodeURIComponent(provider)}`;
-
-                }
-            );
-
-        }
-
-    }
-
-
-    // =====================================================
-    // BASIC TEXT FORMATTING
-    // =====================================================
-
-    function formatMessage(text) {
-
-        if (!text) {
-            return "";
-        }
-
-
-        return text
-
-            .replace(
-                /&/g,
-                "&amp;"
-            )
-
-            .replace(
-                /</g,
-                "&lt;"
-            )
-
-            .replace(
-                />/g,
-                "&gt;"
-            )
-
-            .replace(
-                /\*\*(.*?)\*\*/g,
-                "<strong>$1</strong>"
-            )
-
-            .replace(
-                /\n/g,
-                "<br>"
-            );
-
-    }
-
-
-    // =====================================================
-    // SCROLL CHAT TO BOTTOM
-    // =====================================================
-
-    function scrollToBottom() {
-
-        chatMessages.scrollTo({
-
-            top:
-                chatMessages.scrollHeight,
-
-            behavior:
-                "smooth"
-
-        });
+            }
+        );
 
     }
 
@@ -635,7 +679,6 @@ document.addEventListener("DOMContentLoaded", () => {
         typingIndicator.classList.add(
             "active"
         );
-
 
         scrollToBottom();
 
@@ -655,9 +698,7 @@ document.addEventListener("DOMContentLoaded", () => {
     // SEND MESSAGE TO BACKEND
     // =====================================================
 
-    async function sendMessage(
-        message
-    ) {
+    async function sendMessage(message) {
 
         if (
             !message ||
@@ -665,7 +706,6 @@ document.addEventListener("DOMContentLoaded", () => {
         ) {
 
             return;
-
         }
 
 
@@ -673,63 +713,50 @@ document.addEventListener("DOMContentLoaded", () => {
             message.trim();
 
 
-        // -------------------------------------------------
-        // Show user message
-        // -------------------------------------------------
-
         addMessage(
             "user",
             cleanMessage
         );
 
 
-        messageInput.value =
-            "";
-
+        messageInput.value = "";
 
         messageInput.style.height =
             "auto";
 
-
-        sendButton.disabled =
-            true;
-
+        sendButton.disabled = true;
 
         showTyping();
 
 
         try {
 
-            // ---------------------------------------------
-            // Send message to AI backend
-            // ---------------------------------------------
-
             const response =
                 await fetch(
-                    "https://cloudex-o2xm.onrender.com/api/ai/chat",
+                    `${API_BASE_URL}/api/ai/chat`,
                     {
-
-                        method:
-                            "POST",
+                        method: "POST",
 
                         headers: {
-
                             "Content-Type":
                                 "application/json"
-
                         },
 
-                        body:
-                            JSON.stringify({
+                        body: JSON.stringify({
 
-                                message:
-                                    cleanMessage,
+                            message:
+                                cleanMessage,
 
-                                conversation:
-                                    conversation
+                            conversation:
+                                conversation,
 
-                            })
+                            userId:
+                                currentUserId,
 
+                            chatId:
+                                currentChatId
+
+                        })
                     }
                 );
 
@@ -744,18 +771,14 @@ document.addEventListener("DOMContentLoaded", () => {
             ) {
 
                 throw new Error(
-
                     data.message ||
                     "Cloudex AI could not respond."
-
                 );
 
             }
 
 
-            // ---------------------------------------------
-            // Save conversation
-            // ---------------------------------------------
+            // Update local conversation
 
             if (
                 Array.isArray(
@@ -770,8 +793,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
                 conversation.push({
 
-                    role:
-                        "user",
+                    role: "user",
 
                     content:
                         cleanMessage
@@ -781,8 +803,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
                 conversation.push({
 
-                    role:
-                        "assistant",
+                    role: "assistant",
 
                     content:
                         data.reply
@@ -795,19 +816,13 @@ document.addEventListener("DOMContentLoaded", () => {
             hideTyping();
 
 
-            // ---------------------------------------------
-            // Show AI response
-            // ---------------------------------------------
-
             addMessage(
                 "assistant",
                 data.reply
             );
 
 
-            // ---------------------------------------------
-            // SAVE RECOMMENDATION TO MONGODB
-            // ---------------------------------------------
+            // Save recommendation
 
             await saveRecommendation(
                 cleanMessage,
@@ -827,19 +842,13 @@ document.addEventListener("DOMContentLoaded", () => {
 
 
             addMessage(
-
                 "assistant",
-
                 "Sorry, I couldn't connect to Cloudex AI right now. Please make sure the backend is running and try again."
-
             );
-
 
         } finally {
 
-            sendButton.disabled =
-                false;
-
+            sendButton.disabled = false;
 
             messageInput.focus();
 
@@ -857,7 +866,6 @@ document.addEventListener("DOMContentLoaded", () => {
         (event) => {
 
             event.preventDefault();
-
 
             sendMessage(
                 messageInput.value
@@ -883,7 +891,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
                 event.preventDefault();
 
-
                 chatForm.requestSubmit();
 
             }
@@ -902,7 +909,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
             messageInput.style.height =
                 "auto";
-
 
             messageInput.style.height =
                 Math.min(
@@ -928,10 +934,7 @@ document.addEventListener("DOMContentLoaded", () => {
                     const message =
                         button.dataset.message;
 
-
-                    sendMessage(
-                        message
-                    );
+                    sendMessage(message);
 
                 }
             );
@@ -941,55 +944,103 @@ document.addEventListener("DOMContentLoaded", () => {
 
 
     // =====================================================
-    // CLEAR CONVERSATION
+    // CLEAR / NEW CONVERSATION
     // =====================================================
 
     clearChatButton.addEventListener(
         "click",
-        () => {
+        async () => {
 
-            conversation = [];
+            try {
+
+                const response =
+                    await fetch(
+                        `${API_BASE_URL}/api/chat`,
+                        {
+                            method: "POST",
+
+                            headers: {
+                                "Content-Type":
+                                    "application/json"
+                            },
+
+                            body: JSON.stringify({
+                                userId:
+                                    currentUserId
+                            })
+                        }
+                    );
 
 
-            chatMessages.innerHTML = `
-
-                <div class="message ai-message">
-
-                    <div class="message-avatar">
-                        ☁
-                    </div>
+                const data =
+                    await response.json();
 
 
-                    <div class="message-content">
+                if (
+                    !response.ok ||
+                    !data.success
+                ) {
 
-                        <div class="message-name">
-                            Cloudex AI
+                    throw new Error(
+                        data.message ||
+                        "Could not start a new conversation."
+                    );
+
+                }
+
+
+                currentChatId =
+                    data.chat._id;
+
+                conversation = [];
+
+
+                chatMessages.innerHTML = `
+
+                    <div class="message ai-message">
+
+                        <div class="message-avatar">
+                            ☁
                         </div>
 
+                        <div class="message-content">
 
-                        <div class="message-bubble">
+                            <div class="message-name">
+                                Cloudex AI
+                            </div>
 
-                            <p>
-                                Fresh conversation started. 👋
-                            </p>
+                            <div class="message-bubble">
 
+                                <p>
+                                    Fresh conversation started. 👋
+                                </p>
 
-                            <p>
-                                Tell me what you're planning
-                                to build, and I'll help you
-                                find the right cloud provider.
-                            </p>
+                                <p>
+                                    Tell me what you're planning
+                                    to build, and I'll help you
+                                    find the right cloud provider.
+                                </p>
+
+                            </div>
 
                         </div>
 
                     </div>
 
-                </div>
-
-            `;
+                `;
 
 
-            messageInput.focus();
+                messageInput.focus();
+
+
+            } catch (error) {
+
+                console.error(
+                    "Could not start a new conversation:",
+                    error
+                );
+
+            }
 
         }
     );
