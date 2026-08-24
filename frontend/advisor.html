@@ -8,6 +8,7 @@
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
     <link
         href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
         rel="stylesheet"
@@ -22,13 +23,20 @@
     <div class="page-glow glow-one"></div>
     <div class="page-glow glow-two"></div>
 
+
     <!-- Navigation -->
     <header class="advisor-nav">
 
         <a href="index.html" class="brand">
+
             <span class="brand-icon">☁</span>
-            <span>CLOUD<span>Ex</span></span>
+
+            <span>
+                CLOUD<span>Ex</span>
+            </span>
+
         </a>
+
 
         <div class="nav-right">
 
@@ -37,8 +45,11 @@
             </a>
 
             <div class="status-pill">
+
                 <span class="status-dot"></span>
+
                 AI Online
+
             </div>
 
         </div>
@@ -46,203 +57,337 @@
     </header>
 
 
+
     <!-- Main Advisor -->
     <main class="advisor-container">
+
 
         <!-- Intro -->
         <section class="advisor-intro">
 
             <div class="ai-badge">
+
                 <span>✦</span>
+
                 Cloudex AI Advisor
+
             </div>
 
+
             <h1>
+
                 Let's find the
+
                 <span>right cloud</span>
+
                 for you.
+
             </h1>
 
+
             <p>
+
                 Tell me what you're building. I'll ask the right questions,
                 understand your requirements, and help you choose the best
                 cloud provider for your needs.
+
             </p>
 
         </section>
 
 
-        <!-- Chat Card -->
-        <section class="chat-card">
 
-            <!-- Chat Header -->
-            <div class="chat-header">
+        <!-- Advisor Workspace -->
+        <div class="advisor-workspace">
 
-                <div class="ai-profile">
 
-                    <div class="ai-avatar">
-                        ☁
-                    </div>
+            <!-- =====================================================
+                 CHAT HISTORY SIDEBAR
+                 ===================================================== -->
+
+            <aside
+                class="chat-history"
+                id="chatHistory"
+            >
+
+                <div class="history-header">
 
                     <div>
-                        <h3>Cloudex AI</h3>
-                        <span>
-                            Your cloud decision partner
+
+                        <span class="history-label">
+                            YOUR CHATS
                         </span>
+
+                        <h3>
+                            Chat History
+                        </h3>
+
+                    </div>
+
+
+                    <button
+                        type="button"
+                        class="history-new-btn"
+                        id="newChatButton"
+                        title="Start a new conversation"
+                    >
+                        +
+                    </button>
+
+                </div>
+
+
+                <div
+                    class="history-list"
+                    id="historyList"
+                >
+
+                    <div class="history-loading">
+
+                        Loading conversations...
+
                     </div>
 
                 </div>
 
-                <button
-                    class="clear-btn"
-                    id="clearChat"
-                    type="button"
+            </aside>
+
+
+
+            <!-- =====================================================
+                 CHAT CARD
+                 ===================================================== -->
+
+            <section class="chat-card">
+
+
+                <!-- Chat Header -->
+                <div class="chat-header">
+
+                    <div class="ai-profile">
+
+                        <div class="ai-avatar">
+                            ☁
+                        </div>
+
+
+                        <div>
+
+                            <h3>
+                                Cloudex AI
+                            </h3>
+
+                            <span>
+                                Your cloud decision partner
+                            </span>
+
+                        </div>
+
+                    </div>
+
+
+                    <button
+                        class="clear-btn"
+                        id="clearChat"
+                        type="button"
+                    >
+                        New conversation
+                    </button>
+
+                </div>
+
+
+
+                <!-- =================================================
+                     Messages
+                     ================================================= -->
+
+                <div
+                    class="chat-messages"
+                    id="chatMessages"
                 >
-                    New conversation
-                </button>
 
-            </div>
+                    <!-- Welcome Message -->
+                    <div class="message ai-message">
+
+                        <div class="message-avatar">
+                            ☁
+                        </div>
 
 
-            <!-- Messages -->
-            <div
-                class="chat-messages"
-                id="chatMessages"
-            >
+                        <div class="message-content">
 
-                <!-- Welcome Message -->
-                <div class="message ai-message">
+                            <div class="message-name">
+                                Cloudex AI
+                            </div>
+
+
+                            <div class="message-bubble">
+
+                                <p>
+                                    Hey! 👋 I'm your Cloudex AI advisor.
+                                </p>
+
+
+                                <p>
+                                    Tell me what you're planning to build,
+                                    and I'll help you figure out which cloud
+                                    provider fits your requirements best.
+                                </p>
+
+
+                                <p>
+                                    I won't recommend a provider immediately —
+                                    I'll ask you a few questions first so the
+                                    recommendation actually makes sense for you.
+                                </p>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                </div>
+
+
+
+                <!-- =================================================
+                     Typing Indicator
+                     ================================================= -->
+
+                <div
+                    class="typing-indicator"
+                    id="typingIndicator"
+                >
 
                     <div class="message-avatar">
                         ☁
                     </div>
 
-                    <div class="message-content">
 
-                        <div class="message-name">
-                            Cloudex AI
-                        </div>
+                    <div class="typing-bubble">
 
-                        <div class="message-bubble">
-
-                            <p>
-                                Hey! 👋 I'm your Cloudex AI advisor.
-                            </p>
-
-                            <p>
-                                Tell me what you're planning to build,
-                                and I'll help you figure out which cloud
-                                provider fits your requirements best.
-                            </p>
-
-                            <p>
-                                I won't recommend a provider immediately —
-                                I'll ask you a few questions first so the
-                                recommendation actually makes sense for you.
-                            </p>
-
-                        </div>
+                        <span></span>
+                        <span></span>
+                        <span></span>
 
                     </div>
 
                 </div>
 
-            </div>
 
 
-            <!-- Typing Indicator -->
-            <div
-                class="typing-indicator"
-                id="typingIndicator"
-            >
+                <!-- =================================================
+                     Input
+                     ================================================= -->
 
-                <div class="message-avatar">
-                    ☁
-                </div>
+                <div class="chat-input-area">
 
-                <div class="typing-bubble">
-                    <span></span>
-                    <span></span>
-                    <span></span>
-                </div>
+                    <form id="chatForm">
 
-            </div>
+                        <div class="input-wrapper">
+
+                            <textarea
+                                id="messageInput"
+                                placeholder="Tell Cloudex what you're building..."
+                                rows="1"
+                                autocomplete="off"
+                            ></textarea>
 
 
-            <!-- Input -->
-            <div class="chat-input-area">
+                            <button
+                                type="submit"
+                                id="sendButton"
+                                class="send-button"
+                                aria-label="Send message"
+                            >
 
-                <form id="chatForm">
+                                <span>
+                                    ↑
+                                </span>
 
-                    <div class="input-wrapper">
+                            </button>
 
-                        <textarea
-                            id="messageInput"
-                            placeholder="Tell Cloudex what you're building..."
-                            rows="1"
-                            autocomplete="off"
-                        ></textarea>
+                        </div>
 
-                        <button
-                            type="submit"
-                            id="sendButton"
-                            class="send-button"
-                            aria-label="Send message"
-                        >
-                            <span>↑</span>
-                        </button>
+                    </form>
+
+
+                    <div class="input-hint">
+
+                        Cloudex AI will ask follow-up questions before making a recommendation.
 
                     </div>
 
-                </form>
-
-                <div class="input-hint">
-                    Cloudex AI will ask follow-up questions before making a recommendation.
                 </div>
 
-            </div>
+            </section>
 
-        </section>
+        </div>
 
 
-        <!-- Quick Prompts -->
+
+        <!-- =========================================================
+             QUICK PROMPTS
+             ========================================================= -->
+
         <section class="quick-section">
 
-            <p>Not sure where to start?</p>
+            <p>
+                Not sure where to start?
+            </p>
+
 
             <div class="quick-prompts">
+
 
                 <button
                     type="button"
                     class="quick-prompt"
                     data-message="I want to build an e-commerce website."
                 >
+
                     🛒 E-commerce website
+
                 </button>
+
+
 
                 <button
                     type="button"
                     class="quick-prompt"
                     data-message="I want to deploy a mobile application backend."
                 >
+
                     📱 Mobile app backend
+
                 </button>
+
+
 
                 <button
                     type="button"
                     class="quick-prompt"
                     data-message="I want to build an AI or machine learning application."
                 >
+
                     🤖 AI / ML project
+
                 </button>
+
+
 
                 <button
                     type="button"
                     class="quick-prompt"
                     data-message="I want to host a college project with a limited budget."
                 >
+
                     🎓 College project
+
                 </button>
+
 
             </div>
 
@@ -251,7 +396,10 @@
     </main>
 
 
+
+    <!-- Scripts -->
     <script src="js/advisor.js"></script>
     <script src="js/auth.js"></script>
+
 </body>
 </html>

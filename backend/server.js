@@ -5,6 +5,42 @@ const mongoose = require("mongoose");
 const path = require("path");
 const Groq = require("groq-sdk");
 const ChatHistory = require("./models/ChatHistory");
+// ==================================================
+// GENERATE CHAT TITLE
+// ==================================================
+
+function generateChatTitle(message) {
+
+    let title = message
+        .trim()
+        .replace(/\s+/g, " ");
+
+    title = title.replace(
+        /^i\s+(want|need|would like)\s+to\s+/i,
+        ""
+    );
+
+    title = title.replace(
+        /^(build|create|make|develop|deploy|host)\s+/i,
+        ""
+    );
+
+    if (title.length > 45) {
+
+        title =
+            title.substring(0, 45).trim() +
+            "...";
+
+    }
+
+    if (!title) {
+        return "New Conversation";
+    }
+
+    return title.charAt(0).toUpperCase() +
+        title.slice(1);
+
+}
 const authRoutes = require("./routes/authRoutes");
 const recommendationRoutes =
     require("./routes/recommendationRoutes");
@@ -885,7 +921,7 @@ Speak simply.
                 }
 
             ];
-            // ==================================================
+           // ==================================================
 // SAVE CHAT HISTORY
 // ==================================================
 
@@ -898,6 +934,10 @@ if (userId && chatId) {
 
     if (chat) {
 
+        // ------------------------------------------
+        // SAVE MESSAGES
+        // ------------------------------------------
+
         chat.messages.push(
             {
                 role: "user",
@@ -909,7 +949,36 @@ if (userId && chatId) {
             }
         );
 
+
+        // ------------------------------------------
+        // CREATE TITLE FROM FIRST USER MESSAGE
+        // ------------------------------------------
+
+        if (
+            !chat.title ||
+            chat.title === "New Conversation"
+        ) {
+
+            chat.title =
+                generateChatTitle(
+                    message
+                );
+
+        }
+
+
+        // ------------------------------------------
+        // SAVE CHAT
+        // ------------------------------------------
+
         await chat.save();
+
+
+        console.log(
+            "Chat saved:",
+            chat.title
+        );
+
 
     } else {
 
@@ -918,6 +987,7 @@ if (userId && chatId) {
         );
 
     }
+
 }
 
             // ==================================================
