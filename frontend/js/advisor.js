@@ -2,11 +2,7 @@
 // CLOUDEX AI ADVISOR
 // =========================================================
 
-const API_BASE_URL =
-    window.location.hostname === "localhost" ||
-    window.location.hostname === "127.0.0.1"
-        ? "http://localhost:5000"
-        : "https://cloudex-o2xm.onrender.com";
+const API_BASE_URL = "http://localhost:5000";
 
 let conversation = [];
 let currentChatId = null;

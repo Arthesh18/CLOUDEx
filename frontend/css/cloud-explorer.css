@@ -1875,3 +1875,1223 @@ body {
     }
 
 }
+/* =====================================================
+   DIRECT SERVICE COMPARISON
+===================================================== */
+
+.comparable-services-area {
+    margin-top: 28px;
+    padding: 24px;
+    border-radius: 18px;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.comparable-services-header span,
+.direct-comparison-header span,
+.direct-comparison-conclusion span {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+    opacity: 0.65;
+}
+
+.comparable-services-header h4 {
+    margin: 6px 0;
+    font-size: 20px;
+}
+
+.comparable-services-header p {
+    margin: 0;
+    opacity: 0.65;
+    font-size: 14px;
+}
+
+.comparable-services-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-top: 18px;
+}
+
+.compare-service-group {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 13px 16px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.04);
+    color: inherit;
+    cursor: pointer;
+    transition: 0.2s ease;
+}
+
+.compare-service-group:hover {
+    transform: translateY(-2px);
+    border-color: rgba(255, 255, 255, 0.25);
+}
+
+.compare-service-group i {
+    font-size: 14px;
+}
+
+/* =====================================================
+   DIRECT COMPARISON - EQUIVALENT SERVICES
+===================================================== */
+
+.comparable-services-area {
+    margin-top: 24px;
+    padding: 24px 26px;
+
+    border-top: 1px solid #ececf3;
+
+    background: #ffffff;
+}
+
+
+.comparable-services-header {
+    margin-bottom: 18px;
+}
+
+
+.comparable-services-header span {
+    display: block;
+
+    margin-bottom: 7px;
+
+    color: #77768a;
+
+    font-size: 11px;
+    font-weight: 700;
+
+    letter-spacing: 1.5px;
+}
+
+
+.comparable-services-header h4 {
+    margin: 0 0 7px;
+
+    color: #252431;
+
+    font-size: 22px;
+    font-weight: 700;
+}
+
+
+.comparable-services-header p {
+    margin: 0;
+
+    max-width: 520px;
+
+    color: #777686;
+
+    font-size: 14px;
+
+    line-height: 1.5;
+}
+
+
+/* =====================================================
+   COMPARISON OPTIONS
+===================================================== */
+
+.comparable-services-list {
+    display: flex;
+    flex-direction: column;
+
+    gap: 12px;
+
+    margin-top: 20px;
+}
+
+
+.compare-service-group {
+    width: 100%;
+
+    display: flex;
+    align-items: center;
+
+    padding: 15px 17px;
+
+    border: 1px solid #e7e6ef;
+    border-radius: 13px;
+
+    background: #fafafd;
+
+    color: #282735;
+
+    text-align: left;
+
+    cursor: pointer;
+
+    transition:
+        transform 0.2s ease,
+        border-color 0.2s ease,
+        background 0.2s ease,
+        box-shadow 0.2s ease;
+}
+
+
+/* Service names */
+
+.compare-service-group > span {
+    flex: 1;
+
+    min-width: 0;
+
+    padding-right: 18px;
+
+    color: #363544;
+
+    font-size: 13px;
+    font-weight: 600;
+
+    line-height: 1.45;
+}
+
+
+/* Scale icon */
+
+.compare-service-group > i {
+    flex-shrink: 0;
+
+    width: 34px;
+    height: 34px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    margin-right: 10px;
+
+    border-radius: 9px;
+
+    background: #eeebff;
+
+    color: #705ee8;
+
+    font-size: 14px;
+}
+
+
+/* Compare text */
+
+.compare-service-group::after {
+    content: "Compare";
+
+    flex-shrink: 0;
+
+    padding: 8px 13px;
+
+    border-radius: 8px;
+
+    background: #7160e8;
+
+    color: #ffffff;
+
+    font-size: 12px;
+    font-weight: 600;
+}
+
+
+/* Remove the original text beside icon */
+
+.compare-service-group {
+    font-size: 0;
+}
+
+
+/* Restore service-name font */
+
+.compare-service-group > span {
+    font-size: 13px;
+}
+
+
+/* Hover */
+
+.compare-service-group:hover {
+    transform: translateY(-1px);
+
+    border-color: #d8d2ff;
+
+    background: #fcfbff;
+
+    box-shadow:
+        0 5px 16px rgba(70, 60, 130, 0.08);
+}
+
+
+.compare-service-group:hover > i {
+    background: #e6e1ff;
+}
+
+
+/* =====================================================
+   MOBILE
+===================================================== */
+
+@media (max-width: 650px) {
+
+    .comparable-services-area {
+        padding: 20px 16px;
+    }
+
+
+    .compare-service-group {
+        align-items: flex-start;
+
+        flex-wrap: wrap;
+    }
+
+
+    .compare-service-group > span {
+        padding-right: 0;
+
+        line-height: 1.5;
+    }
+
+
+    .compare-service-group > i {
+        margin-left: 10px;
+    }
+
+
+    .compare-service-group::after {
+        width: 100%;
+
+        margin-top: 10px;
+
+        text-align: center;
+    }
+
+}
+/* =====================================================
+   MOBILE
+===================================================== */
+
+@media (max-width: 700px) {
+
+    .direct-comparison-header h2 {
+        font-size: 22px;
+    }
+
+    .direct-service-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .comparable-services-list {
+        flex-direction: column;
+    }
+
+    .compare-service-group {
+        width: 100%;
+        justify-content: space-between;
+    }
+
+}
+/* =====================================================
+   SERVICE ITEMS INSIDE PROVIDER COMPARISON
+===================================================== */
+
+.service-items {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+
+.service-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    padding: 16px;
+    border-radius: 14px;
+    background: rgba(255, 255, 255, 0.55);
+    border: 1px solid rgba(100, 100, 150, 0.10);
+    transition: all 0.2s ease;
+}
+
+
+.service-item:hover {
+    transform: translateY(-2px);
+    border-color: rgba(120, 100, 255, 0.25);
+    box-shadow: 0 6px 18px rgba(50, 40, 100, 0.08);
+}
+
+
+.service-item-main {
+    flex: 1;
+    min-width: 0;
+}
+
+
+.service-item-name {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    margin-bottom: 7px;
+}
+
+
+.service-item-name i {
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    background: rgba(125, 105, 255, 0.14);
+    color: #7d6cff;
+    font-size: 11px;
+}
+
+
+.service-item-name strong {
+    font-size: 15px;
+    color: #252535;
+}
+
+
+.service-type {
+    display: inline-block;
+    margin-left: 33px;
+    margin-bottom: 6px;
+    padding: 4px 9px;
+    border-radius: 7px;
+    background: rgba(125, 105, 255, 0.10);
+    color: #7665ed;
+    font-size: 11px;
+    font-weight: 600;
+}
+
+
+.service-item-main p {
+    margin: 4px 0 6px 33px;
+    color: #737386;
+    font-size: 12px;
+    line-height: 1.5;
+}
+
+
+.service-item-main small {
+    display: block;
+    margin-left: 33px;
+    color: #77778a;
+    font-size: 11px;
+}
+
+
+.service-item-main small i {
+    margin-right: 5px;
+    color: #7665ed;
+}
+
+
+/* =====================================================
+   VIEW DETAILS BUTTON
+===================================================== */
+
+.service-details-button {
+    flex-shrink: 0;
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    padding: 9px 13px;
+    border: 1px solid rgba(100, 100, 150, 0.14);
+    border-radius: 9px;
+    background: white;
+    color: #4f4c62;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+
+.service-details-button i {
+    font-size: 10px;
+}
+
+
+.service-details-button:hover {
+    background: #f4f1ff;
+    color: #7160ed;
+    border-color: rgba(113, 96, 237, 0.25);
+    transform: translateX(2px);
+}
+
+
+/* =====================================================
+   PROVIDER SERVICE CARD
+===================================================== */
+
+.service-provider-card {
+    padding: 18px;
+    border-radius: 18px;
+    background: rgba(255, 255, 255, 0.72);
+    border: 1px solid rgba(100, 100, 150, 0.10);
+}
+
+
+.service-provider-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 16px;
+}
+
+
+.service-provider-header h4 {
+    margin: 0 0 3px;
+    color: #292839;
+    font-size: 17px;
+}
+
+
+.service-provider-header span {
+    color: #858596;
+    font-size: 11px;
+}
+
+
+.service-provider-icon {
+    width: 38px;
+    height: 38px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 11px;
+    background: rgba(125, 105, 255, 0.10);
+    color: #7665ed;
+}
+
+
+.service-unavailable {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 14px;
+    color: #888898;
+    font-size: 12px;
+}
+
+
+/* =====================================================
+   MOBILE
+===================================================== */
+
+@media (max-width: 700px) {
+
+    .service-item {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .service-details-button {
+        width: 100%;
+        justify-content: center;
+    }
+
+}
+/* =====================================================
+   SERVICE INFORMATION MODAL
+===================================================== */
+
+#providerModal {
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    padding: 30px;
+
+    background: rgba(20, 20, 35, 0.55);
+
+    backdrop-filter: blur(8px);
+}
+
+
+/* MODAL BOX */
+
+#providerModal .modal-content {
+    position: relative;
+
+    width: min(680px, 92vw);
+    max-height: 82vh;
+
+    overflow-y: auto;
+
+    padding: 34px;
+
+    border-radius: 24px;
+
+    background: #ffffff;
+
+    box-shadow:
+        0 25px 70px rgba(20, 20, 40, 0.25);
+
+    color: #242331;
+}
+
+
+/* CLOSE BUTTON */
+
+#providerModal .modal-close,
+#providerModal #modalClose {
+    position: absolute;
+
+    top: 18px;
+    right: 18px;
+
+    width: 42px;
+    height: 42px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    border: none;
+    border-radius: 50%;
+
+    background: #f3f3f8;
+
+    color: #252535;
+
+    font-size: 18px;
+
+    cursor: pointer;
+
+    transition: 0.2s ease;
+}
+
+
+#providerModal .modal-close:hover,
+#providerModal #modalClose:hover {
+    background: #e9e7ff;
+    color: #6d5ce7;
+
+    transform: rotate(90deg);
+}
+
+
+/* HEADER */
+
+.service-details-header {
+    display: flex;
+    align-items: center;
+
+    gap: 16px;
+
+    margin-bottom: 30px;
+
+    padding-right: 50px;
+}
+
+
+.service-details-icon {
+    width: 54px;
+    height: 54px;
+
+    flex-shrink: 0;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    border-radius: 16px;
+
+    background: #eeebff;
+
+    color: #6d5ce7;
+
+    font-size: 22px;
+}
+
+
+.service-details-header span {
+    display: block;
+
+    margin-bottom: 5px;
+
+    color: #858596;
+
+    font-size: 11px;
+    font-weight: 700;
+
+    letter-spacing: 1.4px;
+}
+
+
+.service-details-header h2 {
+    margin: 0;
+
+    color: #22212d;
+
+    font-size: 28px;
+    font-weight: 700;
+}
+
+
+/* SECTIONS */
+
+.service-detail-section {
+    margin-top: 22px;
+
+    padding: 20px;
+
+    border-radius: 16px;
+
+    background: #f8f8fc;
+
+    border: 1px solid #eeeeF5;
+}
+
+
+.service-detail-section h3 {
+    display: flex;
+    align-items: center;
+
+    gap: 9px;
+
+    margin: 0 0 10px;
+
+    color: #292838;
+
+    font-size: 16px;
+    font-weight: 700;
+}
+
+
+.service-detail-section h3 i {
+    color: #6d5ce7;
+
+    font-size: 15px;
+}
+
+
+.service-detail-section p {
+    margin: 0;
+
+    color: #666677;
+
+    font-size: 14px;
+
+    line-height: 1.65;
+}
+
+
+/* LISTS */
+
+.service-detail-section ul {
+    margin: 10px 0 0;
+
+    padding-left: 20px;
+}
+
+
+.service-detail-section li {
+    margin-bottom: 8px;
+
+    color: #666677;
+
+    font-size: 14px;
+
+    line-height: 1.5;
+}
+
+
+.service-detail-section li::marker {
+    color: #6d5ce7;
+}
+
+
+/* LOADING */
+
+.service-details-loading {
+    min-height: 250px;
+
+    display: flex;
+    flex-direction: column;
+
+    align-items: center;
+    justify-content: center;
+
+    gap: 12px;
+
+    color: #77778a;
+}
+
+
+.service-details-loading i {
+    color: #6d5ce7;
+
+    font-size: 28px;
+}
+
+
+.service-details-loading p {
+    margin: 0;
+
+    font-size: 14px;
+}
+
+
+/* ERROR / EMPTY STATE */
+
+#providerModal .empty-state {
+    padding: 45px 20px;
+
+    text-align: center;
+}
+
+
+#providerModal .empty-state i {
+    margin-bottom: 15px;
+
+    color: #6d5ce7;
+
+    font-size: 30px;
+}
+
+
+#providerModal .empty-state h3 {
+    margin: 0 0 8px;
+
+    color: #292838;
+}
+
+
+#providerModal .empty-state p {
+    margin: 0;
+
+    color: #77778a;
+
+    font-size: 14px;
+}
+
+
+/* SCROLLBAR */
+
+#providerModal .modal-content::-webkit-scrollbar {
+    width: 7px;
+}
+
+
+#providerModal .modal-content::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+
+#providerModal .modal-content::-webkit-scrollbar-thumb {
+    border-radius: 10px;
+
+    background: #d8d7e5;
+}
+
+
+#providerModal .modal-content::-webkit-scrollbar-thumb:hover {
+    background: #bdbbd0;
+}
+
+
+/* =====================================================
+   MOBILE MODAL
+===================================================== */
+
+@media (max-width: 700px) {
+
+    #providerModal {
+        padding: 15px;
+    }
+
+
+    #providerModal .modal-content {
+        width: 100%;
+
+        max-height: 88vh;
+
+        padding: 24px 20px;
+
+        border-radius: 20px;
+    }
+
+
+    .service-details-header h2 {
+        font-size: 23px;
+    }
+
+
+    .service-detail-section {
+        padding: 16px;
+    }
+
+}
+/* =====================================================
+   DIRECT SERVICE COMPARISON RESULT
+===================================================== */
+
+.direct-service-comparison {
+    width: 100%;
+    padding: 28px;
+    box-sizing: border-box;
+}
+
+
+/* =====================================================
+   HEADER
+===================================================== */
+
+.direct-comparison-header {
+    margin-bottom: 24px;
+}
+
+.direct-comparison-header > span {
+    display: block;
+    margin-bottom: 7px;
+
+    color: #77768a;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 1.5px;
+}
+
+.direct-comparison-header h2 {
+    margin: 0 0 8px;
+
+    color: #252431;
+    font-size: 26px;
+    font-weight: 700;
+    line-height: 1.25;
+}
+
+.direct-comparison-header p {
+    margin: 0;
+
+    color: #777686;
+    font-size: 14px;
+    line-height: 1.5;
+}
+
+
+/* =====================================================
+   SERVICE CARDS
+===================================================== */
+
+.direct-service-grid {
+    display: grid;
+
+    grid-template-columns:
+        repeat(
+            auto-fit,
+            minmax(250px, 1fr)
+        );
+
+    gap: 18px;
+}
+
+
+/* Individual service */
+
+.direct-service-card {
+    padding: 22px;
+
+    border: 1px solid #e8e7ef;
+    border-radius: 17px;
+
+    background: #fafafd;
+
+    box-sizing: border-box;
+}
+
+
+/* Provider + service name */
+
+.direct-service-provider {
+    display: flex;
+    align-items: center;
+
+    gap: 12px;
+
+    padding-bottom: 17px;
+
+    border-bottom: 1px solid #ecebf2;
+}
+
+
+.direct-service-provider .service-provider-icon {
+    width: 42px;
+    height: 42px;
+
+    flex-shrink: 0;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    border-radius: 11px;
+
+    background: #eeebff;
+
+    color: #6d5ce7;
+}
+
+
+.direct-service-provider span {
+    display: block;
+
+    margin-bottom: 3px;
+
+    color: #858596;
+
+    font-size: 11px;
+}
+
+
+.direct-service-provider h4 {
+    margin: 0;
+
+    color: #292838;
+
+    font-size: 17px;
+    font-weight: 700;
+}
+
+
+/* =====================================================
+   INFORMATION
+===================================================== */
+
+.direct-service-info {
+    display: flex;
+    flex-direction: column;
+
+    gap: 16px;
+
+    padding-top: 18px;
+}
+
+
+.direct-service-info > div {
+    padding-bottom: 14px;
+
+    border-bottom: 1px solid #eeeeF4;
+}
+
+
+.direct-service-info > div:last-child {
+    padding-bottom: 0;
+
+    border-bottom: none;
+}
+
+
+.direct-service-info strong {
+    display: block;
+
+    margin-bottom: 5px;
+
+    color: #353442;
+
+    font-size: 12px;
+    font-weight: 700;
+}
+
+
+.direct-service-info p {
+    margin: 0;
+
+    color: #777686;
+
+    font-size: 13px;
+
+    line-height: 1.55;
+}
+
+
+/* =====================================================
+   VIEW DETAILS
+===================================================== */
+
+.direct-service-card
+.service-details-button {
+    width: 100%;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    gap: 8px;
+
+    margin-top: 20px;
+    padding: 10px 14px;
+
+    border: 1px solid #dcd7ff;
+    border-radius: 10px;
+
+    background: #f4f1ff;
+
+    color: #6d5ce7;
+
+    font-size: 12px;
+    font-weight: 600;
+
+    cursor: pointer;
+
+    transition: all 0.2s ease;
+}
+
+
+.direct-service-card
+.service-details-button:hover {
+    background: #eae5ff;
+
+    border-color: #cfc7ff;
+
+    transform: translateY(-1px);
+}
+
+
+.direct-service-card
+.service-details-button i {
+    font-size: 10px;
+}
+
+
+/* =====================================================
+   KEY DIFFERENCE
+===================================================== */
+
+.direct-comparison-conclusion {
+    display: flex;
+    align-items: flex-start;
+
+    gap: 15px;
+
+    margin-top: 22px;
+    padding: 20px;
+
+    border: 1px solid #e7e4fa;
+    border-radius: 16px;
+
+    background: #faf9ff;
+}
+
+
+.direct-conclusion-icon {
+    width: 40px;
+    height: 40px;
+
+    flex-shrink: 0;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    border-radius: 11px;
+
+    background: #ebe7ff;
+
+    color: #6d5ce7;
+}
+
+
+.direct-comparison-conclusion span {
+    display: block;
+
+    margin-bottom: 6px;
+
+    color: #77768a;
+
+    font-size: 10px;
+    font-weight: 700;
+
+    letter-spacing: 1.4px;
+}
+
+
+.direct-comparison-conclusion p {
+    margin: 0;
+
+    color: #626172;
+
+    font-size: 13px;
+
+    line-height: 1.6;
+}
+
+
+/* =====================================================
+   BACK BUTTON
+===================================================== */
+
+.back-to-service-comparison {
+    display: inline-flex;
+    align-items: center;
+
+    gap: 8px;
+
+    margin-top: 18px;
+    padding: 10px 15px;
+
+    border: 1px solid #e1dfeb;
+    border-radius: 9px;
+
+    background: #ffffff;
+
+    color: #5f5d70;
+
+    font-size: 12px;
+    font-weight: 600;
+
+    cursor: pointer;
+
+    transition: all 0.2s ease;
+}
+
+
+.back-to-service-comparison:hover {
+    background: #f5f3ff;
+
+    border-color: #d5cff9;
+
+    color: #6d5ce7;
+}
+
+
+.back-to-service-comparison i {
+    font-size: 10px;
+}
+
+
+/* =====================================================
+   MOBILE
+===================================================== */
+
+@media (max-width: 700px) {
+
+    .direct-service-comparison {
+        padding: 20px 16px;
+    }
+
+
+    .direct-comparison-header h2 {
+        font-size: 21px;
+    }
+
+
+    .direct-service-grid {
+        grid-template-columns: 1fr;
+    }
+
+
+    .direct-comparison-conclusion {
+        padding: 16px;
+    }
+
+}

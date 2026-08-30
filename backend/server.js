@@ -52,7 +52,10 @@ const {
     getProviderById,
     getAllServices
 } = require("./data/cloudData");
-
+const {
+    getServiceDetails,
+    getAllServiceData
+} = require("./data/serviceData");
 dotenv.config();
 
 const app = express();
@@ -246,7 +249,54 @@ app.get(
 
     }
 );
+// ==================================================
+// DETAILED SERVICE INFORMATION
+// ==================================================
 
+app.get(
+    "/api/services/:providerId/:serviceName",
+    (req, res) => {
+
+        try {
+
+            const service =
+                getServiceDetails(
+                    req.params.providerId,
+                    req.params.serviceName
+                );
+
+            if (!service) {
+
+                return res.status(404).json({
+                    success: false,
+                    message:
+                        "Detailed service information not found."
+                });
+
+            }
+
+            res.json({
+                success: true,
+                service
+            });
+
+        } catch (error) {
+
+            console.error(
+                "Service details API error:",
+                error.message
+            );
+
+            res.status(500).json({
+                success: false,
+                message:
+                    "Could not load service details."
+            });
+
+        }
+
+    }
+);
 
 // ==================================================
 // CLOUDEx AI ADVISOR
@@ -1028,7 +1078,6 @@ if (userId && chatId) {
     }
 );
 
-
 // ==================================================
 // FRONTEND FALLBACK
 // ==================================================
@@ -1037,19 +1086,29 @@ app.get(
     "*splat",
     (req, res) => {
 
-        res.sendFile(
+        if (
+            req.path.startsWith("/js/") ||
+            req.path.startsWith("/css/") ||
+            req.path.startsWith("/images/") ||
+            req.path.startsWith("/assets/")
+        ) {
 
+            return res.status(404).send(
+                "Frontend asset not found."
+            );
+
+        }
+
+
+        res.sendFile(
             path.join(
                 frontendPath,
                 "index.html"
             )
-
         );
 
     }
 );
-
-
 // ==================================================
 // MONGODB
 // ==================================================

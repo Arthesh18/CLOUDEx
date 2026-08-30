@@ -1,6 +1,6 @@
 /* =====================================================
    CLOUDEx - CLOUD EXPLORER
-   Complete Explorer + Comparison + Quick Verdict
+   Explorer + Provider Comparison + Service Comparison
    ===================================================== */
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -50,6 +50,14 @@ document.addEventListener("DOMContentLoaded", () => {
 
 
     /* =================================================
+       CONFIGURATION
+    ================================================= */
+
+    const API_BASE_URL =
+        "http://localhost:5000";
+
+
+    /* =================================================
        DATA
     ================================================= */
 
@@ -61,7 +69,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
 
     /* =================================================
-       LOAD CLOUD PROVIDERS
+       LOAD PROVIDERS
     ================================================= */
 
     async function loadProviders() {
@@ -69,12 +77,16 @@ document.addEventListener("DOMContentLoaded", () => {
         try {
 
             const response =
-                await fetch("https://cloudex-o2xm.onrender.com/api/cloud/providers");
+                await fetch(
+                    `${API_BASE_URL}/api/cloud/providers`
+                );
 
             if (!response.ok) {
+
                 throw new Error(
-                    "Unable to load cloud providers"
+                    "Unable to load cloud providers."
                 );
+
             }
 
             const data =
@@ -84,7 +96,9 @@ document.addEventListener("DOMContentLoaded", () => {
                 data.providers || data || [];
 
             if (!Array.isArray(providers)) {
+
                 providers = [];
+
             }
 
             renderProviders();
@@ -94,34 +108,40 @@ document.addEventListener("DOMContentLoaded", () => {
         } catch (error) {
 
             console.error(
-                "Cloud provider loading error:",
+                "Provider loading error:",
                 error
             );
 
             if (providerGrid) {
 
                 providerGrid.innerHTML = `
+
                     <div class="empty-state">
 
-                        <i class="fa-solid fa-cloud-arrow-down"></i>
+                        <i
+                            class="fa-solid fa-cloud-arrow-down"
+                        ></i>
 
                         <h3>
                             Unable to load cloud providers
                         </h3>
 
                         <p>
-                            Please make sure the
-                            CLOUDEx backend is running.
+                            Make sure the CLOUDEx
+                            backend is running.
                         </p>
 
                     </div>
+
                 `;
 
             }
 
             if (providerCount) {
+
                 providerCount.textContent =
                     "Unable to load";
+
             }
 
         }
@@ -136,7 +156,9 @@ document.addEventListener("DOMContentLoaded", () => {
     function renderProviders() {
 
         if (!providerGrid) {
+
             return;
+
         }
 
         const searchTerm =
@@ -145,6 +167,7 @@ document.addEventListener("DOMContentLoaded", () => {
                     .toLowerCase()
                     .trim()
                 : "";
+
 
         const filteredProviders =
             providers.filter(provider => {
@@ -160,17 +183,24 @@ document.addEventListener("DOMContentLoaded", () => {
                     ).toLowerCase();
 
                 const categories =
-                    Array.isArray(provider.categories)
+                    Array.isArray(
+                        provider.categories
+                    )
                         ? provider.categories
                         : [];
+
 
                 const matchesSearch =
                     name.includes(searchTerm) ||
                     description.includes(searchTerm);
 
+
                 const matchesFilter =
                     currentFilter === "all" ||
-                    categories.includes(currentFilter);
+                    categories.includes(
+                        currentFilter
+                    );
+
 
                 return (
                     matchesSearch &&
@@ -192,12 +222,17 @@ document.addEventListener("DOMContentLoaded", () => {
         }
 
 
-        if (filteredProviders.length === 0) {
+        if (
+            filteredProviders.length === 0
+        ) {
 
             providerGrid.innerHTML = `
+
                 <div class="empty-state">
 
-                    <i class="fa-solid fa-cloud"></i>
+                    <i
+                        class="fa-solid fa-cloud"
+                    ></i>
 
                     <h3>
                         No providers found
@@ -209,22 +244,29 @@ document.addEventListener("DOMContentLoaded", () => {
                     </p>
 
                 </div>
+
             `;
 
             return;
+
         }
 
 
         providerGrid.innerHTML =
             filteredProviders
-                .map(provider =>
-                    createProviderCard(provider)
+                .map(
+                    provider =>
+                        createProviderCard(
+                            provider
+                        )
                 )
                 .join("");
 
 
         document
-            .querySelectorAll(".view-provider")
+            .querySelectorAll(
+                ".view-provider"
+            )
             .forEach(button => {
 
                 button.addEventListener(
@@ -237,12 +279,21 @@ document.addEventListener("DOMContentLoaded", () => {
                         const provider =
                             providers.find(
                                 item =>
-                                    String(item.id) ===
-                                    String(providerId)
+                                    String(
+                                        item.id
+                                    ) ===
+                                    String(
+                                        providerId
+                                    )
                             );
 
+
                         if (provider) {
-                            openProviderModal(provider);
+
+                            openProviderModal(
+                                provider
+                            );
+
                         }
 
                     }
@@ -257,43 +308,79 @@ document.addEventListener("DOMContentLoaded", () => {
        PROVIDER CARD
     ================================================= */
 
-    function createProviderCard(provider) {
+    function createProviderCard(
+        provider
+    ) {
 
         const icon =
-            provider.icon || "fa-cloud";
+            provider.icon ||
+            "fa-cloud";
+
 
         const categories =
-            Array.isArray(provider.categories)
+            Array.isArray(
+                provider.categories
+            )
                 ? provider.categories
                 : [];
+
 
         const tags =
             categories
                 .slice(0, 3)
-                .map(category => `
-                    <span class="provider-tag">
-                        ${formatCategory(category)}
-                    </span>
-                `)
+                .map(
+                    category => `
+
+                        <span
+                            class="provider-tag"
+                        >
+                            ${formatCategory(
+                                category
+                            )}
+                        </span>
+
+                    `
+                )
                 .join("");
 
 
         return `
-            <article class="provider-card">
 
-                <div class="provider-top">
+            <article
+                class="provider-card"
+            >
 
-                    <div class="provider-icon">
-                        <i class="fa-solid ${icon}"></i>
+                <div
+                    class="provider-top"
+                >
+
+                    <div
+                        class="provider-icon"
+                    >
+
+                        <i
+                            class="fa-solid ${icon}"
+                        ></i>
+
                     </div>
+
 
                     ${
                         provider.rating
                             ? `
-                                <div class="provider-rating">
-                                    <i class="fa-solid fa-star"></i>
+
+                                <div
+                                    class="provider-rating"
+                                >
+
+                                    <i
+                                        class="fa-solid fa-star"
+                                    ></i>
+
                                     ${provider.rating}
+
                                 </div>
+
                             `
                             : ""
                     }
@@ -309,7 +396,9 @@ document.addEventListener("DOMContentLoaded", () => {
                 </h3>
 
 
-                <p class="provider-description">
+                <p
+                    class="provider-description"
+                >
                     ${
                         provider.description ||
                         "Cloud services and infrastructure."
@@ -317,8 +406,12 @@ document.addEventListener("DOMContentLoaded", () => {
                 </p>
 
 
-                <div class="provider-tags">
+                <div
+                    class="provider-tags"
+                >
+
                     ${tags}
+
                 </div>
 
 
@@ -326,11 +419,17 @@ document.addEventListener("DOMContentLoaded", () => {
                     class="view-provider"
                     data-id="${provider.id}"
                 >
+
                     View provider
-                    <i class="fa-solid fa-arrow-right"></i>
+
+                    <i
+                        class="fa-solid fa-arrow-right"
+                    ></i>
+
                 </button>
 
             </article>
+
         `;
 
     }
@@ -340,10 +439,15 @@ document.addEventListener("DOMContentLoaded", () => {
        FORMAT CATEGORY
     ================================================= */
 
-    function formatCategory(category) {
+    function formatCategory(
+        category
+    ) {
 
         return String(category)
-            .replace(/-/g, " ")
+            .replace(
+                /-/g,
+                " "
+            )
             .replace(
                 /\b\w/g,
                 letter =>
@@ -368,30 +472,41 @@ document.addEventListener("DOMContentLoaded", () => {
 
 
     /* =================================================
-       FILTER BUTTONS
+       FILTERS
     ================================================= */
 
-    filterButtons.forEach(button => {
+    filterButtons.forEach(
+        button => {
 
-        button.addEventListener(
-            "click",
-            () => {
+            button.addEventListener(
+                "click",
+                () => {
 
-                filterButtons.forEach(btn => {
-                    btn.classList.remove("active");
-                });
+                    filterButtons.forEach(
+                        item =>
+                            item.classList.remove(
+                                "active"
+                            )
+                    );
 
-                button.classList.add("active");
 
-                currentFilter =
-                    button.dataset.filter || "all";
+                    button.classList.add(
+                        "active"
+                    );
 
-                renderProviders();
 
-            }
-        );
+                    currentFilter =
+                        button.dataset.filter ||
+                        "all";
 
-    });
+
+                    renderProviders();
+
+                }
+            );
+
+        }
+    );
 
 
     /* =================================================
@@ -401,41 +516,54 @@ document.addEventListener("DOMContentLoaded", () => {
     function renderProviderSelector() {
 
         if (!providerSelector) {
+
             return;
+
         }
+
 
         providerSelector.innerHTML =
             providers
-                .map(provider => `
+                .map(
+                    provider => `
 
-                    <label
-                        class="provider-option"
-                        data-id="${provider.id}"
-                    >
-
-                        <input
-                            type="checkbox"
-                            value="${provider.id}"
+                        <label
+                            class="provider-option"
+                            data-id="${provider.id}"
                         >
 
-                        <div class="provider-icon">
+                            <input
+                                type="checkbox"
+                                value="${provider.id}"
+                            >
 
-                            <i
-                                class="fa-solid ${
-                                    provider.icon ||
-                                    "fa-cloud"
-                                }"
-                            ></i>
 
-                        </div>
+                            <div
+                                class="provider-icon"
+                            >
 
-                        <span class="provider-option-name">
-                            ${provider.name}
-                        </span>
+                                <i
+                                    class="fa-solid ${
+                                        provider.icon ||
+                                        "fa-cloud"
+                                    }"
+                                ></i>
 
-                    </label>
+                            </div>
 
-                `)
+
+                            <span
+                                class="provider-option-name"
+                            >
+
+                                ${provider.name}
+
+                            </span>
+
+                        </label>
+
+                    `
+                )
                 .join("");
 
 
@@ -459,13 +587,17 @@ document.addEventListener("DOMContentLoaded", () => {
        PROVIDER SELECTION
     ================================================= */
 
-    function handleProviderSelection(event) {
+    function handleProviderSelection(
+        event
+    ) {
 
         const input =
             event.target;
 
         const id =
-            String(input.value);
+            String(
+                input.value
+            );
 
         const option =
             input.closest(
@@ -475,7 +607,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
         if (input.checked) {
 
-            if (selectedProviders.length >= 4) {
+            if (
+                selectedProviders.length >= 4
+            ) {
 
                 input.checked = false;
 
@@ -484,23 +618,22 @@ document.addEventListener("DOMContentLoaded", () => {
                 );
 
                 return;
+
             }
 
 
-            if (!selectedProviders.includes(id)) {
+            if (
+                !selectedProviders.includes(id)
+            ) {
 
                 selectedProviders.push(id);
 
             }
 
 
-            if (option) {
-
-                option.classList.add(
-                    "selected"
-                );
-
-            }
+            option?.classList.add(
+                "selected"
+            );
 
         } else {
 
@@ -511,13 +644,9 @@ document.addEventListener("DOMContentLoaded", () => {
                 );
 
 
-            if (option) {
-
-                option.classList.remove(
-                    "selected"
-                );
-
-            }
+            option?.classList.remove(
+                "selected"
+            );
 
         }
 
@@ -556,7 +685,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
 
     /* =================================================
-       COMPARE BUTTON
+       MAIN COMPARE BUTTON
     ================================================= */
 
     if (compareButton) {
@@ -574,6 +703,7 @@ document.addEventListener("DOMContentLoaded", () => {
                     );
 
                     return;
+
                 }
 
 
@@ -581,31 +711,27 @@ document.addEventListener("DOMContentLoaded", () => {
                     providers.filter(
                         provider =>
                             selectedProviders.includes(
-                                String(provider.id)
+                                String(
+                                    provider.id
+                                )
                             )
                     );
 
 
-                if (comparisonResults) {
-
-                    comparisonResults.classList.remove(
-                        "hidden"
-                    );
-
-                }
+                comparisonResults?.classList.remove(
+                    "hidden"
+                );
 
 
-                renderComparison(selected);
+                renderComparison(
+                    selected
+                );
 
 
-                if (comparisonResults) {
-
-                    comparisonResults.scrollIntoView({
-                        behavior: "smooth",
-                        block: "start"
-                    });
-
-                }
+                comparisonResults?.scrollIntoView({
+                    behavior: "smooth",
+                    block: "start"
+                });
 
             }
         );
@@ -617,40 +743,37 @@ document.addEventListener("DOMContentLoaded", () => {
        COMPLETE COMPARISON
     ================================================= */
 
-    function renderComparison(selected) {
+    function renderComparison(
+        selected
+    ) {
 
-        /* ---------------------------------------------
-           QUICK VERDICT
-        --------------------------------------------- */
+        renderQuickVerdict(
+            selected
+        );
 
-        renderQuickVerdict(selected);
-
-
-        /* ---------------------------------------------
-           CHARTS
-        --------------------------------------------- */
 
         if (
             typeof window.renderComparisonCharts ===
             "function"
         ) {
 
-            setTimeout(() => {
+            setTimeout(
+                () => {
 
-                window.renderComparisonCharts(
-                    selected
-                );
+                    window.renderComparisonCharts(
+                        selected
+                    );
 
-            }, 50);
+                },
+                50
+            );
 
         }
 
 
-        /* ---------------------------------------------
-           SERVICES
-        --------------------------------------------- */
-
-        renderServiceComparison(selected);
+        renderServiceComparison(
+            selected
+        );
 
     }
 
@@ -659,34 +782,39 @@ document.addEventListener("DOMContentLoaded", () => {
        QUICK VERDICT
     ================================================= */
 
-    function renderQuickVerdict(selected) {
+    function renderQuickVerdict(
+        selected
+    ) {
 
         if (!comparisonSummary) {
+
             return;
+
         }
+
 
         if (
             !Array.isArray(selected) ||
             selected.length < 2
         ) {
-            comparisonSummary.innerHTML = "";
+
+            comparisonSummary.innerHTML =
+                "";
+
             return;
+
         }
 
 
-        /* ---------------------------------------------
-           GET NUMERIC SCORE
-        --------------------------------------------- */
-
-        function getMetric(provider, key) {
-
-            const rawValue =
-                key === "affordability"
-                    ? provider.affordability
-                    : provider[key];
+        function getMetric(
+            provider,
+            key
+        ) {
 
             const value =
-                Number(rawValue);
+                Number(
+                    provider[key]
+                );
 
             return Number.isFinite(value)
                 ? value
@@ -695,61 +823,38 @@ document.addEventListener("DOMContentLoaded", () => {
         }
 
 
-        /* ---------------------------------------------
-           OVERALL SCORE
-        --------------------------------------------- */
+        function getOverallScore(
+            provider
+        ) {
 
-        function getOverallScore(provider) {
+            const keys = [
 
-            const scores = [
-
-                getMetric(
-                    provider,
-                    "beginnerFriendly"
-                ),
-
-                getMetric(
-                    provider,
-                    "affordability"
-                ),
-
-                getMetric(
-                    provider,
-                    "scalability"
-                ),
-
-                getMetric(
-                    provider,
-                    "aiMl"
-                ),
-
-                getMetric(
-                    provider,
-                    "enterprise"
-                ),
-
-                getMetric(
-                    provider,
-                    "globalReach"
-                )
+                "beginnerFriendly",
+                "affordability",
+                "scalability",
+                "aiMl",
+                "enterprise",
+                "globalReach"
 
             ];
 
 
-            return (
-                scores.reduce(
-                    (sum, value) =>
-                        sum + value,
+            const total =
+                keys.reduce(
+                    (sum, key) =>
+                        sum +
+                        getMetric(
+                            provider,
+                            key
+                        ),
                     0
-                ) / scores.length
-            );
+                );
+
+
+            return total / keys.length;
 
         }
 
-
-        /* ---------------------------------------------
-           CATEGORIES
-        --------------------------------------------- */
 
         const categories = [
 
@@ -792,16 +897,16 @@ document.addEventListener("DOMContentLoaded", () => {
         ];
 
 
-        /* ---------------------------------------------
-           OVERALL WINNER
-        --------------------------------------------- */
-
         const overallWinner =
             selected.reduce(
                 (best, provider) => {
 
-                    return getOverallScore(provider) >
-                        getOverallScore(best)
+                    return getOverallScore(
+                        provider
+                    ) >
+                    getOverallScore(
+                        best
+                    )
                         ? provider
                         : best;
 
@@ -816,17 +921,19 @@ document.addEventListener("DOMContentLoaded", () => {
             );
 
 
-        /* ---------------------------------------------
-           HEADER
-        --------------------------------------------- */
-
         let html = `
 
-            <div class="quick-verdict-header">
+            <div
+                class="quick-verdict-header"
+            >
 
-                <div class="quick-verdict-title">
+                <div
+                    class="quick-verdict-title"
+                >
 
-                    <span class="chart-label">
+                    <span
+                        class="chart-label"
+                    >
                         QUICK VERDICT
                     </span>
 
@@ -842,17 +949,16 @@ document.addEventListener("DOMContentLoaded", () => {
                 </div>
 
 
-                <div class="verdict-overall">
+                <div
+                    class="verdict-overall"
+                >
 
                     <span>
                         Best Overall
                     </span>
 
                     <strong>
-                        ${
-                            overallWinner.name ||
-                            "Provider"
-                        }
+                        ${overallWinner.name}
                     </strong>
 
                     <small>
@@ -864,83 +970,90 @@ document.addEventListener("DOMContentLoaded", () => {
             </div>
 
 
-            <div class="verdict-grid">
+            <div
+                class="verdict-grid"
+            >
 
         `;
 
 
-        /* ---------------------------------------------
-           CATEGORY WINNERS
-        --------------------------------------------- */
+        categories.forEach(
+            category => {
 
-        categories.forEach(category => {
+                const winner =
+                    selected.reduce(
+                        (best, provider) => {
 
-            const winner =
-                selected.reduce(
-                    (best, provider) => {
+                            return getMetric(
+                                provider,
+                                category.key
+                            ) >
+                            getMetric(
+                                best,
+                                category.key
+                            )
+                                ? provider
+                                : best;
 
-                        return getMetric(
-                            provider,
-                            category.key
-                        ) >
-                        getMetric(
-                            best,
-                            category.key
-                        )
-                            ? provider
-                            : best;
-
-                    },
-                    selected[0]
-                );
+                        },
+                        selected[0]
+                    );
 
 
-            const value =
-                getMetric(
-                    winner,
-                    category.key
-                );
+                const value =
+                    getMetric(
+                        winner,
+                        category.key
+                    );
 
 
-            html += `
+                html += `
 
-                <div class="verdict-card">
+                    <div
+                        class="verdict-card"
+                    >
 
-                    <div class="verdict-icon">
+                        <div
+                            class="verdict-icon"
+                        >
 
-                        <i
-                            class="fa-solid ${
-                                category.icon
-                            }"
-                        ></i>
+                            <i
+                                class="fa-solid ${
+                                    category.icon
+                                }"
+                            ></i>
+
+                        </div>
+
+
+                        <div
+                            class="verdict-content"
+                        >
+
+                            <span
+                                class="verdict-category"
+                            >
+                                ${category.title}
+                            </span>
+
+                            <strong>
+                                ${winner.name}
+                            </strong>
+
+                            <span
+                                class="verdict-score"
+                            >
+                                ${value.toFixed(1)} / 10
+                            </span>
+
+                        </div>
 
                     </div>
 
+                `;
 
-                    <div class="verdict-content">
-
-                        <span class="verdict-category">
-                            ${category.title}
-                        </span>
-
-                        <strong>
-                            ${
-                                winner.name ||
-                                "Provider"
-                            }
-                        </strong>
-
-                        <span class="verdict-score">
-                            ${value.toFixed(1)} / 10
-                        </span>
-
-                    </div>
-
-                </div>
-
-            `;
-
-        });
+            }
+        );
 
 
         html += `
@@ -957,25 +1070,16 @@ document.addEventListener("DOMContentLoaded", () => {
 
 
     /* =================================================
-       SERVICE DATA HELPERS
+       SERVICE HELPERS
     ================================================= */
 
-    function getServiceCategories(provider) {
+    function getServiceCategories(
+        provider
+    ) {
 
         const services =
             provider.services;
 
-
-        /* ---------------------------------------------
-           NEW STRUCTURE
-
-           services: {
-               compute: [],
-               storage: [],
-               database: [],
-               ai: []
-           }
-        --------------------------------------------- */
 
         if (
             services &&
@@ -987,10 +1091,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
         }
 
-
-        /* ---------------------------------------------
-           OLD STRUCTURE
-        --------------------------------------------- */
 
         return {
 
@@ -1004,7 +1104,9 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
 
-    function getServiceName(service) {
+    function getServiceName(
+        service
+    ) {
 
         if (
             typeof service === "string"
@@ -1034,7 +1136,9 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
 
-    function getServiceDescription(service) {
+    function getServiceDescription(
+        service
+    ) {
 
         if (
             service &&
@@ -1054,7 +1158,9 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
 
-    function getServiceType(service) {
+    function getServiceType(
+        service
+    ) {
 
         if (
             service &&
@@ -1075,7 +1181,9 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
 
-    function getServicePricing(service) {
+    function getServicePricing(
+        service
+    ) {
 
         if (
             service &&
@@ -1094,16 +1202,261 @@ document.addEventListener("DOMContentLoaded", () => {
         return "";
 
     }
+    /* =================================================
+       FIND COMPARABLE SERVICES
+    ================================================= */
+
+    function normalizeServiceName(
+        name
+    ) {
+
+        return String(name || "")
+            .toLowerCase()
+            .replace(
+                /[^a-z0-9]+/g,
+                " "
+            )
+            .trim();
+
+    }
+
+
+    function getComparableServiceKey(
+        name,
+        category
+    ) {
+
+        const normalized =
+            normalizeServiceName(
+                name
+            );
+
+
+        const aliases = {
+
+            compute: [
+
+                [
+                    "ec2",
+                    "virtual machines",
+                    "compute engine"
+                ],
+
+                [
+                    "lambda",
+                    "azure functions",
+                    "cloud functions"
+                ],
+
+                [
+                    "eks",
+                    "aks",
+                    "gke"
+                ]
+
+            ],
+
+
+            storage: [
+
+                [
+                    "s3",
+                    "blob storage",
+                    "cloud storage"
+                ],
+
+                [
+                    "ebs",
+                    "managed disks",
+                    "persistent disk"
+                ],
+
+                [
+                    "efs",
+                    "azure files",
+                    "filestore"
+                ]
+
+            ],
+
+
+            database: [
+
+                [
+                    "rds",
+                    "sql database",
+                    "cloud sql"
+                ],
+
+                [
+                    "dynamodb",
+                    "cosmos db",
+                    "firestore"
+                ]
+
+            ],
+
+
+            ai: [
+
+                [
+                    "sagemaker",
+                    "azure machine learning",
+                    "vertex ai"
+                ],
+
+                [
+                    "bedrock",
+                    "azure ai",
+                    "vertex ai"
+                ]
+
+            ]
+
+        };
+
+
+        const groups =
+            aliases[category] || [];
+
+
+        for (
+            const group of groups
+        ) {
+
+            if (
+                group.some(
+                    alias =>
+                        normalized.includes(
+                            alias
+                        )
+                )
+            ) {
+
+                return group[0];
+
+            }
+
+        }
+
+
+        return normalized;
+
+    }
+
+
+    function getComparableServices(
+        selected,
+        category
+    ) {
+
+        const serviceMap =
+            new Map();
+
+
+        selected.forEach(
+            provider => {
+
+                const serviceCategories =
+                    getServiceCategories(
+                        provider
+                    );
+
+
+                const services =
+                    Array.isArray(
+                        serviceCategories[
+                            category
+                        ]
+                    )
+                        ? serviceCategories[
+                            category
+                        ]
+                        : [];
+
+
+                services.forEach(
+                    service => {
+
+                        const name =
+                            getServiceName(
+                                service
+                            );
+
+
+                        const key =
+                            getComparableServiceKey(
+                                name,
+                                category
+                            );
+
+
+                        if (
+                            !serviceMap.has(
+                                key
+                            )
+                        ) {
+
+                            serviceMap.set(
+                                key,
+                                []
+                            );
+
+                        }
+
+
+                        serviceMap
+                            .get(key)
+                            .push({
+
+                                provider,
+
+                                service,
+
+                                name
+
+                            });
+
+                    }
+                );
+
+            }
+        );
+
+
+        return Array
+            .from(
+                serviceMap.entries()
+            )
+            .filter(
+                ([, services]) =>
+                    services.length >= 2
+            )
+            .map(
+                ([key, services]) => ({
+
+                    key,
+
+                    services
+
+                })
+            );
+
+    }
 
 
     /* =================================================
        SERVICE COMPARISON
     ================================================= */
 
-    function renderServiceComparison(selected) {
+    function renderServiceComparison(
+        selected
+    ) {
 
         if (!serviceComparison) {
+
             return;
+
         }
 
 
@@ -1114,9 +1467,13 @@ document.addEventListener("DOMContentLoaded", () => {
 
             serviceComparison.innerHTML = `
 
-                <div class="empty-state">
+                <div
+                    class="empty-state"
+                >
 
-                    <i class="fa-solid fa-table"></i>
+                    <i
+                        class="fa-solid fa-table"
+                    ></i>
 
                     <h3>
                         Select providers to compare
@@ -1175,7 +1532,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
         let html = `
 
-            <div class="service-comparison-intro">
+            <div
+                class="service-comparison-intro"
+            >
 
                 <span>
                     SERVICE COMPARISON
@@ -1187,7 +1546,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
                 <p>
                     See what each selected provider
-                    offers in the same service category.
+                    offers in the same category.
+                    You can also compare equivalent
+                    services directly.
                 </p>
 
             </div>
@@ -1195,95 +1556,26 @@ document.addEventListener("DOMContentLoaded", () => {
         `;
 
 
-        categories.forEach(category => {
-
-            html += `
-
-                <section
-                    class="service-category"
-                >
-
-                    <div
-                        class="service-category-title"
-                    >
-
-                        <div
-                            class="service-category-icon"
-                        >
-
-                            <i
-                                class="fa-solid ${
-                                    category.icon
-                                }"
-                            ></i>
-
-                        </div>
-
-
-                        <div>
-
-                            <span>
-                                SERVICE CATEGORY
-                            </span>
-
-                            <h3>
-                                ${category.title}
-                            </h3>
-
-                            <p>
-                                ${category.description}
-                            </p>
-
-                        </div>
-
-                    </div>
-
-
-                    <div
-                        class="service-comparison-grid"
-                    >
-
-            `;
-
-
-            selected.forEach(provider => {
-
-                const categoriesData =
-                    getServiceCategories(
-                        provider
-                    );
-
-
-                const services =
-                    Array.isArray(
-                        categoriesData[
-                            category.key
-                        ]
-                    )
-                        ? categoriesData[
-                            category.key
-                        ]
-                        : [];
-
+        categories.forEach(
+            category => {
 
                 html += `
 
-                    <article
-                        class="service-provider-card"
+                    <section
+                        class="service-category"
                     >
 
                         <div
-                            class="service-provider-header"
+                            class="service-category-title"
                         >
 
                             <div
-                                class="service-provider-icon"
+                                class="service-category-icon"
                             >
 
                                 <i
                                     class="fa-solid ${
-                                        provider.icon ||
-                                        "fa-cloud"
+                                        category.icon
                                     }"
                                 ></i>
 
@@ -1292,21 +1584,17 @@ document.addEventListener("DOMContentLoaded", () => {
 
                             <div>
 
-                                <h4>
-                                    ${
-                                        provider.name ||
-                                        "Provider"
-                                    }
-                                </h4>
-
                                 <span>
-                                    ${services.length}
-                                    service${
-                                        services.length !== 1
-                                            ? "s"
-                                            : ""
-                                    }
+                                    SERVICE CATEGORY
                                 </span>
+
+                                <h3>
+                                    ${category.title}
+                                </h3>
+
+                                <p>
+                                    ${category.description}
+                                </p>
 
                             </div>
 
@@ -1314,39 +1602,467 @@ document.addEventListener("DOMContentLoaded", () => {
 
 
                         <div
-                            class="service-items"
+                            class="service-comparison-grid"
                         >
 
                 `;
 
 
-                if (services.length === 0) {
+                selected.forEach(
+                    provider => {
+
+                        const serviceCategories =
+                            getServiceCategories(
+                                provider
+                            );
+
+
+                        const services =
+                            Array.isArray(
+                                serviceCategories[
+                                    category.key
+                                ]
+                            )
+                                ? serviceCategories[
+                                    category.key
+                                ]
+                                : [];
+
+
+                        html += `
+
+                            <article
+                                class="service-provider-card"
+                            >
+
+                                <div
+                                    class="service-provider-header"
+                                >
+
+                                    <div
+                                        class="service-provider-icon"
+                                    >
+
+                                        <i
+                                            class="fa-solid ${
+                                                provider.icon ||
+                                                "fa-cloud"
+                                            }"
+                                        ></i>
+
+                                    </div>
+
+
+                                    <div>
+
+                                        <h4>
+                                            ${provider.name}
+                                        </h4>
+
+                                        <span>
+                                            ${services.length}
+                                            service${
+                                                services.length !== 1
+                                                    ? "s"
+                                                    : ""
+                                            }
+                                        </span>
+
+                                    </div>
+
+                                </div>
+
+
+                                <div
+                                    class="service-items"
+                                >
+
+                        `;
+
+
+                        if (
+                            services.length === 0
+                        ) {
+
+                            html += `
+
+                                <div
+                                    class="service-unavailable"
+                                >
+
+                                    <i
+                                        class="fa-solid fa-circle-info"
+                                    ></i>
+
+                                    No information
+                                    available
+
+                                </div>
+
+                            `;
+
+                        } else {
+
+                            services.forEach(
+                                service => {
+
+                                    const name =
+                                        getServiceName(
+                                            service
+                                        );
+
+                                    const description =
+                                        getServiceDescription(
+                                            service
+                                        );
+
+                                    const type =
+                                        getServiceType(
+                                            service
+                                        );
+
+                                    const pricing =
+                                        getServicePricing(
+                                            service
+                                        );
+
+
+                                    html += `
+
+                                        <div
+                                            class="service-item"
+                                        >
+
+                                            <div
+                                                class="service-item-main"
+                                            >
+
+                                                <div
+                                                    class="service-item-name"
+                                                >
+
+                                                    <i
+                                                        class="fa-solid fa-check"
+                                                    ></i>
+
+                                                    <strong>
+                                                        ${name}
+                                                    </strong>
+
+                                                </div>
+
+
+                                                ${
+                                                    type
+                                                        ? `
+
+                                                            <span
+                                                                class="service-type"
+                                                            >
+                                                                ${type}
+                                                            </span>
+
+                                                        `
+                                                        : ""
+                                                }
+
+
+                                                ${
+                                                    description
+                                                        ? `
+
+                                                            <p>
+                                                                ${description}
+                                                            </p>
+
+                                                        `
+                                                        : ""
+                                                }
+
+
+                                                ${
+                                                    pricing
+                                                        ? `
+
+                                                            <small>
+
+                                                                <i
+                                                                    class="fa-solid fa-tag"
+                                                                ></i>
+
+                                                                ${pricing}
+
+                                                            </small>
+
+                                                        `
+                                                        : ""
+                                                }
+
+                                            </div>
+
+
+                                            <button
+                                                type="button"
+                                                class="service-details-button"
+                                                data-provider-id="${provider.id}"
+                                                data-service-name="${encodeURIComponent(
+                                                    name
+                                                )}"
+                                            >
+
+                                                View details
+
+                                                <i
+                                                    class="fa-solid fa-arrow-right"
+                                                ></i>
+
+                                            </button>
+
+                                        </div>
+
+                                    `;
+
+                                }
+                            );
+
+                        }
+
+
+                        html += `
+
+                                </div>
+
+                            </article>
+
+                        `;
+
+                    }
+                );
+
+
+                html += `
+
+                        </div>
+
+                `;
+
+
+                const comparableGroups =
+                    getComparableServices(
+                        selected,
+                        category.key
+                    );
+
+
+                if (
+                    comparableGroups.length > 0
+                ) {
 
                     html += `
 
                         <div
-                            class="service-unavailable"
+                            class="comparable-services-area"
                         >
 
-                            <i
-                                class="fa-solid fa-circle-info"
-                            ></i>
+                            <div
+                                class="comparable-services-header"
+                            >
 
-                            No information
-                            available
+                                <span>
+                                    DIRECT COMPARISON
+                                </span>
+
+                                <h4>
+                                    Equivalent services
+                                </h4>
+
+                                <p>
+                                    Compare services that
+                                    perform a similar role
+                                    across providers.
+                                </p>
+
+                            </div>
+
+
+                            <div
+                                class="comparable-services-list"
+                            >
+
+                    `;
+
+
+                    comparableGroups.forEach(
+                        group => {
+
+                            html += `
+
+                                <button
+                                    type="button"
+                                    class="compare-service-group"
+                                    data-category="${category.key}"
+                                    data-service-key="${group.key}"
+                                >
+
+                                    <span>
+
+                                        ${
+                                            group.services
+                                                .map(
+                                                    item =>
+                                                        `${item.provider.name}: ${item.name}`
+                                                )
+                                                .join(
+                                                    " • "
+                                                )
+                                        }
+
+                                    </span>
+
+
+                                    <i
+                                        class="fa-solid fa-scale-balanced"
+                                    ></i>
+
+                                    Compare
+
+                                </button>
+
+                            `;
+
+                        }
+                    );
+
+
+                    html += `
+
+                            </div>
 
                         </div>
 
                     `;
 
-                } else {
+                }
 
-                    services.forEach(service => {
 
-                        const name =
-                            getServiceName(
-                                service
+                html += `
+
+                    </section>
+
+                `;
+
+            }
+        );
+
+
+        serviceComparison.innerHTML =
+            html;
+
+
+        /* ---------------------------------------------
+           VIEW SERVICE DETAILS
+        --------------------------------------------- */
+
+        serviceComparison
+            .querySelectorAll(
+                ".service-details-button"
+            )
+            .forEach(
+                button => {
+
+                    button.addEventListener(
+                        "click",
+                        event => {
+
+                            event.stopPropagation();
+
+
+                            openServiceDetails(
+                                button.dataset.providerId,
+                                button.dataset.serviceName
                             );
+
+                        }
+                    );
+
+                }
+            );
+
+
+        /* ---------------------------------------------
+           DIRECT SERVICE COMPARISON
+        --------------------------------------------- */
+
+        serviceComparison
+            .querySelectorAll(
+                ".compare-service-group"
+            )
+            .forEach(
+                button => {
+
+                    button.addEventListener(
+                        "click",
+                        () => {
+
+                            const category =
+                                button.dataset.category;
+
+                            const serviceKey =
+                                button.dataset.serviceKey;
+
+
+                            const groups =
+                                getComparableServices(
+                                    selected,
+                                    category
+                                );
+
+
+                            const group =
+                                groups.find(
+                                    item =>
+                                        item.key ===
+                                        serviceKey
+                                );
+
+
+                            if (group) {
+
+                                renderDirectServiceComparison(
+                                    selected,
+                                    category,
+                                    group
+                                );
+
+                            }
+
+                        }
+                    );
+
+                }
+            );
+
+    }
+
+
+    /* =================================================
+       DIRECT SERVICE COMPARISON
+    ================================================= */
+
+    function renderDirectServiceComparison(
+        selected,
+        category,
+        group
+    ) {
+
+        const serviceCards =
+            group.services
+                .map(
+                    item => {
+
+                        const service =
+                            item.service;
+
 
                         const description =
                             getServiceDescription(
@@ -1364,115 +2080,1074 @@ document.addEventListener("DOMContentLoaded", () => {
                             );
 
 
-                        html += `
+                        return `
 
-                            <div
-                                class="service-item"
+                            <article
+                                class="direct-service-card"
                             >
 
                                 <div
-                                    class="service-item-name"
+                                    class="direct-service-provider"
                                 >
 
-                                    <i
-                                        class="fa-solid fa-check"
-                                    ></i>
+                                    <div
+                                        class="service-provider-icon"
+                                    >
 
-                                    <strong>
-                                        ${name}
-                                    </strong>
+                                        <i
+                                            class="fa-solid ${
+                                                item.provider.icon ||
+                                                "fa-cloud"
+                                            }"
+                                        ></i>
+
+                                    </div>
+
+
+                                    <div>
+
+                                        <span>
+                                            ${item.provider.name}
+                                        </span>
+
+                                        <h4>
+                                            ${item.name}
+                                        </h4>
+
+                                    </div>
 
                                 </div>
 
 
-                                ${
-                                    type
-                                        ? `
-                                            <span
-                                                class="service-type"
-                                            >
-                                                ${type}
-                                            </span>
-                                        `
-                                        : ""
-                                }
+                                <div
+                                    class="direct-service-info"
+                                >
+
+                                    <div>
+
+                                        <strong>
+                                            What it does
+                                        </strong>
+
+                                        <p>
+                                            ${
+                                                description ||
+                                                "Detailed information is available in View details."
+                                            }
+                                        </p>
+
+                                    </div>
 
 
-                                ${
-                                    description
-                                        ? `
-                                            <p>
-                                                ${description}
-                                            </p>
-                                        `
-                                        : ""
-                                }
+                                    ${
+                                        type
+                                            ? `
+
+                                                <div>
+
+                                                    <strong>
+                                                        Type
+                                                    </strong>
+
+                                                    <p>
+                                                        ${type}
+                                                    </p>
+
+                                                </div>
+
+                                            `
+                                            : ""
+                                    }
 
 
-                                ${
-                                    pricing
-                                        ? `
-                                            <small>
+                                    ${
+                                        pricing
+                                            ? `
 
-                                                <i
-                                                    class="fa-solid fa-tag"
-                                                ></i>
+                                                <div>
 
-                                                ${pricing}
+                                                    <strong>
+                                                        Pricing
+                                                    </strong>
 
-                                            </small>
-                                        `
-                                        : ""
-                                }
+                                                    <p>
+                                                        ${pricing}
+                                                    </p>
 
-                            </div>
+                                                </div>
+
+                                            `
+                                            : ""
+                                    }
+
+                                </div>
+
+
+                                <button
+                                    type="button"
+                                    class="service-details-button"
+                                    data-provider-id="${item.provider.id}"
+                                    data-service-name="${encodeURIComponent(
+                                        item.name
+                                    )}"
+                                >
+
+                                    View details
+
+                                    <i
+                                        class="fa-solid fa-arrow-right"
+                                    ></i>
+
+                                </button>
+
+                            </article>
 
                         `;
 
-                    });
-
-                }
-
-
-                html += `
-
-                        </div>
-
-                    </article>
-
-                `;
-
-            });
+                    }
+                )
+                .join("");
 
 
-            html += `
+        const conclusion =
+            getServiceComparisonConclusion(
+                category,
+                group.services
+            );
+
+
+        serviceComparison.innerHTML = `
+
+            <div
+                class="direct-service-comparison"
+            >
+
+                <div
+                    class="direct-comparison-header"
+                >
+
+                    <span>
+                        DIRECT SERVICE COMPARISON
+                    </span>
+
+                    <h2>
+                        ${
+                            group.services
+                                .map(
+                                    item =>
+                                        item.name
+                                )
+                                .join(
+                                    " vs "
+                                )
+                        }
+                    </h2>
+
+                    <p>
+                        Side-by-side comparison
+                        of equivalent cloud services.
+                    </p>
+
+                </div>
+
+
+                <div
+                    class="direct-service-grid"
+                >
+
+                    ${serviceCards}
+
+                </div>
+
+
+                <div
+                    class="direct-comparison-conclusion"
+                >
+
+                    <div
+                        class="direct-conclusion-icon"
+                    >
+
+                        <i
+                            class="fa-solid fa-lightbulb"
+                        ></i>
 
                     </div>
 
-                </section>
 
+                    <div>
+
+                        <span>
+                            KEY DIFFERENCE
+                        </span>
+
+                        <p>
+                            ${conclusion}
+                        </p>
+
+                    </div>
+
+                </div>
+
+
+                <button
+                    type="button"
+                    class="back-to-service-comparison"
+                    id="backToServiceComparison"
+                >
+
+                    <i
+                        class="fa-solid fa-arrow-left"
+                    ></i>
+
+                    Back to service comparison
+
+                </button>
+
+            </div>
+
+        `;
+
+
+        serviceComparison
+            .querySelectorAll(
+                ".service-details-button"
+            )
+            .forEach(
+                button => {
+
+                    button.addEventListener(
+                        "click",
+                        event => {
+
+                            event.stopPropagation();
+
+
+                            openServiceDetails(
+                                button.dataset.providerId,
+                                button.dataset.serviceName
+                            );
+
+                        }
+                    );
+
+                }
+            );
+
+
+        const backButton =
+            document.getElementById(
+                "backToServiceComparison"
+            );
+
+
+        if (backButton) {
+
+            backButton.addEventListener(
+                "click",
+                () => {
+
+                    renderServiceComparison(
+                        selected
+                    );
+
+                }
+            );
+
+        }
+
+    }
+        /* =================================================
+       SERVICE COMPARISON CONCLUSION
+    ================================================= */
+
+    function getServiceComparisonConclusion(
+        category,
+        services
+    ) {
+
+        const names =
+            services.map(
+                item =>
+                    `${item.provider.name}'s ${item.name}`
+            );
+
+
+        if (
+            category === "compute"
+        ) {
+
+            return `
+                ${names.join(" and ")}
+                provide comparable cloud compute
+                capabilities. Their main differences
+                come from configuration options,
+                ecosystem integrations, management
+                experience and workload suitability.
             `;
 
-        });
+        }
 
 
-        serviceComparison.innerHTML =
-            html;
+        if (
+            category === "storage"
+        ) {
+
+            return `
+                ${names.join(" and ")}
+                provide comparable storage capabilities,
+                but their storage models, integrations,
+                performance characteristics and pricing
+                can differ.
+            `;
+
+        }
+
+
+        if (
+            category === "database"
+        ) {
+
+            return `
+                ${names.join(" and ")}
+                provide managed database capabilities,
+                but their supported data models,
+                scaling behaviour, integrations and
+                management experience can differ.
+            `;
+
+        }
+
+
+        if (
+            category === "ai"
+        ) {
+
+            return `
+                ${names.join(" and ")}
+                provide AI / ML capabilities, but their
+                supported models, tooling, integrations
+                and deployment experience can differ.
+            `;
+
+        }
+
+
+        return `
+            ${names.join(" and ")}
+            provide similar capabilities, but the
+            best choice depends on the workload and
+            the user's existing cloud ecosystem.
+        `;
 
     }
 
 
+/* =================================================
+   SERVICE INFORMATION EXPLANATIONS
+================================================= */
+
+function getPricingExplanation(
+    pricingModel
+) {
+
+    const pricing =
+        String(
+            pricingModel || ""
+        ).toLowerCase();
+
+
+    if (
+        pricing.includes(
+            "pay-as-you-go"
+        )
+    ) {
+
+        return `
+            You pay according to the resources
+            you actually use. This is useful when
+            your workload changes over time.
+        `;
+
+    }
+
+
+    if (
+        pricing.includes(
+            "consumption"
+        )
+    ) {
+
+        return `
+            You are charged mainly according to
+            the amount of resources or requests
+            your application actually consumes.
+        `;
+
+    }
+
+
+    if (
+        pricing.includes(
+            "usage"
+        )
+    ) {
+
+        return `
+            The cost depends on how much you use
+            the service, such as requests,
+            processing, storage or data transfer.
+        `;
+
+    }
+
+
+    if (
+        pricing.includes(
+            "provisioned"
+        )
+    ) {
+
+        return `
+            You generally pay for capacity that
+            you reserve or provision, even if you
+            do not use all of it.
+        `;
+
+    }
+
+
+    if (
+        pricing.includes(
+            "request"
+        )
+    ) {
+
+        return `
+            Charges are influenced by the number
+            of requests or operations performed
+            by your application.
+        `;
+
+    }
+
+
+    return `
+        Pricing depends on the resources and
+        usage associated with this service.
+        Check the provider's pricing for the
+        exact cost.
+    `;
+
+}
+
+
+/* =================================================
+   SERVICE TYPE EXPLANATIONS
+================================================= */
+
+function getTypeExplanation(
+    type
+) {
+
+    const value =
+        String(
+            type || ""
+        ).toLowerCase();
+
+
+    if (
+        value.includes(
+            "virtual machine"
+        )
+    ) {
+
+        return `
+            A virtual machine is a software-based
+            computer running in the cloud. You get
+            control over the operating system,
+            computing resources and installed software.
+        `;
+
+    }
+
+
+    if (
+        value.includes(
+            "serverless"
+        )
+    ) {
+
+        return `
+            Serverless means you do not have to
+            manage the underlying servers yourself.
+            The cloud provider handles the
+            infrastructure while you focus mainly
+            on your application code.
+        `;
+
+    }
+
+
+    if (
+        value.includes(
+            "container"
+        )
+    ) {
+
+        return `
+            Containers package an application
+            together with its dependencies so it
+            can run consistently across different
+            environments.
+        `;
+
+    }
+
+
+    if (
+        value.includes(
+            "object storage"
+        )
+    ) {
+
+        return `
+            Object storage is designed for storing
+            files and large amounts of unstructured
+            data such as images, videos, backups
+            and documents.
+        `;
+
+    }
+
+
+    if (
+        value.includes(
+            "block storage"
+        )
+    ) {
+
+        return `
+            Block storage provides storage volumes
+            that can be attached to computing
+            resources and used like disks.
+        `;
+
+    }
+
+
+    if (
+    value.includes("nosql")
+) {
+
+    return `
+        A NoSQL database uses flexible data
+        models and is useful for applications
+        handling large or changing datasets.
+    `;
+
+}
+
+
+if (
+    value.includes("sql")
+) {
+
+    return `
+        A SQL database stores structured data
+        in tables and supports relationships
+        and SQL-based queries.
+    `;
+
+}
+
+
+    if (
+        value.includes("ai") ||
+        value.includes(
+            "machine learning"
+        )
+    ) {
+
+        return `
+            This service provides tools or
+            infrastructure for building, training,
+            deploying or using AI and machine
+            learning applications.
+        `;
+
+    }
+
+
+    return `
+        This describes the main category or
+        technology used by the service.
+    `;
+
+}
+
+
+/* =================================================
+   SERVICE DETAILS MODAL
+================================================= */
+
+async function openServiceDetails(
+    providerId,
+    encodedServiceName
+) {
+
+    if (
+        !modal ||
+        !modalContent
+    ) {
+
+        return;
+
+    }
+
+
+    const serviceName =
+        decodeURIComponent(
+            encodedServiceName
+        );
+
+
+    modalContent.innerHTML = `
+
+        <div
+            class="service-details-loading"
+        >
+
+            <i
+                class="fa-solid fa-spinner fa-spin"
+            ></i>
+
+            <p>
+                Loading service information...
+            </p>
+
+        </div>
+
+    `;
+
+
+    modal.classList.add(
+        "show"
+    );
+
+
+    try {
+
+        const response =
+            await fetch(
+                `${API_BASE_URL}/api/services/${
+                    encodeURIComponent(
+                        providerId
+                    )
+                }/${
+                    encodeURIComponent(
+                        serviceName
+                    )
+                }`
+            );
+
+
+        if (
+            !response.ok
+        ) {
+
+            throw new Error(
+                "Unable to load service details."
+            );
+
+        }
+
+
+        const data =
+            await response.json();
+
+
+        if (
+            !data.success ||
+            !data.service
+        ) {
+
+            throw new Error(
+                "Service information unavailable."
+            );
+
+        }
+
+
+        const service =
+            data.service;
+
+
+        const advantages =
+            Array.isArray(
+                service.advantages
+            )
+                ? service.advantages
+                : [];
+
+
+        const limitations =
+            Array.isArray(
+                service.limitations
+            )
+                ? service.limitations
+                : [];
+
+
+        const typeExplanation =
+            getTypeExplanation(
+                service.type
+            );
+
+
+        const pricingExplanation =
+            getPricingExplanation(
+                service.pricingModel
+            );
+
+
+        modalContent.innerHTML = `
+
+            <div
+                class="service-details-header"
+            >
+
+                <div
+                    class="service-details-icon"
+                >
+
+                    <i
+                        class="fa-solid fa-cloud"
+                    ></i>
+
+                </div>
+
+
+                <div>
+
+                    <span>
+                        SERVICE INFORMATION
+                    </span>
+
+                    <h2>
+                        ${serviceName}
+                    </h2>
+
+                </div>
+
+            </div>
+
+
+            <!-- WHAT IT DOES -->
+
+            <div
+                class="service-detail-section"
+            >
+
+                <h3>
+
+                    <i
+                        class="fa-solid fa-circle-info"
+                    ></i>
+
+                    What does it do?
+
+                </h3>
+
+
+                <p>
+                    ${
+                        service.description ||
+                        "Detailed information is not available."
+                    }
+                </p>
+
+            </div>
+
+
+            <!-- BEST FOR -->
+
+            <div
+                class="service-detail-section"
+            >
+
+                <h3>
+
+                    <i
+                        class="fa-solid fa-bullseye"
+                    ></i>
+
+                    Best for
+
+                </h3>
+
+
+                <p>
+                    ${
+                        service.bestFor ||
+                        "Information not available."
+                    }
+                </p>
+
+            </div>
+
+
+            <!-- SERVICE TYPE -->
+
+            ${
+                service.type
+                    ? `
+
+                        <div
+                            class="service-detail-section"
+                        >
+
+                            <h3>
+
+                                <i
+                                    class="fa-solid fa-layer-group"
+                                ></i>
+
+                                What does
+                                "${service.type}"
+                                mean?
+
+                            </h3>
+
+
+                            <div
+                                class="pricing-model-name"
+                            >
+                                ${service.type}
+                            </div>
+
+
+                            <p>
+                                ${typeExplanation}
+                            </p>
+
+                        </div>
+
+                    `
+                    : ""
+            }
+
+
+            <!-- PRICING -->
+
+            ${
+                service.pricingModel
+                    ? `
+
+                        <div
+                            class="service-detail-section"
+                        >
+
+                            <h3>
+
+                                <i
+                                    class="fa-solid fa-tag"
+                                ></i>
+
+                                Understanding the
+                                pricing model
+
+                            </h3>
+
+
+                            <div
+                                class="pricing-model-name"
+                            >
+                                ${service.pricingModel}
+                            </div>
+
+
+                            <p>
+                                ${pricingExplanation}
+                            </p>
+
+                        </div>
+
+                    `
+                    : ""
+            }
+
+
+            <!-- ADVANTAGES -->
+
+            ${
+                advantages.length
+                    ? `
+
+                        <div
+                            class="service-detail-section"
+                        >
+
+                            <h3>
+
+                                <i
+                                    class="fa-solid fa-circle-check"
+                                ></i>
+
+                                Advantages
+
+                            </h3>
+
+
+                            <ul>
+
+                                ${
+                                    advantages
+                                        .map(
+                                            item => `
+                                                <li>
+                                                    ${item}
+                                                </li>
+                                            `
+                                        )
+                                        .join("")
+                                }
+
+                            </ul>
+
+                        </div>
+
+                    `
+                    : ""
+            }
+
+
+            <!-- LIMITATIONS -->
+
+            ${
+                limitations.length
+                    ? `
+
+                        <div
+                            class="service-detail-section"
+                        >
+
+                            <h3>
+
+                                <i
+                                    class="fa-solid fa-circle-exclamation"
+                                ></i>
+
+                                Limitations
+
+                            </h3>
+
+
+                            <ul>
+
+                                ${
+                                    limitations
+                                        .map(
+                                            item => `
+                                                <li>
+                                                    ${item}
+                                                </li>
+                                            `
+                                        )
+                                        .join("")
+                                }
+
+                            </ul>
+
+                        </div>
+
+                    `
+                    : ""
+            }
+
+
+            <!-- QUICK UNDERSTANDING -->
+
+            <div
+                class="service-information-note"
+            >
+
+                <i
+                    class="fa-solid fa-lightbulb"
+                ></i>
+
+
+                <div>
+
+                    <strong>
+                        Quick understanding
+                    </strong>
+
+
+                    <p>
+                        This information explains what
+                        the service is designed for.
+                        The best choice depends on your
+                        workload, requirements and
+                        existing cloud environment.
+                    </p>
+
+                </div>
+
+            </div>
+
+        `;
+
+
+    } catch (error) {
+
+        console.error(
+            "Service details error:",
+            error
+        );
+
+
+        modalContent.innerHTML = `
+
+            <div
+                class="empty-state"
+            >
+
+                <i
+                    class="fa-solid fa-circle-exclamation"
+                ></i>
+
+                <h3>
+                    Unable to load service details
+                </h3>
+
+                <p>
+                    Make sure the CLOUDEx
+                    backend is running.
+                </p>
+
+            </div>
+
+        `;
+
+    }
+
+}
     /* =================================================
        PROVIDER DETAILS MODAL
     ================================================= */
 
-    function openProviderModal(provider) {
+    function openProviderModal(
+        provider
+    ) {
 
         if (
             !modal ||
             !modalContent
         ) {
+
             return;
+
         }
 
 
@@ -1485,51 +3160,40 @@ document.addEventListener("DOMContentLoaded", () => {
         let serviceList = [];
 
 
-        /* ---------------------------------------------
-           NEW SERVICE STRUCTURE
-        --------------------------------------------- */
+        Object.keys(
+            services
+        ).forEach(
+            category => {
 
-        if (
-            services &&
-            typeof services === "object" &&
-            !Array.isArray(services)
-        ) {
-
-            Object.keys(services)
-                .forEach(category => {
-
-                    const categoryServices =
-                        Array.isArray(
-                            services[category]
-                        )
-                            ? services[category]
-                            : [];
+                const categoryServices =
+                    Array.isArray(
+                        services[category]
+                    )
+                        ? services[category]
+                        : [];
 
 
-                    categoryServices.forEach(
-                        service => {
+                categoryServices.forEach(
+                    service => {
 
-                            serviceList.push(
-                                getServiceName(
-                                    service
-                                )
-                            );
+                        serviceList.push(
+                            getServiceName(
+                                service
+                            )
+                        );
 
-                        }
-                    );
+                    }
+                );
 
-                });
+            }
+        );
 
-        }
-
-
-        /* ---------------------------------------------
-           OLD SERVICE STRUCTURE
-        --------------------------------------------- */
 
         if (
             serviceList.length === 0 &&
-            Array.isArray(provider.services)
+            Array.isArray(
+                provider.services
+            )
         ) {
 
             serviceList =
@@ -1577,14 +3241,18 @@ document.addEventListener("DOMContentLoaded", () => {
 
             strengthsHTML = `
 
-                <div class="modal-section">
+                <div
+                    class="modal-section"
+                >
 
                     <h3>
                         Why consider it?
                     </h3>
 
 
-                    <div class="modal-points">
+                    <div
+                        class="modal-points"
+                    >
 
                         ${
                             provider.strengths
@@ -1602,7 +3270,6 @@ document.addEventListener("DOMContentLoaded", () => {
                                                 }
                                             </strong>
 
-                                            
                                             <span>
                                                 ${
                                                     strength.description ||
@@ -1628,7 +3295,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
         modalContent.innerHTML = `
 
-            <div class="modal-header">
+            <div
+                class="modal-header"
+            >
 
                 <div
                     class="modal-provider-icon"
@@ -1662,14 +3331,18 @@ document.addEventListener("DOMContentLoaded", () => {
             </div>
 
 
-            <div class="modal-section">
+            <div
+                class="modal-section"
+            >
 
                 <h3>
                     Popular services
                 </h3>
 
 
-                <div class="modal-list">
+                <div
+                    class="modal-list"
+                >
 
                     ${serviceHTML}
 
@@ -1683,13 +3356,15 @@ document.addEventListener("DOMContentLoaded", () => {
         `;
 
 
-        modal.classList.add("show");
+        modal.classList.add(
+            "show"
+        );
 
     }
 
 
     /* =================================================
-       CLOSE MODAL
+       MODAL CONTROLS
     ================================================= */
 
     if (
@@ -1729,10 +3404,6 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
 
-    /* =================================================
-       ESCAPE KEY
-    ================================================= */
-
     document.addEventListener(
         "keydown",
         event => {
@@ -1759,200 +3430,224 @@ document.addEventListener("DOMContentLoaded", () => {
     loadProviders();
 
 });
-// =========================================================
-// AI ADVISOR → CLOUD EXPLORER INTEGRATION
-// =========================================================
-
-document.addEventListener("DOMContentLoaded", () => {
-
-    const params = new URLSearchParams(
-        window.location.search
-    );
-
-    const providerFromAI = params.get("provider");
-    const compareFromAI = params.get("compare");
 
 
-    // -----------------------------------------------------
-    // Find provider checkbox
-    // -----------------------------------------------------
+/* =====================================================
+   AI ADVISOR → CLOUD EXPLORER
+===================================================== */
 
-    function findProviderCheckbox(providerId) {
+document.addEventListener(
+    "DOMContentLoaded",
+    () => {
 
-        if (!providerId) {
-            return null;
-        }
-
-        const checkboxes =
-            document.querySelectorAll(
-                'input[type="checkbox"]'
+        const params =
+            new URLSearchParams(
+                window.location.search
             );
 
-        return Array.from(checkboxes).find(
-            checkbox => {
 
-                const value =
-                    (checkbox.value || "")
-                    .toLowerCase();
+        const providerFromAI =
+            params.get(
+                "provider"
+            );
 
-                const dataProvider =
-                    (
-                        checkbox.dataset.provider || ""
-                    ).toLowerCase();
 
-                const id =
-                    (
-                        checkbox.id || ""
-                    ).toLowerCase();
+        const compareFromAI =
+            params.get(
+                "compare"
+            );
 
-                return (
-                    value === providerId.toLowerCase() ||
-                    dataProvider === providerId.toLowerCase() ||
-                    id.includes(providerId.toLowerCase())
-                );
+
+        /* ---------------------------------------------
+           FIND PROVIDER CHECKBOX
+        --------------------------------------------- */
+
+        function findProviderCheckbox(
+            providerId
+        ) {
+
+            if (!providerId) {
+
+                return null;
+
             }
-        );
-    }
 
 
-    // -----------------------------------------------------
-    // Explore provider
-    // -----------------------------------------------------
-
-    if (providerFromAI) {
-
-        setTimeout(() => {
-
-            /*
-             * Find a provider card that contains
-             * the recommended provider.
-             */
-
-            const providerCards =
+            const checkboxes =
                 document.querySelectorAll(
-                    "[data-provider]"
-                );
-
-            const card =
-                Array.from(providerCards).find(
-                    element =>
-                        (
-                            element.dataset.provider || ""
-                        ).toLowerCase() ===
-                        providerFromAI.toLowerCase()
+                    'input[type="checkbox"]'
                 );
 
 
-            if (card) {
+            return Array
+                .from(
+                    checkboxes
+                )
+                .find(
+                    checkbox => {
 
-                card.scrollIntoView({
-                    behavior: "smooth",
-                    block: "center"
-                });
+                        const value =
+                            (
+                                checkbox.value ||
+                                ""
+                            ).toLowerCase();
 
-            }
 
-        }, 500);
+                        const dataProvider =
+                            (
+                                checkbox.dataset.provider ||
+                                ""
+                            ).toLowerCase();
+
+
+                        const id =
+                            (
+                                checkbox.id ||
+                                ""
+                            ).toLowerCase();
+
+
+                        return (
+
+                            value ===
+                            providerId.toLowerCase()
+
+                            ||
+
+                            dataProvider ===
+                            providerId.toLowerCase()
+
+                            ||
+
+                            id.includes(
+                                providerId.toLowerCase()
+                            )
+
+                        );
+
+                    }
+                );
+
+        }
+
+
+        /* ---------------------------------------------
+           EXPLORE PROVIDER
+        --------------------------------------------- */
+
+        if (
+            providerFromAI
+        ) {
+
+            setTimeout(
+                () => {
+
+                    const providerCards =
+                        document.querySelectorAll(
+                            "[data-provider]"
+                        );
+
+
+                    const card =
+                        Array
+                            .from(
+                                providerCards
+                            )
+                            .find(
+                                element =>
+                                    (
+                                        element.dataset.provider ||
+                                        ""
+                                    ).toLowerCase() ===
+                                    providerFromAI.toLowerCase()
+                            );
+
+
+                    if (card) {
+
+                        card.scrollIntoView({
+                            behavior:
+                                "smooth",
+                            block:
+                                "center"
+                        });
+
+                    }
+
+                },
+                500
+            );
+
+        }
+
+
+        /* ---------------------------------------------
+           COMPARE PROVIDER
+        --------------------------------------------- */
+
+        if (
+            compareFromAI
+        ) {
+
+            setTimeout(
+                () => {
+
+                    const checkbox =
+                        findProviderCheckbox(
+                            compareFromAI
+                        );
+
+
+                    if (checkbox) {
+
+                        if (
+                            !checkbox.checked
+                        ) {
+
+                            checkbox.click();
+
+                        }
+
+                    } else {
+
+                        console.warn(
+                            "Could not find comparison checkbox for:",
+                            compareFromAI
+                        );
+
+                    }
+
+
+                    const comparisonSection =
+                        document.querySelector(
+                            "#comparison"
+                        ) ||
+                        document.querySelector(
+                            ".comparison-section"
+                        ) ||
+                        document.querySelector(
+                            "[data-section='comparison']"
+                        );
+
+
+                    if (
+                        comparisonSection
+                    ) {
+
+                        comparisonSection.scrollIntoView({
+                            behavior:
+                                "smooth",
+                            block:
+                                "start"
+                        });
+
+                    }
+
+                },
+                700
+            );
+
+        }
 
     }
-
-
-    // -----------------------------------------------------
-    // Compare provider
-    // -----------------------------------------------------
-
-    if (compareFromAI) {
-
-        setTimeout(() => {
-
-            const checkbox =
-                findProviderCheckbox(
-                    compareFromAI
-                );
-
-
-            if (checkbox) {
-
-                /*
-                 * Automatically select the
-                 * provider recommended by AI.
-                 */
-
-                if (!checkbox.checked) {
-
-                    checkbox.click();
-
-                }
-
-            } else {
-
-                console.warn(
-                    "Could not find comparison checkbox for:",
-                    compareFromAI
-                );
-
-            }
-
-
-            // ---------------------------------------------
-            // Scroll to comparison section
-            // ---------------------------------------------
-
-            const comparisonSection =
-                document.querySelector(
-                    "#comparison"
-                ) ||
-                document.querySelector(
-                    ".comparison-section"
-                ) ||
-                document.querySelector(
-                    "[data-section='comparison']"
-                );
-
-
-            if (comparisonSection) {
-
-                comparisonSection.scrollIntoView({
-                    behavior: "smooth",
-                    block: "start"
-                });
-
-            } else {
-
-                /*
-                 * Fallback:
-                 * search for the Compare heading.
-                 */
-
-                const headings =
-                    document.querySelectorAll(
-                        "h1, h2, h3"
-                    );
-
-                const compareHeading =
-                    Array.from(headings).find(
-                        heading =>
-                            heading.textContent
-                                .toLowerCase()
-                                .includes(
-                                    "compare cloud providers"
-                                )
-                    );
-
-
-                if (compareHeading) {
-
-                    compareHeading.scrollIntoView({
-                        behavior: "smooth",
-                        block: "start"
-                    });
-
-                }
-
-            }
-
-        }, 700);
-
-    }
-
-});
+);

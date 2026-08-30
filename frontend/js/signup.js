@@ -168,7 +168,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
                 const response =
                     await fetch(
-                        "https://cloudex-o2xm.onrender.com/api/auth/signup",
+                        "http://localhost:5000/api/auth/signup",
                         {
                             method: "POST",
 
