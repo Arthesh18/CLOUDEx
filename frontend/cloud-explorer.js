@@ -69,7 +69,7 @@ document.addEventListener("DOMContentLoaded", () => {
         try {
 
             const response =
-                await fetch("https://cloudex-o2xm.onrender.com/api/cloud/providers");
+                await fetch("http://localhost:5000/api/cloud/providers");
 
             if (!response.ok) {
                 throw new Error(
