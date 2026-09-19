@@ -399,8 +399,22 @@ app.post(
     message,
     conversation = [],
     userId,
-    chatId
+    chatId,
+    experienceMode: rawExperienceMode
 } = req.body;
+
+
+            // ------------------------------------------
+            // VALIDATE EXPERIENCE MODE (FEATURE #7)
+            // ------------------------------------------
+
+            const sanitizedMode = typeof rawExperienceMode === "string"
+                ? rawExperienceMode.toLowerCase().trim()
+                : "beginner";
+
+            const experienceMode = ["beginner", "intermediate", "expert"].includes(sanitizedMode)
+                ? sanitizedMode
+                : "beginner";
 
 
             // ------------------------------------------
@@ -437,7 +451,7 @@ app.post(
 
 
             console.log(
-                "Cloudex AI received:",
+                `Cloudex AI received [Mode: ${experienceMode.toUpperCase()}]:`,
                 message
             );
 
@@ -456,6 +470,50 @@ app.post(
                 formatRequirementsForPrompt(
                     extractedRequirements
                 );
+
+
+            // ------------------------------------------
+            // EXPERIENCE MODE DIRECTIVE (FEATURE #7)
+            // ------------------------------------------
+
+            let modePromptSection = "";
+            if (experienceMode === "beginner") {
+                modePromptSection = `
+==================================================
+CURRENT ACTIVE MODE: BEGINNER (DEFAULT)
+==================================================
+
+The user is currently interacting in BEGINNER mode.
+- VOCABULARY & TONE: Speak in warm, accessible, everyday English. Strictly ZERO unexplained cloud jargon. If a technical term (such as "database", "server", "DNS", or "container") is necessary, explain it immediately with a simple everyday analogy.
+- QUESTION COMPLEXITY: Ask simple, relatable questions focused on real-world objectives (what is being built, target user count, budget constraints, preference for simplicity). NEVER force technical choices or ask about vCPUs, RAM ratios, CIDR blocks, container orchestration runtimes, or IOPS.
+- EXPLANATION DEPTH: Focus on ease of setup, intuitive dashboards, 1-click deployments, predictable flat monthly pricing, and generous free tiers so they never face unexpected bills.
+- RECOMMENDATION EXPLANATION: Clearly explain why the recommended cloud fits their project in plain, encouraging language, highlighting hassle-free management and cost predictability.
+`;
+            } else if (experienceMode === "intermediate") {
+                modePromptSection = `
+==================================================
+CURRENT ACTIVE MODE: INTERMEDIATE
+==================================================
+
+The user is currently interacting in INTERMEDIATE mode.
+- VOCABULARY & TONE: Practical, professional engineering tone. The user understands foundational cloud concepts (virtual machines, containers, managed databases, storage buckets, CDNs, git deployments). Do NOT talk down to them or explain basic terms like "what is a server" or "what is an API".
+- QUESTION COMPLEXITY: Ask pragmatic architectural and operational questions: e.g., "Do you prefer managed PaaS/containers (like App Platform, Cloud Run, or ECS) or a raw Linux VM?", "What database engine and managed tier do you plan to use?", "What is your target budget and expected egress volume?".
+- EXPLANATION DEPTH: Focus on operational trade-offs: managed vs unmanaged infrastructure, serverless vs persistent VMs, auto-scaling thresholds, connection pooling, and cost-to-performance efficiency.
+- RECOMMENDATION EXPLANATION: Emphasize developer workflow, tooling ergonomics, API support, managed database offerings, bandwidth allocations, and cost efficiency.
+`;
+            } else if (experienceMode === "expert") {
+                modePromptSection = `
+==================================================
+CURRENT ACTIVE MODE: EXPERT
+==================================================
+
+The user is currently interacting in EXPERT mode.
+- VOCABULARY & TONE: High-level architectural peer dialogue. Direct, technical, and concise. No handholding, no introductory definitions, no patronizing explanations.
+- QUESTION COMPLEXITY: Engage at enterprise production level: e.g., Kubernetes orchestration (EKS/GKE/AKS/bare-metal), VPC topology, peering and transit gateways, database replication topologies (read replicas, sharding, failover SLAs), multi-region active-active vs active-passive, GPU interconnects (InfiniBand/NVLink), regulatory compliance (SOC2, HIPAA, ISO27001, GDPR), and committed use / savings plans.
+- EXPLANATION DEPTH: Evaluate deep technical factors: hypervisor overhead, network backplane throughput, IOPS guarantees, egress peering economics, SLA commitments (99.99%+), data sovereignty, observability/telemetry integration, and disaster recovery RTO/RPO.
+- RECOMMENDATION EXPLANATION: Justify the recommendation with rigorous architectural rationale: architectural flexibility, networking performance, compliance certifications, pricing predictability at high scale, and ecosystem lock-in vs portability.
+`;
+            }
 
 
             // ------------------------------------------
@@ -483,6 +541,8 @@ CLOUDEx is an intelligent, adaptive cloud decision assistant and architecture ad
 Your job is to engage in an insightful, consultative conversation with users, understand what they are building, assess their technical context and constraints, and eventually recommend the optimal cloud provider and architecture from our curated catalog of 15 Cloud Service Providers.
 
 You are a consultative cloud advisor, not a rigid questionnaire.
+
+${modePromptSection}
 
 
 ==================================================
@@ -873,7 +933,9 @@ if (userId && chatId) {
                     updatedConversation,
 
                 requirements:
-                    extractedRequirements
+                    extractedRequirements,
+
+                experienceMode
 
             });
 

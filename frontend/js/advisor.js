@@ -65,6 +65,80 @@ document.addEventListener("DOMContentLoaded", async () => {
     const newChatButton =
         document.getElementById("newChatButton");
 
+    const modePills =
+        document.querySelectorAll(".mode-pill");
+
+    const modeDescriptionHint =
+        document.getElementById("modeDescriptionHint");
+
+
+    // =====================================================
+    // EXPERIENCE MODES (FEATURE #7)
+    // =====================================================
+
+    const VALID_MODES = ["beginner", "intermediate", "expert"];
+
+    const MODE_CONFIGS = {
+        beginner: {
+            hint: "Plain English • Guided questions • No jargon",
+            placeholder: "Tell Cloudex what you're building (e.g. personal portfolio, student project)..."
+        },
+        intermediate: {
+            hint: "Architecture & trade-offs • Containers & DBs • Pragmatic",
+            placeholder: "Describe your stack and architecture needs (e.g. Next.js + Postgres container)..."
+        },
+        expert: {
+            hint: "DevOps & orchestration • Multi-region & SLAs • Deep technical",
+            placeholder: "Specify production requirements (e.g. multi-region K8s, high-IOPS DB, SOC2)..."
+        }
+    };
+
+    let currentExperienceMode = (localStorage.getItem("cloudexExperienceMode") || "beginner").toLowerCase();
+    if (!VALID_MODES.includes(currentExperienceMode)) {
+        currentExperienceMode = "beginner";
+    }
+
+    function setExperienceMode(mode, userInitiated = false) {
+        if (!VALID_MODES.includes(mode)) {
+            mode = "beginner";
+        }
+
+        const prevMode = currentExperienceMode;
+        currentExperienceMode = mode;
+        localStorage.setItem("cloudexExperienceMode", mode);
+
+        modePills.forEach((pill) => {
+            const pillMode = pill.dataset.mode;
+            const isActive = pillMode === mode;
+            pill.classList.toggle("active", isActive);
+            pill.setAttribute("aria-checked", isActive ? "true" : "false");
+        });
+
+        if (modeDescriptionHint && MODE_CONFIGS[mode]) {
+            modeDescriptionHint.textContent = MODE_CONFIGS[mode].hint;
+        }
+
+        if (messageInput && MODE_CONFIGS[mode]) {
+            messageInput.placeholder = MODE_CONFIGS[mode].placeholder;
+        }
+
+        if (userInitiated && prevMode !== mode && conversation.length > 0) {
+            addSystemNotice(`Switched to ${mode.charAt(0).toUpperCase() + mode.slice(1)} mode — subsequent responses will adapt.`);
+        }
+    }
+
+    modePills.forEach((pill) => {
+        pill.addEventListener("click", () => {
+            const selectedMode = pill.dataset.mode;
+            if (selectedMode && selectedMode !== currentExperienceMode) {
+                setExperienceMode(selectedMode, true);
+            }
+        });
+    });
+
+    // Initialize mode UI
+    setExperienceMode(currentExperienceMode, false);
+
 
     // =====================================================
     // PROVIDER INFORMATION
@@ -1571,6 +1645,34 @@ document.addEventListener("DOMContentLoaded", async () => {
 
 
     // =========================================================
+    // SYSTEM NOTICE (FEATURE #7)
+    // =========================================================
+
+    function addSystemNotice(text) {
+
+        if (!chatMessages) {
+            return;
+        }
+
+        const notice =
+            document.createElement("div");
+
+        notice.className =
+            "system-notice";
+
+        notice.textContent =
+            text;
+
+        chatMessages.appendChild(
+            notice
+        );
+
+        scrollToBottom();
+
+    }
+
+
+    // =========================================================
     // TYPING INDICATOR
     // =========================================================
 
@@ -1656,7 +1758,10 @@ document.addEventListener("DOMContentLoaded", async () => {
                                 currentUserId,
 
                             chatId:
-                                currentChatId
+                                currentChatId,
+
+                            experienceMode:
+                                currentExperienceMode
 
                         })
                     }

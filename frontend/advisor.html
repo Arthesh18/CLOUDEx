@@ -199,6 +199,63 @@
 
 
                 <!-- =================================================
+                     Experience Mode Selector (Feature #7)
+                     ================================================= -->
+                <div class="mode-selector-bar" id="modeSelectorBar">
+
+                    <div class="mode-bar-label">
+                        <span class="mode-label-text">MODE:</span>
+                    </div>
+
+                    <div class="mode-pills" role="radiogroup" aria-label="Advisor Experience Mode">
+
+                        <button
+                            type="button"
+                            class="mode-pill active"
+                            data-mode="beginner"
+                            title="Beginner: Plain English, guided questions, zero cloud jargon"
+                            aria-checked="true"
+                            role="radio"
+                        >
+                            <span class="mode-pill-icon">🌱</span>
+                            <span class="mode-pill-name">Beginner</span>
+                        </button>
+
+                        <button
+                            type="button"
+                            class="mode-pill"
+                            data-mode="intermediate"
+                            title="Intermediate: Pragmatic architecture, containers, managed DBs & trade-offs"
+                            aria-checked="false"
+                            role="radio"
+                        >
+                            <span class="mode-pill-icon">⚡</span>
+                            <span class="mode-pill-name">Intermediate</span>
+                        </button>
+
+                        <button
+                            type="button"
+                            class="mode-pill"
+                            data-mode="expert"
+                            title="Expert: Deep technical dialogue, orchestration, multi-region, SLAs & compliance"
+                            aria-checked="false"
+                            role="radio"
+                        >
+                            <span class="mode-pill-icon">🚀</span>
+                            <span class="mode-pill-name">Expert</span>
+                        </button>
+
+                    </div>
+
+                    <div class="mode-description-hint" id="modeDescriptionHint">
+                        Plain English • Guided questions • No jargon
+                    </div>
+
+                </div>
+
+
+
+                <!-- =================================================
                      Messages
                      ================================================= -->
 
