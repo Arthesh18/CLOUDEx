@@ -646,16 +646,12 @@ document.addEventListener("DOMContentLoaded", async () => {
 
 
                         <p>
-                            Tell me what you're planning to build,
-                            and I'll help you figure out which cloud
-                            provider fits your requirements best.
+                            Tell me what you're planning to build in simple words — you don't need any cloud computing knowledge. I'll translate your project needs into the right cloud setup.
                         </p>
 
 
                         <p>
-                            I won't recommend a provider immediately —
-                            I'll ask you a few questions first so the
-                            recommendation actually makes sense for you.
+                            I won't recommend a provider immediately — I'll ask you a few simple questions first so the recommendation makes sense for your budget and goals.
                         </p>
 
                     </div>

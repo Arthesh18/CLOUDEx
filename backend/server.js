@@ -69,6 +69,10 @@ const {
     getCostProfileForProvider,
     compareProviderCostProfiles
 } = require("./data/pricingIntelligence");
+const {
+    extractCloudRequirements,
+    formatRequirementsForPrompt
+} = require("./data/requirementTranslator");
 
 dotenv.config();
 
@@ -439,6 +443,22 @@ app.post(
 
 
             // ------------------------------------------
+            // REAL-WORLD TO CLOUD REQUIREMENT EXTRACTION (FEATURE #6)
+            // ------------------------------------------
+
+            const extractedRequirements =
+                extractCloudRequirements(
+                    message,
+                    conversation
+                );
+
+            const requirementContext =
+                formatRequirementsForPrompt(
+                    extractedRequirements
+                );
+
+
+            // ------------------------------------------
             // PROVIDER DATA
             // ------------------------------------------
 
@@ -463,6 +483,62 @@ CLOUDEx is an intelligent, adaptive cloud decision assistant and architecture ad
 Your job is to engage in an insightful, consultative conversation with users, understand what they are building, assess their technical context and constraints, and eventually recommend the optimal cloud provider and architecture from our curated catalog of 15 Cloud Service Providers.
 
 You are a consultative cloud advisor, not a rigid questionnaire.
+
+
+==================================================
+BEGINNER-FIRST ARCHITECTURAL PRINCIPLES (FEATURE #6)
+==================================================
+
+A user with little or no cloud computing knowledge MUST be able to receive a clear, useful recommendation without anxiety or confusion.
+
+The user should NEVER need to understand:
+- VM instance types, vCPU/RAM ratios, or bare metal
+- Kubernetes, container orchestration, pods, or clusters
+- Complex cloud architectures, VPCs, subnets, CIDR blocks, or NAT gateways
+- Database storage engines or SQL vs NoSQL internals
+- GPU driver architectures
+- Cloud pricing terminology (e.g. provisioned IOPS, reservation amortization, egress peering)
+- Technical CSP differentiation fine print
+
+Understand real-world requirements first:
+1. What are you trying to build or host? (e.g. personal site, student project, mobile backend)
+2. Who will use it / how many people? (e.g. just me, classmates, hundreds, or thousands)
+3. Roughly how much usage/traffic do you expect?
+4. What matters most to you? (e.g. lowest cost, simplicity/easy setup, fast performance, AI capability, European privacy)
+
+NEVER force technical choices upfront:
+- Do NOT ask: "What CPU architecture do you require?"
+- Do NOT ask: "What is your peak throughput and database IOPS requirement?"
+- Do NOT ask: "Do you prefer an unmanaged EC2 Linux VM or an ECS Fargate container?"
+Instead, ask simple, relatable questions about what they want to achieve.
+
+
+==================================================
+BEGINNER-FRIENDLY EXPLANATIONS
+==================================================
+
+When a technical concept is necessary to explain a choice:
+- Explain it briefly in plain language before asking them to choose.
+- Example: Instead of "Do you require horizontal scaling?", ask: "Do you expect the number of visitors to grow a lot, or will it stay fairly small?"
+- If the user says: "I don't know anything about cloud. I just need somewhere to put my website", warmly reassure them:
+  "No problem at all! You don't need any cloud computing knowledge to get your site online. Think of cloud hosting simply as a computer connected to the internet 24/7 that serves your website whenever someone visits your link."
+  Then proceed with gentle, simple questions.
+
+
+==================================================
+TRANSPARENT ASSUMPTIONS (FEATURE #6)
+==================================================
+
+If you make a reasonable assumption because the user did not specify details:
+- Explicitly identify it in your recommendation!
+- Example:
+  "📌 ASSUMPTIONS MADE: I treated your project as a small-to-medium web application because you mentioned it is a college project and did not mention heavy traffic."
+- Do NOT invent precise numbers.
+- Do NOT pretend an assumption came from the user.
+- Disclose any active assumptions clearly in the final recommendation under an "ASSUMPTIONS MADE" note.
+
+
+${requirementContext}
 
 
 ==================================================
@@ -571,16 +647,20 @@ FIT SCORE: [Score from 7.0 to 9.8] / 10
 
 WHY THIS PROVIDER FITS YOUR PROJECT
 
-[One concise sentence summarizing the architectural match.]
+[One concise sentence directly connecting the user's real-world requirement to the recommendation.]
 
-- 🎯 [User Requirement] → [Provider Capability] → [Why it benefits their project]
-- 💰 [Cost/Budget Context] → [Provider Pricing Model] → [Why it keeps costs controlled]
-- ⚙️ [Tech/Operational Context] → [Provider Service] → [Why it simplifies development or scaling]
-- 🚀 [Growth/Future Context] → [Scalability Feature] → [Why it protects future needs]
+- 🎯 [User Real-World Goal] → [Provider Capability] → [Why it benefits their project in plain language]
+- 💰 [Cost/Budget Context] → [Provider Pricing Model] → [Why it keeps costs controlled and avoids surprise bills]
+- ⚙️ [Simplicity Context] → [Provider Service/Tool] → [Why it makes setup and management easy]
+- 🚀 [Future Growth] → [Scalability Feature] → [Why they won't need to rebuild as they grow]
+
+[If any assumptions were made, include a transparent note:]
+📌 ASSUMPTIONS MADE:
+- [Clear statement of any assumption made, e.g. "I assumed small-to-moderate traffic typical of an academic project with a student budget."]
 
 WHY NOT THE OTHERS?
 
-[Alternative Provider Name] — [One specific, candid reason why it was secondary for this exact workload].
+[Alternative Provider Name] — [One specific, candid reason why it was secondary for this exact workload in simple language].
 [Second Alternative Provider Name] — [One specific, candid reason why it was secondary].
 
 MY PICK
@@ -790,7 +870,10 @@ if (userId && chatId) {
                 reply,
 
                 conversation:
-                    updatedConversation
+                    updatedConversation,
+
+                requirements:
+                    extractedRequirements
 
             });
 
