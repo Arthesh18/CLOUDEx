@@ -96,6 +96,9 @@ const {
 const {
     explainAssumptions
 } = require("./data/assumptionExplainer");
+const {
+    RequirementSlotTracker
+} = require("./data/slotTracker");
 
 dotenv.config();
 
@@ -770,6 +773,31 @@ app.post(
 
 
             // ------------------------------------------
+            // INTELLIGENT SLOT TRACKING (prevents repeated questions)
+            // ------------------------------------------
+
+            const slotTracker = new RequirementSlotTracker();
+            const slotSummary = slotTracker.processTurn(message, conversation, experienceMode);
+
+            // Pick the best unresolved question to ask (only during discovery stage)
+            let selectedQuestion = null;
+            if (isDiscoveryStage) {
+                selectedQuestion = slotTracker.selectBestUnresolvedQuestion(experienceMode);
+                if (selectedQuestion) {
+                    slotTracker.markSlotAsked(selectedQuestion.slotKey);
+                }
+            }
+
+            // Build human-readable "known slots" list for the prompt
+            const knownSlotLines = Object.values(slotSummary.knownSlots)
+                .map(s => `- ${s.label}: ${s.value}`)
+                .join("\n") || "None yet";
+            const assumedSlotLines = Object.values(slotSummary.assumedSlots)
+                .map(s => `- ${s.label}: ${s.value} (assumed)`)
+                .join("\n") || "None";
+
+
+            // ------------------------------------------
             // EXPERIENCE MODE DIRECTIVE (FEATURE #7)
             // ------------------------------------------
 
@@ -932,31 +960,40 @@ THIS STRICTLY APPLIES ACROSS ALL THREE MODES: BEGINNER, INTERMEDIATE, AND EXPERT
 Current Turn: ${userTurnIndex + 1}.
 UNDER NO CIRCUMSTANCES SHOULD YOU OUTPUT "🥇 MY RECOMMENDATION" OR "MY PICK" ON THIS TURN!
 
-${userTurnIndex === 0 ? `
-TURN 1 INSTRUCTIONS:
-1. Warmly acknowledge what the user is building and state what you understand so far.
-2. DO NOT output "🥇 MY RECOMMENDATION" or "MY PICK" under ANY circumstances on this turn!
-3. Intelligently ask 1 to 2 targeted questions to begin distinguishing between providers.
-   * NEVER ask about details the user already answered in their message!
-   * Adapt to active mode (${experienceMode.toUpperCase()}):
-     - BEGINNER: Use simple, everyday non-technical language. Ask if users will need accounts/logins, what kind of data the app will store (tasks, posts, profiles, files), expected user numbers, or budget preference.
-     - INTERMEDIATE: Ask pragmatic architectural questions (relational vs NoSQL database, Docker containers vs managed PaaS vs Linux VM, predictable vs spiky traffic, object storage for media).
-     - EXPERT: Ask deep architecture/enterprise questions: workload orchestration (K8s/bare metal/serverless), multi-region active-active & SLA targets, GPU training vs inference, VPC topology/peering, compliance (SOC2/GDPR) & data residency.
+==================================================
+WHAT CLOUDEx ALREADY KNOWS (DO NOT ASK ABOUT THESE):
+==================================================
+${knownSlotLines}
+
+ALREADY ASSUMED (DO NOT ASK ABOUT THESE EITHER):
+${assumedSlotLines}
+
+==================================================
+YOUR ONLY TASK ON THIS TURN:
+==================================================
+${selectedQuestion ? `
+1. Warmly acknowledge the user's message and summarize what you have learned so far in 1–2 natural sentences.
+2. Ask ONLY this ONE targeted question — it is the highest-impact missing piece of information:
+
+   "${selectedQuestion.questionText}"
+
+   (This question is about: ${selectedQuestion.slotLabel})
+
+3. DO NOT ask about any of the "ALREADY KNOWN" or "ALREADY ASSUMED" items listed above.
+4. DO NOT ask more than 1–2 questions total in this turn.
+5. DO NOT output "🥇 MY RECOMMENDATION" or "MY PICK" under ANY circumstances on this turn.
+6. Keep your response conversational, warm, and concise — not a long report.
 ` : `
-TURN 2 INSTRUCTIONS:
-1. Acknowledge the user's latest response.
-2. If the user expressed uncertainty ("I don't know", "Not sure", "You decide", "Whatever is best"):
-   - Warmly explain what the concept means in simple, everyday language.
-   - Adopt a safe, conservative default assumption and CLEARLY disclose what you assumed (e.g. "Since your app sounds like it will store user data, I'll temporarily assume you need a small managed database. You can change this later.").
-   - DO NOT STOP OR JUMP TO AN IMMEDIATE RECOMMENDATION ON "I DON'T KNOW"! Continue to confirm the remaining critical question!
-3. Ask the second meaningful question that has not yet been answered (e.g. user scale, database, budget tolerance, or architecture preference).
-4. DO NOT provide the final recommendation on this turn.
+1. Warmly acknowledge what the user is building and summarize what you understand so far.
+2. All key information slots appear to be resolved or assumed. Ask 1 brief clarifying question about the user's preferred setup or any remaining uncertainty.
+3. DO NOT output "🥇 MY RECOMMENDATION" or "MY PICK" on this turn.
 `}
 ` : `
 CURRENT STAGE: RECOMMENDATION READY (Turn ${userTurnIndex + 1})
 At least 2 meaningful questions have been asked and answered across the dialogue.
 You may now present the tailored final recommendation concisely using the structured format below.
 `}
+
 
 ${isDiscoveryStage ? `
 ==================================================
@@ -1274,7 +1311,11 @@ if (userId && chatId) {
 
                 hasMinimumQuestions,
 
-                isDiscoveryStage: !hasMinimumQuestions && !isRecalculatedPreferences
+                isDiscoveryStage: !hasMinimumQuestions && !isRecalculatedPreferences,
+
+                slotSummary,
+
+                selectedQuestion
 
             });
 
