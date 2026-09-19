@@ -2519,6 +2519,36 @@ function getAllServices() {
 
 
 // =========================================================
+// ENRICH WITH OFFICIAL LINKS (FEATURE #21)
+// =========================================================
+
+const { getOfficialProviderLinks, getOfficialServiceLink } = require("./officialLinks");
+
+cloudProviders.forEach((provider) => {
+    const pLinks = getOfficialProviderLinks(provider.id);
+    if (pLinks) {
+        provider.officialUrl = pLinks.officialUrl;
+        provider.officialLinks = {
+            website: pLinks.officialUrl,
+            documentation: pLinks.documentationUrl,
+            pricing: pLinks.pricingUrl
+        };
+    }
+    if (provider.services) {
+        Object.keys(provider.services).forEach((cat) => {
+            if (Array.isArray(provider.services[cat])) {
+                provider.services[cat].forEach((svc) => {
+                    const svcUrl = getOfficialServiceLink(provider.id, svc.name);
+                    if (svcUrl) {
+                        svc.officialUrl = svcUrl;
+                    }
+                });
+            }
+        });
+    }
+});
+
+// =========================================================
 // EXPORT
 // =========================================================
 

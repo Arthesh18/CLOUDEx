@@ -4,6 +4,7 @@
  */
 
 const { cloudProviders, getProviderById } = require("./cloudData");
+const { getOfficialServiceLink } = require("./officialLinks");
 
 const serviceEquivalenceGroups = [
     {
@@ -197,6 +198,7 @@ function getEquivalentService(groupKey, providerId) {
                 id: provider.id,
                 name: provider.name,
                 shortName: provider.shortName,
+                officialUrl: provider.officialUrl || null,
                 icon: provider.icon || "fa-cloud"
             },
             service: null,
@@ -214,6 +216,7 @@ function getEquivalentService(groupKey, providerId) {
                 id: provider.id,
                 name: provider.name,
                 shortName: provider.shortName,
+                officialUrl: provider.officialUrl || null,
                 icon: provider.icon || "fa-cloud"
             },
             service: null,
@@ -221,16 +224,20 @@ function getEquivalentService(groupKey, providerId) {
         };
     }
 
+    const svcOfficial = service.officialUrl || getOfficialServiceLink(provider.id, service.name) || null;
+
     return {
         hasEquivalent: true,
         provider: {
             id: provider.id,
             name: provider.name,
             shortName: provider.shortName,
+            officialUrl: provider.officialUrl || null,
             icon: provider.icon || "fa-cloud"
         },
         service: {
             ...service,
+            officialUrl: svcOfficial,
             groupKey: group.key,
             groupTitle: group.title
         }

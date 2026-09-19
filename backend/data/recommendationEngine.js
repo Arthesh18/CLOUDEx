@@ -226,12 +226,17 @@ function generatePersonalizedRecommendation(options = {}) {
         confidenceBasis = "Moderate confidence: Some defaults were safely assumed due to unstated requirements.";
     }
 
+    const pData = getProviderById(winner.providerId);
+    const runnerUpData = runnerUp ? getProviderById(runnerUp.providerId) : null;
+
     return {
         success: true,
         recommendedProvider: {
             id: winner.providerId,
             name: winner.providerName,
             shortName: winner.shortName,
+            officialUrl: (pData && pData.officialUrl) || null,
+            officialLinks: (pData && pData.officialLinks) || null,
             totalScore: winner.totalScore,
             matchPercentage: winner.matchPercentage,
             rank: 1,
@@ -243,7 +248,8 @@ function generatePersonalizedRecommendation(options = {}) {
         runnerUp: runnerUp ? {
             id: runnerUp.providerId,
             name: runnerUp.providerName,
-            matchPercentage: runnerUp.matchPercentage
+            matchPercentage: runnerUp.matchPercentage,
+            officialUrl: (runnerUpData && runnerUpData.officialUrl) || null
         } : null,
         recommendationScore: winner.totalScore,
         matchPercentage: winner.matchPercentage,
@@ -270,12 +276,16 @@ function generatePersonalizedRecommendation(options = {}) {
         source: fuzzyResult.source,
         mode: fuzzyResult.mode,
         scoringMethod: "Weighted MCDM",
-        allRankings: mcdmResult.rankedProviders.map(p => ({
-            rank: p.rank,
-            id: p.providerId,
-            name: p.providerName,
-            matchPercentage: p.matchPercentage
-        })),
+        allRankings: mcdmResult.rankedProviders.map(p => {
+            const providerInfo = getProviderById(p.providerId);
+            return {
+                rank: p.rank,
+                id: p.providerId,
+                name: p.providerName,
+                matchPercentage: p.matchPercentage,
+                officialUrl: (providerInfo && providerInfo.officialUrl) || null
+            };
+        }),
         howDecided: buildDecisionPipelineExplainability({
             requirements: fuzzyResult.requirementSignals,
             preferences: fuzzyResult.preferences,
@@ -619,23 +629,29 @@ function buildDecisionPipelineExplainability(options = {}) {
     }) : [];
 
     // 7. CSP Ranking (All 15 CSPs)
-    const rankedProviders = (mcdmResult && mcdmResult.rankedProviders) ? mcdmResult.rankedProviders.map(p => ({
-        rank: p.rank,
-        id: p.providerId,
-        name: p.providerName,
-        shortName: p.shortName,
-        totalScore: p.totalScore,
-        matchPercentage: p.matchPercentage,
-        isWinner: p.rank === 1
-    })) : [];
+    const rankedProviders = (mcdmResult && mcdmResult.rankedProviders) ? mcdmResult.rankedProviders.map(p => {
+        const pObj = getProviderById(p.providerId);
+        return {
+            rank: p.rank,
+            id: p.providerId,
+            name: p.providerName,
+            shortName: p.shortName,
+            officialUrl: (pObj && pObj.officialUrl) || null,
+            totalScore: p.totalScore,
+            matchPercentage: p.matchPercentage,
+            isWinner: p.rank === 1
+        };
+    }) : [];
 
     // 8. Why the Winner Won
     const strongestContributions = [...mcdmCriteria]
         .sort((a, b) => b.weightedContribution - a.weightedContribution)
         .slice(0, 3);
 
+    const winnerInfo = getProviderById(topWinner ? topWinner.providerId : "");
     const whyWinnerWon = {
         providerName: topWinner ? topWinner.providerName : "Recommended Cloud",
+        officialUrl: (winnerInfo && winnerInfo.officialUrl) || null,
         topFactors: strongestContributions.map((c, i) => `${i + 1}. Strong ${c.label} fit (${c.providerFitPct}% match at ${c.userWeightPct}% priority)`),
         summary: mode === "expert"
             ? `${topWinner ? topWinner.providerName : "Winner"} maximized multi-criteria utility across your priority weights with ${strongestContributions.map(c => c.label).join(", ")} delivering top positive contributions.`

@@ -1462,7 +1462,7 @@ document.addEventListener("DOMContentLoaded", () => {
                                 ${limitationsHTML}
                             </div>
 
-                            <div class="eq-service-footer">
+                            <div class="eq-service-footer" style="display: flex; align-items: center; justify-content: space-between; gap: 8px;">
                                 <button
                                     class="eq-open-modal-btn"
                                     data-provider="${provider.id}"
@@ -1470,6 +1470,11 @@ document.addEventListener("DOMContentLoaded", () => {
                                 >
                                     View Full Details <i class="fa-solid fa-chevron-right"></i>
                                 </button>
+                                ${svc.officialUrl ? `
+                                    <a href="${svc.officialUrl}" target="_blank" rel="noopener noreferrer" class="eq-official-link-btn" title="Open official service page" style="color: #38bdf8; font-size: 11px; text-decoration: none; padding: 5px 9px; border-radius: 6px; background: rgba(56, 189, 248, 0.1); border: 1px solid rgba(56, 189, 248, 0.25); display: inline-flex; align-items: center; gap: 4px;">
+                                        <i class="fa-solid fa-arrow-up-right-from-square"></i> Official
+                                    </a>
+                                ` : ""}
                             </div>
                         </article>
                     `;
@@ -2415,6 +2420,12 @@ document.addEventListener("DOMContentLoaded", () => {
                 <p class="modal-intro">${provider.description || ""}</p>
                 
                 <div class="modal-top-actions">
+                    ${provider.officialUrl ? `
+                        <a href="${provider.officialUrl}" target="_blank" rel="noopener noreferrer" class="modal-action-btn modal-website-btn" style="background: rgba(56, 189, 248, 0.15); border: 1px solid rgba(56, 189, 248, 0.4); color: #38bdf8; text-decoration: none; display: inline-flex; align-items: center; gap: 8px;">
+                            <i class="fa-solid fa-arrow-up-right-from-square"></i>
+                            Visit Official Website &rarr;
+                        </a>
+                    ` : ""}
                     <button class="modal-action-btn modal-compare-btn" id="modalCompareActionBtn">
                         <i class="fa-solid fa-scale-balanced"></i>
                         Compare this Provider
@@ -2563,6 +2574,11 @@ document.addEventListener("DOMContentLoaded", () => {
                 <div class="service-meta-strip">
                     ${sType ? `<span class="service-type-tag"><i class="fa-solid fa-layer-group"></i> ${sType}</span>` : ""}
                     ${sPricing ? `<span class="service-pricing-tag"><i class="fa-solid fa-tag"></i> ${sPricing}</span>` : ""}
+                    ${service.officialUrl ? `
+                        <a href="${service.officialUrl}" target="_blank" rel="noopener noreferrer" class="service-official-link-tag" style="display: inline-flex; align-items: center; gap: 5px; font-size: 11px; font-weight: 700; color: #38bdf8; text-decoration: none; padding: 4px 10px; border-radius: 6px; background: rgba(56, 189, 248, 0.12); border: 1px solid rgba(56, 189, 248, 0.3);">
+                            <i class="fa-solid fa-arrow-up-right-from-square"></i> Official Service Page
+                        </a>
+                    ` : ""}
                 </div>
             </div>
 

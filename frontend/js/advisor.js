@@ -3115,6 +3115,13 @@ document.addEventListener("DOMContentLoaded", async () => {
                         ${why.topFactors.map((f) => `<span style="font-size: 11.5px; color: #e2e8f0;"><i class="fa-solid fa-check" style="color: #35d99a; font-size: 10px; margin-right: 6px;"></i>${f}</span>`).join("")}
                     </div>
                 ` : ""}
+                ${why.officialUrl ? `
+                    <div style="margin-top: 8px;">
+                        <a href="${why.officialUrl}" target="_blank" rel="noopener noreferrer" style="font-size: 11px; color: #38bdf8; text-decoration: none; display: inline-flex; align-items: center; gap: 5px;">
+                            <i class="fa-solid fa-arrow-up-right-from-square"></i> Visit ${why.providerName || "Provider"} Official Website
+                        </a>
+                    </div>
+                ` : ""}
             </div>
         `;
 
@@ -3254,6 +3261,13 @@ document.addEventListener("DOMContentLoaded", async () => {
                         <i class="fa-solid fa-microchip"></i>
                         <span>Ranked #1 using Weighted MCDM across all 15 Cloud Service Providers based on your active priority weights.${runnerUpNote}</span>
                     </div>
+                    ${provider.officialUrl ? `
+                        <div style="margin-top: 10px; display: flex; justify-content: flex-end;">
+                            <a href="${provider.officialUrl}" target="_blank" rel="noopener noreferrer" class="final-rec-official-btn">
+                                <i class="fa-solid fa-arrow-up-right-from-square"></i> Visit Official Website &rarr;
+                            </a>
+                        </div>
+                    ` : ""}
                 </div>
             </div>
             ${rec.assumptions ? renderAssumptionsCardHtml(rec.assumptions, mode) : ""}

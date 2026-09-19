@@ -647,6 +647,28 @@ app.post("/api/advisor/assumptions", (req, res) => {
 
 
 // ==================================================
+// OFFICIAL CSP & SERVICE LINKS (FEATURE #21)
+// ==================================================
+
+app.get("/api/official-links", (req, res) => {
+    try {
+        const { OFFICIAL_PROVIDERS, OFFICIAL_SERVICES } = require("./data/officialLinks");
+        res.json({
+            success: true,
+            providers: OFFICIAL_PROVIDERS,
+            services: OFFICIAL_SERVICES
+        });
+    } catch (error) {
+        console.error("Official links API error:", error.message);
+        res.status(500).json({
+            success: false,
+            message: "Failed to load official links."
+        });
+    }
+});
+
+
+// ==================================================
 // CLOUDEx AI ADVISOR
 // ==================================================
 
