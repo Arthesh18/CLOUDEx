@@ -2660,10 +2660,190 @@ document.addEventListener("DOMContentLoaded", async () => {
             getRecommendation: () => currentRecommendation,
             getOriginalRecommendation: () => originalRecommendation,
             getUpdatedRecommendation: () => updatedRecommendation,
-            getRecommendationComparison: () => currentRecommendationComparison
+            getRecommendationComparison: () => currentRecommendationComparison,
+            getHowDecided: () => currentRecommendation ? currentRecommendation.howDecided : null
         };
     }
 
+    // =========================================================
+    // HOW CLOUDEx DECIDED EXPLAINABILITY (FEATURE #18)
+    // =========================================================
+
+    function renderHowDecidedHtml(howDecided, mode = "beginner") {
+        if (!howDecided || !howDecided.mcdm) {
+            return "";
+        }
+
+        const inp = howDecided.inputSummary || {};
+        const reqs = howDecided.requirementsUnderstood || {};
+        const mcdm = howDecided.mcdm || {};
+        const topRankings = (mcdm.ranking || []).slice(0, 5);
+        const allRankings = mcdm.ranking || [];
+
+        const stage1Html = `
+            <div class="how-decided-step-item">
+                <div class="how-decided-step-title"><i class="fa-solid fa-user"></i> 1. User Input Summary</div>
+                <div class="how-decided-chips-grid">
+                    <div class="how-decided-chip"><span class="chip-label">Project</span><span class="chip-val">${inp.project || "General Project"}</span></div>
+                    <div class="how-decided-chip"><span class="chip-label">Budget</span><span class="chip-val">${inp.budget || "Standard"}</span></div>
+                    <div class="how-decided-chip"><span class="chip-label">Scale</span><span class="chip-val">${inp.scale || "Standard"}</span></div>
+                    <div class="how-decided-chip"><span class="chip-label">Experience</span><span class="chip-val">${inp.experience || mode}</span></div>
+                </div>
+            </div>
+        `;
+
+        const reqKeys = ["workload", "scale", "budgetSensitivity", "simplicity", "database", "aiGpu", "geographic", "compliance"];
+        const stage2Chips = reqKeys.map((k) => {
+            const item = reqs[k];
+            if (!item) return "";
+            const isStated = item.statedByUser;
+            return `
+                <div class="how-decided-chip">
+                    <span class="chip-label">${item.dimension}</span>
+                    <span class="chip-val">${item.value}</span>
+                    <span class="chip-source ${isStated ? "stated" : "assumed"}">${isStated ? "User Stated" : "CLOUDEx Assumed"}</span>
+                </div>
+            `;
+        }).filter(Boolean).join("");
+
+        const stage2Html = `
+            <div class="how-decided-step-item">
+                <div class="how-decided-step-title"><i class="fa-solid fa-brain"></i> 2. Requirements Understood (User Stated vs Assumed)</div>
+                <div class="how-decided-chips-grid">
+                    ${stage2Chips}
+                </div>
+            </div>
+        `;
+
+        const stage3Chips = (howDecided.fuzzyPreferences || []).map((f) => `
+            <div class="how-decided-chip">
+                <span class="chip-label">${f.label}</span>
+                <span class="chip-val">${f.percentage}% (${f.linguisticLevel})</span>
+                ${f.isUserUpdated ? '<span class="chip-source stated">User Calibrated</span>' : '<span class="chip-source assumed">AI Inferred</span>'}
+            </div>
+        `).join("");
+
+        const stage3Html = `
+            <div class="how-decided-step-item">
+                <div class="how-decided-step-title"><i class="fa-solid fa-sliders"></i> 3. Fuzzy Preferences (${howDecided.userPriorities ? howDecided.userPriorities.status : "Active Weights"})</div>
+                <div class="how-decided-chips-grid">
+                    ${stage3Chips}
+                </div>
+            </div>
+        `;
+
+        const tradeoffs = howDecided.tradeoffs || [];
+        const stage4Html = `
+            <div class="how-decided-step-item">
+                <div class="how-decided-step-title"><i class="fa-solid fa-scale-balanced"></i> 4. Trade-Off Detection</div>
+                ${tradeoffs.length > 0 ? `
+                    <div style="display: flex; flex-direction: column; gap: 6px;">
+                        ${tradeoffs.map((t) => `
+                            <div style="font-size: 11.5px; color: #cbd5e1;">
+                                <strong style="color: #fbbf24;">${t.title}:</strong> ${t.explanation}
+                            </div>
+                        `).join("")}
+                    </div>
+                ` : `<p style="margin: 0; font-size: 11.5px; color: #a7f3d0;"><i class="fa-solid fa-check"></i> No architectural tensions detected; criteria are well-balanced.</p>`}
+            </div>
+        `;
+
+        const mcdmRows = (mcdm.criteria || []).map((c) => `
+            <tr>
+                <td>${c.label}</td>
+                <td>${c.userWeightPct}%</td>
+                <td>${c.providerFitPct}%</td>
+                <td><strong>${c.weightedContribution}</strong></td>
+            </tr>
+        `).join("");
+
+        const stage5Html = `
+            <div class="how-decided-step-item">
+                <div class="how-decided-step-title"><i class="fa-solid fa-calculator"></i> 5. Weighted MCDM Calculation for Top Winner</div>
+                <p style="margin: 0; font-size: 11.5px; color: var(--text-muted);">${mcdm.description}</p>
+                <div style="font-size: 11px; font-weight: 700; color: #c084fc; margin-top: 4px;">Formula: <code>${mcdm.formula}</code></div>
+                <table class="how-decided-mcdm-table">
+                    <thead>
+                        <tr>
+                            <th>Criterion</th>
+                            <th>User Weight</th>
+                            <th>Provider Fit</th>
+                            <th>Weighted Contribution</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${mcdmRows}
+                    </tbody>
+                </table>
+            </div>
+        `;
+
+        const stage6Html = `
+            <div class="how-decided-step-item">
+                <div class="how-decided-step-title"><i class="fa-solid fa-ranking-star"></i> 6. CSP Ranking (All 15 Evaluated)</div>
+                <div class="how-decided-rankings-box" id="topRankingsBox">
+                    ${topRankings.map((r) => `
+                        <div class="how-decided-ranking-row ${r.isWinner ? "winner" : ""}">
+                            <span>#${r.rank} ${r.name} ${r.isWinner ? "★ (Winner)" : ""}</span>
+                            <strong>${r.matchPercentage}% Fit</strong>
+                        </div>
+                    `).join("")}
+                </div>
+                <div class="how-decided-rankings-box" id="allRankingsBox" style="display: none;">
+                    ${allRankings.map((r) => `
+                        <div class="how-decided-ranking-row ${r.isWinner ? "winner" : ""}">
+                            <span>#${r.rank} ${r.name} ${r.isWinner ? "★ (Winner)" : ""}</span>
+                            <strong>${r.matchPercentage}% Fit</strong>
+                        </div>
+                    `).join("")}
+                </div>
+                ${allRankings.length > 5 ? `
+                    <button type="button" class="how-decided-all-btn" onclick="const b=this.parentElement.querySelector('#allRankingsBox'); const t=this.parentElement.querySelector('#topRankingsBox'); if(b.style.display==='none'){b.style.display='flex'; t.style.display='none'; this.textContent='Show Top 5 Only';}else{b.style.display='none'; t.style.display='flex'; this.textContent='Show All 15 Providers';}">
+                        Show All 15 Providers
+                    </button>
+                ` : ""}
+                <div class="how-decided-disclaimer">${mcdm.disclaimer}</div>
+            </div>
+        `;
+
+        const why = howDecided.whyWinnerWon || {};
+        const stage7Html = `
+            <div class="how-decided-step-item">
+                <div class="how-decided-step-title"><i class="fa-solid fa-award"></i> 7. Why the Winner Won (${why.providerName || "Recommended Cloud"})</div>
+                <p style="margin: 0; font-size: 12px; color: #cbd5e1; line-height: 1.5;">${why.summary || ""}</p>
+                ${Array.isArray(why.topFactors) ? `
+                    <div style="display: flex; flex-direction: column; gap: 4px; margin-top: 6px;">
+                        ${why.topFactors.map((f) => `<span style="font-size: 11.5px; color: #e2e8f0;"><i class="fa-solid fa-check" style="color: #35d99a; font-size: 10px; margin-right: 6px;"></i>${f}</span>`).join("")}
+                    </div>
+                ` : ""}
+            </div>
+        `;
+
+        return `
+            <div class="how-decided-card" id="howDecidedCard">
+                <div class="how-decided-header" onclick="const c=this.parentElement.querySelector('#howDecidedContent'); const btn=this.querySelector('#howDecidedToggleText'); if(c.classList.contains('open')){c.classList.remove('open'); btn.textContent='Explore Decision Pipeline ▼';}else{c.classList.add('open'); btn.textContent='Close Decision Pipeline ▲';}">
+                    <div class="how-decided-tag">
+                        <i class="fa-solid fa-sitemap"></i>
+                        <span>HOW CLOUDEx DECIDED</span>
+                    </div>
+                    <button type="button" class="how-decided-toggle-btn" id="howDecidedToggleText">
+                        Explore Decision Pipeline ▼
+                    </button>
+                </div>
+                <div class="how-decided-content" id="howDecidedContent">
+                    <div class="how-decided-pipeline-steps">
+                        ${stage1Html}
+                        ${stage2Html}
+                        ${stage3Html}
+                        ${stage4Html}
+                        ${stage5Html}
+                        ${stage6Html}
+                        ${stage7Html}
+                    </div>
+                </div>
+            </div>
+        `;
+    }
 
     // =========================================================
     // PERSONALIZED FINAL RECOMMENDATION CARD (FEATURE #16)
@@ -2777,6 +2957,7 @@ document.addEventListener("DOMContentLoaded", async () => {
                     </div>
                 </div>
             </div>
+            ${rec.howDecided ? renderHowDecidedHtml(rec.howDecided, mode) : ""}
         `;
     }
 

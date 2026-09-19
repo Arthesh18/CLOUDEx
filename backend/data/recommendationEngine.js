@@ -269,6 +269,15 @@ function generatePersonalizedRecommendation(options = {}) {
             name: p.providerName,
             matchPercentage: p.matchPercentage
         })),
+        howDecided: buildDecisionPipelineExplainability({
+            requirements: fuzzyResult.requirementSignals,
+            preferences: fuzzyResult.preferences,
+            source: fuzzyResult.source,
+            mode: fuzzyResult.mode,
+            tradeoffs: activeTradeoffs,
+            mcdmResult,
+            winner
+        }),
         generatedAt: new Date().toISOString()
     };
 }
@@ -459,10 +468,215 @@ function compareRecommendations(options = {}) {
     };
 }
 
+/**
+ * Generate Structured Decision Pipeline Explainability (Feature #18)
+ *
+ * @param {Object} options
+ * @returns {Object} Structured explainability object
+ */
+function buildDecisionPipelineExplainability(options = {}) {
+    const {
+        requirements = {},
+        preferences = {},
+        source = "ai_generated",
+        mode = "beginner",
+        tradeoffs = null,
+        mcdmResult = null,
+        winner = null
+    } = options;
+
+    const DIMENSIONS = [
+        { key: "cost", label: "Cost & Budget", beginner: "Cost & Budget", intermediate: "Cost & Budget Sensitivity", expert: "FinOps & Egress Optimization" },
+        { key: "simplicity", label: "Ease of Setup", beginner: "Ease of Setup", intermediate: "Simplicity & Developer Velocity", expert: "Low Infrastructure Overhead" },
+        { key: "performance", label: "Speed & Performance", beginner: "Speed & Performance", intermediate: "Performance & Throughput", expert: "Compute Throughput & IOPS" },
+        { key: "reliability", label: "Reliability & Uptime", beginner: "Reliability & Uptime", intermediate: "High Availability & SLAs", expert: "Enterprise SLA & Fault Tolerance" },
+        { key: "features", label: "Tools & Features", beginner: "Tools & Features", intermediate: "Ecosystem Breadth & Tools", expert: "Enterprise Ecosystem Breadth" },
+        { key: "support", label: "Help & Support", beginner: "Help & Support", intermediate: "Support SLAs & Guidance", expert: "Enterprise Agreement & Direct Support" },
+        { key: "aiGpu", label: "AI & Smart Tech", beginner: "AI & Smart Tech", intermediate: "Dedicated AI/GPU Compute", expert: "Dedicated GPU Compute Acceleration" }
+    ];
+
+    // 1. Input Summary
+    const inputSummary = {
+        project: requirements.projectPurpose || "Web / Cloud Workload",
+        budget: requirements.budgetSensitivity || "Not explicitly constrained",
+        scale: requirements.scaleRequirement || "Initial / Standard Scale",
+        experience: requirements.experienceLevel || mode || "Beginner"
+    };
+
+    // 2. Requirements Understood (Feature #14)
+    const isUncertain = Boolean(requirements.uncertaintySignal);
+    const requirementsUnderstood = {
+        workload: {
+            dimension: "Workload",
+            value: requirements.workloadType || "General Web Application",
+            statedByUser: Boolean(requirements.workloadType),
+            assumed: !requirements.workloadType
+        },
+        scale: {
+            dimension: "Scale",
+            value: requirements.scaleRequirement || "Standard Single-Region",
+            statedByUser: Boolean(requirements.scaleRequirement),
+            assumed: !requirements.scaleRequirement
+        },
+        budgetSensitivity: {
+            dimension: "Budget Sensitivity",
+            value: requirements.budgetSensitivity || "Moderate Budget",
+            statedByUser: Boolean(requirements.budgetSensitivity),
+            assumed: !requirements.budgetSensitivity
+        },
+        simplicity: {
+            dimension: "Setup Simplicity",
+            value: requirements.simplicityRequirement || (preferences.simplicity >= 0.70 ? "Turnkey / Low Ops" : "Standard Management"),
+            statedByUser: Boolean(requirements.simplicityRequirement),
+            assumed: !requirements.simplicityRequirement
+        },
+        database: {
+            dimension: "Database Tier",
+            value: requirements.databaseRequirement || "Standard Application Database",
+            statedByUser: Boolean(requirements.databaseRequirement),
+            assumed: !requirements.databaseRequirement
+        },
+        aiGpu: {
+            dimension: "AI / GPU Compute",
+            value: preferences.aiGpu >= 0.70 ? "Dedicated GPU Required" : "CPU / Standard Compute",
+            statedByUser: Boolean(requirements.aiGpuRequirement || preferences.aiGpu >= 0.70),
+            assumed: !requirements.aiGpuRequirement && preferences.aiGpu < 0.70
+        },
+        geographic: {
+            dimension: "Geographic Needs",
+            value: requirements.geographicRequirement || "Global Multi-Zone Capable",
+            statedByUser: Boolean(requirements.geographicRequirement),
+            assumed: !requirements.geographicRequirement
+        },
+        compliance: {
+            dimension: "Compliance",
+            value: requirements.complianceRequirement || "Standard Commercial Cloud Security",
+            statedByUser: Boolean(requirements.complianceRequirement),
+            assumed: !requirements.complianceRequirement
+        },
+        uncertaintySignal: isUncertain
+    };
+
+    // 3. Fuzzy Preferences (7 dimensions)
+    function toLinguistic(val) {
+        if (val <= 0.20) return "Very Low";
+        if (val <= 0.40) return "Low";
+        if (val <= 0.60) return "Medium";
+        if (val <= 0.80) return "High";
+        return "Very High";
+    }
+
+    const fuzzyPreferences = DIMENSIONS.map(d => {
+        const val = typeof preferences[d.key] === "number" ? preferences[d.key] : 0.5;
+        return {
+            key: d.key,
+            label: d[mode] || d.label,
+            value: val,
+            percentage: Math.round(val * 100),
+            linguisticLevel: toLinguistic(val),
+            isUserUpdated: source === "user_updated"
+        };
+    });
+
+    // 4. User Priorities
+    const userPriorities = {
+        source,
+        status: source === "user_updated" ? "Calibrated by You via Priority Sliders" : "Inferred by CLOUDEx from Requirements",
+        mode
+    };
+
+    // 5. Trade-Offs (Feature #12)
+    const tradeoffsList = Array.isArray(tradeoffs) ? tradeoffs.map(t => ({
+        id: t.id,
+        title: t.title,
+        severity: t.severity,
+        explanation: (t.explanations && t.explanations[mode]) || t.explanation || "",
+        hint: (t.hints && t.hints[mode]) || t.hint || ""
+    })) : [];
+
+    // 6. MCDM Evaluation
+    const topWinner = winner || (mcdmResult && mcdmResult.winner);
+    const mcdmCriteria = topWinner ? DIMENSIONS.map(d => {
+        const uWeight = preferences[d.key] || 0;
+        const pFit = (topWinner.criteriaScores && topWinner.criteriaScores[d.key]) || 0;
+        const weightedCont = (topWinner.weightedContributions && topWinner.weightedContributions[d.key]) || (uWeight * pFit);
+        return {
+            dimension: d.key,
+            label: d[mode] || d.label,
+            userWeight: Math.round(uWeight * 100) / 100,
+            userWeightPct: Math.round(uWeight * 100),
+            providerFit: Math.round(pFit * 100) / 100,
+            providerFitPct: Math.round(pFit * 100),
+            weightedContribution: Math.round(weightedCont * 1000) / 1000
+        };
+    }) : [];
+
+    // 7. CSP Ranking (All 15 CSPs)
+    const rankedProviders = (mcdmResult && mcdmResult.rankedProviders) ? mcdmResult.rankedProviders.map(p => ({
+        rank: p.rank,
+        id: p.providerId,
+        name: p.providerName,
+        shortName: p.shortName,
+        totalScore: p.totalScore,
+        matchPercentage: p.matchPercentage,
+        isWinner: p.rank === 1
+    })) : [];
+
+    // 8. Why the Winner Won
+    const strongestContributions = [...mcdmCriteria]
+        .sort((a, b) => b.weightedContribution - a.weightedContribution)
+        .slice(0, 3);
+
+    const whyWinnerWon = {
+        providerName: topWinner ? topWinner.providerName : "Recommended Cloud",
+        topFactors: strongestContributions.map((c, i) => `${i + 1}. Strong ${c.label} fit (${c.providerFitPct}% match at ${c.userWeightPct}% priority)`),
+        summary: mode === "expert"
+            ? `${topWinner ? topWinner.providerName : "Winner"} maximized multi-criteria utility across your priority weights with ${strongestContributions.map(c => c.label).join(", ")} delivering top positive contributions.`
+            : `${topWinner ? topWinner.providerName : "Winner"} ranked #1 because it scored highest across your top priorities: ${strongestContributions.map(c => c.label).join(", ")}.`
+    };
+
+    return {
+        success: true,
+        pipelineStages: [
+            { id: "user_input", title: "1. User Input", description: "What you told CLOUDEx about your application" },
+            { id: "requirements_understood", title: "2. Requirements Understood", description: "Inferred signals and assumed defaults" },
+            { id: "fuzzy_preferences", title: "3. Fuzzy Preferences", description: "Normalized 7-dimension weights and linguistic levels" },
+            { id: "user_priorities", title: "4. User Priorities", description: "Active weight calibration profile" },
+            { id: "tradeoff_detection", title: "5. Trade-Off Detection", description: "Competing architectural tensions analyzed" },
+            { id: "mcdm_evaluation", title: "6. MCDM Evaluation", description: "Mathematical multi-criteria utility calculation" },
+            { id: "csp_ranking", title: "7. CSP Ranking", description: "Deterministic ranking of all 15 cloud providers" },
+            { id: "final_recommendation", title: "8. Final Recommendation", description: "Synthesized recommendation and why the winner won" }
+        ],
+        inputSummary,
+        requirementsUnderstood,
+        fuzzyPreferences,
+        userPriorities,
+        tradeoffs: tradeoffsList,
+        mcdm: {
+            method: "Weighted Multi-Criteria Decision Making (MCDM)",
+            formula: "Score = Σ (User Preference Weight × Provider Fit Score)",
+            description: "Each provider receives a score for the criteria that matter to you. Your preference weights determine how strongly each criterion affects the final score.",
+            criteria: mcdmCriteria,
+            winner: topWinner ? {
+                id: topWinner.providerId,
+                name: topWinner.providerName,
+                totalScore: topWinner.totalScore,
+                matchPercentage: topWinner.matchPercentage
+            } : null,
+            ranking: rankedProviders,
+            disclaimer: "These are CLOUDEx decision-support scores based on your selected priorities and CLOUDEx evaluation data. They are not official provider ratings."
+        },
+        whyWinnerWon,
+        mode,
+        generatedAt: new Date().toISOString()
+    };
+}
+
 module.exports = {
     generatePersonalizedRecommendation,
     buildPersonalizedWhyRecommended,
     extractStrongestMatches,
     extractWeakerMatches,
-    compareRecommendations
+    compareRecommendations,
+    buildDecisionPipelineExplainability
 };

@@ -551,6 +551,39 @@ app.post("/api/advisor/compare-recommendations", (req, res) => {
 
 
 // ==================================================
+// HOW CLOUDEx DECIDED EXPLAINABILITY (FEATURE #18)
+// ==================================================
+
+app.post("/api/advisor/how-decided", (req, res) => {
+    try {
+        const {
+            requirements = {},
+            preferences = {},
+            source = "ai_generated",
+            mode = "beginner",
+            tradeoffs = []
+        } = req.body;
+
+        const rec = generatePersonalizedRecommendation({
+            requirements,
+            preferences,
+            source,
+            mode,
+            tradeoffs
+        });
+
+        res.json(rec.howDecided);
+    } catch (error) {
+        console.error("How CLOUDEx Decided API error:", error.message);
+        res.status(500).json({
+            success: false,
+            message: "Failed to generate decision pipeline explainability."
+        });
+    }
+});
+
+
+// ==================================================
 // CLOUDEx AI ADVISOR
 // ==================================================
 

@@ -1738,6 +1738,238 @@ body {
     color: #cbd5e1;
 }
 
+/* =========================================================
+   HOW CLOUDEx DECIDED (FEATURE #18)
+   ========================================================= */
+
+.how-decided-card {
+    margin-top: 14px;
+    background: linear-gradient(135deg, rgba(18, 22, 38, 0.95), rgba(13, 16, 28, 0.95));
+    border: 1px solid rgba(139, 124, 255, 0.35);
+    border-radius: 12px;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 6px 24px rgba(0, 0, 0, 0.3);
+    overflow: hidden;
+    animation: message-in 0.25s ease both;
+}
+
+.how-decided-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 14px 18px;
+    background: rgba(255, 255, 255, 0.02);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+    cursor: pointer;
+    user-select: none;
+}
+
+.how-decided-tag {
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 1.2px;
+    color: #38bdf8;
+    text-transform: uppercase;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.how-decided-toggle-btn {
+    font-size: 11px;
+    font-weight: 700;
+    padding: 4px 12px;
+    border-radius: 8px;
+    background: rgba(56, 189, 248, 0.12);
+    border: 1px solid rgba(56, 189, 248, 0.3);
+    color: #7dd3fc;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.how-decided-toggle-btn:hover {
+    background: rgba(56, 189, 248, 0.22);
+}
+
+.how-decided-content {
+    display: none;
+    padding: 16px 18px;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.how-decided-content.open {
+    display: flex;
+}
+
+.how-decided-pipeline-steps {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.how-decided-step-item {
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid rgba(255, 255, 255, 0.07);
+    border-radius: 10px;
+    padding: 12px 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.how-decided-step-title {
+    font-size: 11.5px;
+    font-weight: 800;
+    color: #38bdf8;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+}
+
+.how-decided-step-title i {
+    font-size: 11px;
+    color: #a78bfa;
+}
+
+.how-decided-chips-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+    gap: 8px;
+}
+
+.how-decided-chip {
+    padding: 6px 10px;
+    border-radius: 6px;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    font-size: 11px;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.how-decided-chip .chip-label {
+    font-size: 9.5px;
+    font-weight: 700;
+    text-transform: uppercase;
+    color: var(--text-muted);
+}
+
+.how-decided-chip .chip-val {
+    font-size: 11.5px;
+    font-weight: 600;
+    color: #e2e8f0;
+}
+
+.how-decided-chip .chip-source {
+    font-size: 9px;
+    font-weight: 700;
+    padding: 1px 5px;
+    border-radius: 4px;
+    align-self: flex-start;
+    margin-top: 2px;
+}
+
+.chip-source.stated {
+    background: rgba(53, 217, 154, 0.15);
+    color: #a7f3d0;
+    border: 1px solid rgba(53, 217, 154, 0.3);
+}
+
+.chip-source.assumed {
+    background: rgba(245, 158, 11, 0.15);
+    color: #fef08a;
+    border: 1px solid rgba(245, 158, 11, 0.3);
+}
+
+.how-decided-mcdm-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 11px;
+    margin-top: 4px;
+}
+
+.how-decided-mcdm-table th,
+.how-decided-mcdm-table td {
+    padding: 6px 10px;
+    text-align: left;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.how-decided-mcdm-table th {
+    font-size: 9.5px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    color: var(--text-muted);
+}
+
+.how-decided-mcdm-table tr:last-child td {
+    border-bottom: none;
+}
+
+.how-decided-mcdm-table td strong {
+    color: #35d99a;
+}
+
+.how-decided-rankings-box {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.how-decided-ranking-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 6px 10px;
+    border-radius: 6px;
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    font-size: 11.5px;
+}
+
+.how-decided-ranking-row.winner {
+    background: rgba(124, 58, 237, 0.15);
+    border-color: rgba(139, 124, 255, 0.4);
+    font-weight: 700;
+}
+
+.how-decided-all-btn {
+    align-self: flex-start;
+    margin-top: 6px;
+    font-size: 10.5px;
+    font-weight: 700;
+    padding: 4px 10px;
+    border-radius: 6px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: #cbd5e1;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.how-decided-all-btn:hover {
+    background: rgba(255, 255, 255, 0.1);
+    color: #ffffff;
+}
+
+.how-decided-disclaimer {
+    font-size: 10.5px;
+    line-height: 1.45;
+    color: var(--text-muted);
+    font-style: italic;
+    padding-top: 6px;
+    border-top: 1px solid rgba(255, 255, 255, 0.05);
+}
+
 
 /* =========================================================
    TYPING INDICATOR
