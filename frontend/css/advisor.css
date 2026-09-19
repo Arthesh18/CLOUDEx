@@ -678,6 +678,86 @@ body {
 
 
 /* =========================================================
+   INITIAL CLOUD PREFERENCES (FEATURE #9)
+   ========================================================= */
+
+.initial-preferences-panel {
+    margin-top: 18px;
+    padding: 16px 18px;
+    background: rgba(18, 20, 38, 0.85);
+    border: 1px solid rgba(139, 124, 255, 0.22);
+    border-radius: 14px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+}
+
+.preferences-header {
+    margin-bottom: 14px;
+}
+
+.preferences-tag {
+    display: inline-block;
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 0.9px;
+    color: #c4b5fd;
+    text-transform: uppercase;
+    margin-bottom: 5px;
+}
+
+.preferences-intro {
+    font-size: 12px;
+    color: var(--text-secondary);
+    line-height: 1.5;
+    margin: 0;
+}
+
+.preferences-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.preference-row {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.preference-row-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 12px;
+}
+
+.preference-name {
+    color: #e2e8f0;
+    font-weight: 600;
+}
+
+.preference-pct {
+    color: #a78bfa;
+    font-weight: 700;
+    font-size: 12px;
+}
+
+.preference-track {
+    width: 100%;
+    height: 6px;
+    background: rgba(255, 255, 255, 0.08);
+    border-radius: 999px;
+    overflow: hidden;
+}
+
+.preference-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #7c3aed, #a78bfa);
+    border-radius: 999px;
+    transition: width 0.3s ease;
+}
+
+
+/* =========================================================
    TYPING INDICATOR
    ========================================================= */
 

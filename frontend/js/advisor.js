@@ -1566,12 +1566,70 @@ document.addEventListener("DOMContentLoaded", async () => {
 
 
     // =========================================================
+    // INITIAL CLOUD PREFERENCES PANEL (FEATURE #9)
+    // =========================================================
+
+    let currentFuzzyPreferences = null;
+    let originalFuzzyPreferences = null;
+
+    function createInitialPreferencesPanel(fuzzyPreferences) {
+
+        if (!fuzzyPreferences) {
+            return "";
+        }
+
+        const dimensions = [
+            { key: "cost", label: "Cost", icon: "💰" },
+            { key: "simplicity", label: "Simplicity", icon: "⚙️" },
+            { key: "performance", label: "Performance", icon: "⚡" },
+            { key: "reliability", label: "Reliability", icon: "🛡️" },
+            { key: "features", label: "Features", icon: "🧰" },
+            { key: "support", label: "Support", icon: "💬" },
+            { key: "aiGpu", label: "AI/GPU", icon: "🤖" }
+        ];
+
+        let rowsHtml = "";
+        dimensions.forEach((dim) => {
+            const val = typeof fuzzyPreferences[dim.key] === "number"
+                ? fuzzyPreferences[dim.key]
+                : 0.5;
+            const pct = Math.round(val * 100);
+            rowsHtml += `
+                <div class="preference-row" data-dimension="${dim.key}">
+                    <div class="preference-row-header">
+                        <span class="preference-name">${dim.icon} ${dim.label}</span>
+                        <span class="preference-pct" id="pref-pct-${dim.key}">${pct}%</span>
+                    </div>
+                    <div class="preference-track">
+                        <div class="preference-fill" style="width: ${pct}%;"></div>
+                    </div>
+                </div>
+            `;
+        });
+
+        return `
+            <div class="initial-preferences-panel">
+                <div class="preferences-header">
+                    <span class="preferences-tag">YOUR INITIAL CLOUD PREFERENCES</span>
+                    <p class="preferences-intro">These are my initial understanding of what matters most to you. You can adjust them if you'd like.</p>
+                </div>
+                <div class="preferences-list">
+                    ${rowsHtml}
+                </div>
+            </div>
+        `;
+
+    }
+
+
+    // =========================================================
     // ADD MESSAGE TO CHAT
     // =========================================================
 
     function addMessage(
         role,
-        text
+        text,
+        fuzzyPreferences = null
     ) {
 
         const message =
@@ -1601,6 +1659,11 @@ document.addEventListener("DOMContentLoaded", async () => {
                 ? createProviderActions(text)
                 : "";
 
+        const preferencesHtml =
+            (role === "assistant" && fuzzyPreferences && (detectProvider(text) || text.includes("MY RECOMMENDATION") || text.includes("MY PICK")))
+                ? createInitialPreferencesPanel(fuzzyPreferences)
+                : "";
+
 
         message.innerHTML = `
 
@@ -1619,6 +1682,8 @@ document.addEventListener("DOMContentLoaded", async () => {
                 <div class="message-bubble">
 
                     ${formatMessage(text)}
+
+                    ${preferencesHtml}
 
                     ${actions}
 
@@ -1821,9 +1886,17 @@ document.addEventListener("DOMContentLoaded", async () => {
             hideTyping();
 
 
+            if (data.fuzzyPreferences) {
+                currentFuzzyPreferences = data.fuzzyPreferences;
+                if (!originalFuzzyPreferences) {
+                    originalFuzzyPreferences = { ...data.fuzzyPreferences };
+                }
+            }
+
             addMessage(
                 "assistant",
-                data.reply
+                data.reply,
+                data.fuzzyPreferences
             );
 
 

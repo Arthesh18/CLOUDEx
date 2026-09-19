@@ -73,6 +73,10 @@ const {
     extractCloudRequirements,
     formatRequirementsForPrompt
 } = require("./data/requirementTranslator");
+const {
+    generateInitialFuzzyValues,
+    DIMENSION_METADATA
+} = require("./data/fuzzyPreferences");
 
 dotenv.config();
 
@@ -957,6 +961,17 @@ if (userId && chatId) {
 }
 
             // ==================================================
+            // INITIAL FUZZY PREFERENCES (FEATURE #9)
+            // ==================================================
+
+            const fuzzyPreferences =
+                generateInitialFuzzyValues(
+                    extractedRequirements,
+                    message
+                );
+
+
+            // ==================================================
             // RESPONSE
             // ==================================================
 
@@ -972,7 +987,9 @@ if (userId && chatId) {
                 requirements:
                     extractedRequirements,
 
-                experienceMode
+                experienceMode,
+
+                fuzzyPreferences
 
             });
 
