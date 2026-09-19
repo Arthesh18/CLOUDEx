@@ -1064,6 +1064,151 @@ body {
     font-size: 12px;
 }
 
+/* Original vs Updated Values (Feature #13) */
+.preferences-comparison-panel {
+    margin-top: 14px;
+    padding: 12px 14px;
+    background: rgba(20, 24, 38, 0.75);
+    border: 1px solid rgba(139, 124, 255, 0.25);
+    border-radius: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    animation: message-in 0.25s ease both;
+}
+
+.comparison-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.comparison-header-title {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.8px;
+    color: #a78bfa;
+    text-transform: uppercase;
+}
+
+.comparison-badge {
+    padding: 2px 8px;
+    border-radius: 999px;
+    font-size: 10px;
+    font-weight: 700;
+}
+
+.comparison-badge.changed {
+    background: rgba(139, 124, 255, 0.2);
+    border: 1px solid rgba(139, 124, 255, 0.4);
+    color: #c4b5fd;
+}
+
+.comparison-badge.unchanged {
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    color: var(--text-muted);
+}
+
+.comparison-summary-box {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    padding: 8px 10px;
+    border-radius: 8px;
+    background: rgba(139, 124, 255, 0.08);
+    border: 1px solid rgba(139, 124, 255, 0.18);
+    color: #e0e7ff;
+    font-size: 11.5px;
+    line-height: 1.45;
+}
+
+.comparison-summary-box i {
+    color: #a78bfa;
+    margin-top: 2px;
+    font-size: 11px;
+    flex-shrink: 0;
+}
+
+.comparison-table-wrapper {
+    width: 100%;
+    overflow-x: auto;
+}
+
+.comparison-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 11.5px;
+}
+
+.comparison-table th {
+    text-align: left;
+    padding: 6px 8px;
+    color: var(--text-muted);
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.comparison-table td {
+    padding: 7px 8px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+}
+
+.comparison-row.is-changed {
+    background: rgba(139, 124, 255, 0.04);
+}
+
+.comparison-row.is-changed td.val-cell.font-bold {
+    color: #ffffff;
+    font-weight: 700;
+}
+
+.dim-cell {
+    color: #e2e8f0;
+    font-weight: 600;
+}
+
+.val-cell {
+    color: #94a3b8;
+}
+
+.delta-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    padding: 2px 7px;
+    border-radius: 4px;
+    font-size: 10px;
+    font-weight: 700;
+}
+
+.delta-pill.positive {
+    background: rgba(53, 217, 154, 0.18);
+    border: 1px solid rgba(53, 217, 154, 0.35);
+    color: #35d99a;
+}
+
+.delta-pill.negative {
+    background: rgba(245, 158, 11, 0.18);
+    border: 1px solid rgba(245, 158, 11, 0.35);
+    color: #fbbf24;
+}
+
+.delta-pill.neutral {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    color: var(--text-muted);
+}
+
 
 /* =========================================================
    TYPING INDICATOR

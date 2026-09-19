@@ -1426,6 +1426,9 @@ document.addEventListener("DOMContentLoaded", async () => {
             conversation = [];
             originalFuzzyPreferences = null;
             userModifiedPreferences = null;
+            updatedPreferences = null;
+            isRecalculated = false;
+            recalculatedAt = null;
 
 
             showWelcomeMessage();
@@ -1861,6 +1864,166 @@ document.addEventListener("DOMContentLoaded", async () => {
         }
     }
 
+    // =========================================================
+    // ORIGINAL VS UPDATED VALUES (FEATURE #13)
+    // =========================================================
+
+    function generatePreferenceComparison(originalPrefs, updatedPrefs, mode = "beginner") {
+        if (!originalPrefs || !updatedPrefs) {
+            return null;
+        }
+
+        const modeKey = ["beginner", "intermediate", "expert"].includes(mode) ? mode : "beginner";
+        const dimConfigMap = {};
+        PREFERENCE_DIMENSION_CONFIG.forEach((d) => {
+            dimConfigMap[d.key] = d;
+        });
+
+        const rows = [];
+        const increased = [];
+        const decreased = [];
+
+        PREFERENCE_DIMENSION_CONFIG.forEach((dim) => {
+            const origRaw = typeof originalPrefs[dim.key] === "number"
+                ? originalPrefs[dim.key]
+                : 0.5;
+            const updRaw = typeof updatedPrefs[dim.key] === "number"
+                ? updatedPrefs[dim.key]
+                : origRaw;
+
+            const origPct = Math.round(origRaw * 100);
+            const updPct = Math.round(updRaw * 100);
+            const deltaPct = updPct - origPct;
+
+            const label = dim[modeKey] || dim.beginner;
+
+            if (deltaPct > 0) {
+                increased.push({ key: dim.key, label, deltaPct });
+            } else if (deltaPct < 0) {
+                decreased.push({ key: dim.key, label, deltaPct });
+            }
+
+            rows.push({
+                key: dim.key,
+                icon: dim.icon,
+                label: label,
+                originalPct: origPct,
+                updatedPct: updPct,
+                deltaPct: deltaPct,
+                changed: deltaPct !== 0
+            });
+        });
+
+        const hasChanges = increased.length > 0 || decreased.length > 0;
+        let summary = "";
+
+        if (!hasChanges) {
+            summary = "No preference changes were made.";
+        } else {
+            const parts = [];
+            if (increased.length > 0) {
+                const incDesc = increased.map((i) => `${i.label} (+${i.deltaPct}%)`).join(", ");
+                parts.push(`prioritized ${incDesc}`);
+            }
+            if (decreased.length > 0) {
+                const decDesc = decreased.map((d) => `${d.label} (${d.deltaPct}%)`).join(", ");
+                parts.push(`decreased ${decDesc}`);
+            }
+
+            if (modeKey === "expert") {
+                summary = `Calibrated utility weights: You ${parts.join(" and ")}. Multi-criteria ranking will re-weight scoring matrices accordingly.`;
+            } else if (modeKey === "intermediate") {
+                summary = `Updated architectural criteria: You ${parts.join(" and ")}. CloudEx will evaluate providers against these modified constraints.`;
+            } else {
+                summary = `You ${parts.join(" and ")}. CloudEx will use these priorities to find the best fit for your project.`;
+            }
+        }
+
+        return {
+            rows,
+            hasChanges,
+            increased,
+            decreased,
+            summary,
+            mode: modeKey
+        };
+    }
+
+    function renderComparisonPanelHtml(comparison, mode = "beginner") {
+        if (!comparison) {
+            return "";
+        }
+
+        const rowsHtml = comparison.rows.map((row) => {
+            let deltaHtml = "";
+            if (row.deltaPct > 0) {
+                deltaHtml = `<span class="delta-pill positive">+${row.deltaPct}% <i class="fa-solid fa-arrow-up"></i></span>`;
+            } else if (row.deltaPct < 0) {
+                deltaHtml = `<span class="delta-pill negative">${row.deltaPct}% <i class="fa-solid fa-arrow-down"></i></span>`;
+            } else {
+                deltaHtml = `<span class="delta-pill neutral">No change</span>`;
+            }
+
+            return `
+                <tr class="comparison-row ${row.changed ? "is-changed" : "is-unchanged"}">
+                    <td class="dim-cell">${row.icon} ${row.label}</td>
+                    <td class="val-cell">${row.originalPct}%</td>
+                    <td class="val-cell ${row.changed ? "font-bold" : ""}">${row.updatedPct}%</td>
+                    <td class="delta-cell">${deltaHtml}</td>
+                </tr>
+            `;
+        }).join("");
+
+        const badgeLabel = comparison.hasChanges ? "Updated Priorities Active" : "No Changes";
+
+        return `
+            <div class="preferences-comparison-panel" id="preferencesComparisonPanel">
+                <div class="comparison-header">
+                    <div class="comparison-header-title">
+                        <i class="fa-solid fa-code-compare"></i>
+                        <span>Your Preference Changes (Original vs. Updated)</span>
+                    </div>
+                    <span class="comparison-badge ${comparison.hasChanges ? "changed" : "unchanged"}">${badgeLabel}</span>
+                </div>
+                <div class="comparison-summary-box">
+                    <i class="fa-solid fa-circle-info"></i>
+                    <span>${comparison.summary}</span>
+                </div>
+                <div class="comparison-table-wrapper">
+                    <table class="comparison-table">
+                        <thead>
+                            <tr>
+                                <th>Dimension</th>
+                                <th>Initial AI</th>
+                                <th>Your Priority</th>
+                                <th>Change</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${rowsHtml}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        `;
+    }
+
+    function updateComparisonDisplay(container, originalPrefs, updPrefs, mode) {
+        if (!container) return;
+        const compSlot = container.querySelector("#comparisonContainer");
+        if (!compSlot) return;
+
+        if (!updPrefs || !originalPrefs) {
+            compSlot.style.display = "none";
+            compSlot.innerHTML = "";
+            return;
+        }
+
+        const comparison = generatePreferenceComparison(originalPrefs, updPrefs, mode || currentExperienceMode);
+        compSlot.innerHTML = renderComparisonPanelHtml(comparison, mode || currentExperienceMode);
+        compSlot.style.display = "block";
+    }
+
     function getPreferenceIntroText(mode) {
         if (mode === "expert") {
             return "Calibrate multidimensional utility weights across infrastructure and operational criteria. Sliders reflect current model understanding:";
@@ -1923,6 +2086,9 @@ document.addEventListener("DOMContentLoaded", async () => {
         });
 
         const initialTradeoffs = detectClientTradeoffs(activeValues, currentMode);
+        const comparisonHtml = (isRecalculated && updatedPreferences && originalFuzzyPreferences)
+            ? renderComparisonPanelHtml(generatePreferenceComparison(originalFuzzyPreferences, updatedPreferences, currentMode), currentMode)
+            : "";
 
         return `
             <div class="initial-preferences-panel" id="initialPreferencesPanel">
@@ -1945,6 +2111,9 @@ document.addEventListener("DOMContentLoaded", async () => {
                         <span class="banner-icon">✓</span>
                         <span class="banner-text">Preferences updated. CloudEx will use these updated priorities for the next recommendation.</span>
                     </div>
+                </div>
+                <div class="comparison-container" id="comparisonContainer" style="${(isRecalculated && updatedPreferences) ? "display: block;" : "display: none;"}">
+                    ${comparisonHtml}
                 </div>
                 <div class="tradeoffs-container" id="tradeoffsContainer">
                     ${renderTradeoffPanelHtml(initialTradeoffs, currentMode)}
@@ -2078,10 +2247,13 @@ document.addEventListener("DOMContentLoaded", async () => {
             }
         }
 
+        // Render / refresh comparison between original AI preferences and user preferences (Feature #13)
+        updateComparisonDisplay(container, originalFuzzyPreferences, updatedPreferences, currentExperienceMode);
+
         // Refresh trade-offs for recalculated values (Feature #12)
         updateTradeoffsDisplay(container, updatedPreferences, currentExperienceMode);
 
-        console.log("Feature #11 & #12: Preferences recalculated, trade-offs evaluated:", {
+        console.log("Feature #11, #12 & #13: Preferences recalculated:", {
             original: originalFuzzyPreferences,
             updated: updatedPreferences,
             isRecalculated
@@ -2128,6 +2300,11 @@ document.addEventListener("DOMContentLoaded", async () => {
 
             });
 
+            // Update preference comparison for new experience mode depth (Feature #13)
+            if (isRecalculated && updatedPreferences && originalFuzzyPreferences) {
+                updateComparisonDisplay(panel, originalFuzzyPreferences, updatedPreferences, mode);
+            }
+
             // Update trade-off notices for new experience mode depth (Feature #12)
             const activePrefs = updatedPreferences || userModifiedPreferences || originalFuzzyPreferences;
             if (activePrefs) {
@@ -2157,6 +2334,10 @@ document.addEventListener("DOMContentLoaded", async () => {
                 const p = prefs || updatedPreferences || userModifiedPreferences || originalFuzzyPreferences || {};
                 const m = mode || currentExperienceMode || "beginner";
                 return detectClientTradeoffs(p, m);
+            },
+            getPreferenceComparison: (mode = null) => {
+                if (!originalFuzzyPreferences || !updatedPreferences) return null;
+                return generatePreferenceComparison(originalFuzzyPreferences, updatedPreferences, mode || currentExperienceMode || "beginner");
             }
         };
     }
