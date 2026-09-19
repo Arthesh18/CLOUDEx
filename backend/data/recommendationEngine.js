@@ -8,6 +8,7 @@ const { processFuzzyRequirements } = require("./fuzzyRequirementProcessor");
 const { detectTradeoffs } = require("./tradeoffDetection");
 const { evaluateProvidersMCDM, CRITERIA_DEFINITIONS } = require("./mcdmEngine");
 const { getProviderById } = require("./cloudData");
+const { explainAssumptions } = require("./assumptionExplainer");
 
 /**
  * Generate personalized explanation why the winner matches user priorities.
@@ -258,6 +259,12 @@ function generatePersonalizedRecommendation(options = {}) {
         weakerMatches,
         tradeoffs: activeTradeoffs,
         requirementsUnderstood: fuzzyResult.requirementSignals,
+        assumptions: explainAssumptions({
+            requirements: fuzzyResult.requirementSignals,
+            preferences: fuzzyResult.preferences,
+            recommendation: winner,
+            mode: fuzzyResult.mode
+        }),
         preferencesUsed: fuzzyResult.preferences,
         fuzzyInterpretation: fuzzyResult.fuzzyInterpretation,
         source: fuzzyResult.source,
@@ -635,11 +642,18 @@ function buildDecisionPipelineExplainability(options = {}) {
             : `${topWinner ? topWinner.providerName : "Winner"} ranked #1 because it scored highest across your top priorities: ${strongestContributions.map(c => c.label).join(", ")}.`
     };
 
+    const assumptionsReport = explainAssumptions({
+        requirements,
+        preferences,
+        recommendation: topWinner,
+        mode
+    });
+
     return {
         success: true,
         pipelineStages: [
             { id: "user_input", title: "1. User Input", description: "What you told CLOUDEx about your application" },
-            { id: "requirements_understood", title: "2. Requirements Understood", description: "Inferred signals and assumed defaults" },
+            { id: "requirements_understood", title: "2. Requirements Understood & Assumptions", description: "Inferred signals and assumed defaults" },
             { id: "fuzzy_preferences", title: "3. Fuzzy Preferences", description: "Normalized 7-dimension weights and linguistic levels" },
             { id: "user_priorities", title: "4. User Priorities", description: "Active weight calibration profile" },
             { id: "tradeoff_detection", title: "5. Trade-Off Detection", description: "Competing architectural tensions analyzed" },
@@ -649,6 +663,7 @@ function buildDecisionPipelineExplainability(options = {}) {
         ],
         inputSummary,
         requirementsUnderstood,
+        assumptions: assumptionsReport,
         fuzzyPreferences,
         userPriorities,
         tradeoffs: tradeoffsList,

@@ -93,6 +93,9 @@ const {
 const {
     getDecisionSystemGuide
 } = require("./data/decisionSystemGuide");
+const {
+    explainAssumptions
+} = require("./data/assumptionExplainer");
 
 dotenv.config();
 
@@ -614,6 +617,30 @@ app.post("/api/advisor/decision-guide", (req, res) => {
         res.status(500).json({
             success: false,
             message: "Failed to load decision system guide."
+        });
+    }
+});
+
+
+// ==================================================
+// EXPLAINABLE AI ASSUMPTIONS (FEATURE #20)
+// ==================================================
+
+app.post("/api/advisor/assumptions", (req, res) => {
+    try {
+        const { requirements = {}, preferences = {}, recommendation = null, mode = "beginner" } = req.body || {};
+        const assumptionsReport = explainAssumptions({
+            requirements,
+            preferences,
+            recommendation,
+            mode
+        });
+        res.json(assumptionsReport);
+    } catch (error) {
+        console.error("Assumptions API error:", error.message);
+        res.status(500).json({
+            success: false,
+            message: "Failed to generate assumptions report."
         });
     }
 });

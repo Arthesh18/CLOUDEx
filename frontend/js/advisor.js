@@ -1444,6 +1444,7 @@ document.addEventListener("DOMContentLoaded", async () => {
             originalRecommendation = null;
             updatedRecommendation = null;
             currentRecommendationComparison = null;
+            currentAssumptions = null;
             isRecalculated = false;
             recalculatedAt = null;
 
@@ -1607,6 +1608,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     let originalRecommendation = null;
     let updatedRecommendation = null;
     let currentRecommendationComparison = null;
+    let currentAssumptions = null;
 
     const PREFERENCE_DIMENSION_CONFIG = [
         {
@@ -2537,14 +2539,29 @@ document.addEventListener("DOMContentLoaded", async () => {
                 if (newRec && newRec.success) {
                     currentRecommendation = newRec;
                     updatedRecommendation = newRec;
+                    if (newRec.assumptions) {
+                        currentAssumptions = newRec.assumptions;
+                    }
                     const recCards = document.querySelectorAll(".final-recommendation-card");
                     recCards.forEach((card) => {
                         const parent = card.parentElement;
                         if (parent) {
+                            let next = card.nextElementSibling;
+                            while (next && (next.classList.contains("assumptions-card") || next.classList.contains("how-decided-card"))) {
+                                const toRemove = next;
+                                next = next.nextElementSibling;
+                                parent.removeChild(toRemove);
+                            }
                             const temp = document.createElement("div");
                             temp.innerHTML = createPersonalizedRecommendationCard(newRec, currentExperienceMode);
-                            if (temp.firstElementChild) {
-                                parent.replaceChild(temp.firstElementChild, card);
+                            const children = Array.from(temp.children);
+                            if (children.length > 0) {
+                                parent.replaceChild(children[0], card);
+                                let prev = children[0];
+                                for (let i = 1; i < children.length; i++) {
+                                    prev.after(children[i]);
+                                    prev = children[i];
+                                }
                             }
                         }
                     });
@@ -2626,16 +2643,28 @@ document.addEventListener("DOMContentLoaded", async () => {
 
         });
 
-        // Refresh personalized recommendation cards for new mode (Feature #16)
+        // Refresh personalized recommendation cards for new mode (Feature #16 & Feature #20)
         const recCards = document.querySelectorAll(".final-recommendation-card");
         if (recCards.length > 0 && currentRecommendation) {
             recCards.forEach((card) => {
                 const parent = card.parentElement;
                 if (parent) {
+                    let next = card.nextElementSibling;
+                    while (next && (next.classList.contains("assumptions-card") || next.classList.contains("how-decided-card"))) {
+                        const toRemove = next;
+                        next = next.nextElementSibling;
+                        parent.removeChild(toRemove);
+                    }
                     const temp = document.createElement("div");
                     temp.innerHTML = createPersonalizedRecommendationCard(currentRecommendation, mode);
-                    if (temp.firstElementChild) {
-                        parent.replaceChild(temp.firstElementChild, card);
+                    const children = Array.from(temp.children);
+                    if (children.length > 0) {
+                        parent.replaceChild(children[0], card);
+                        let prev = children[0];
+                        for (let i = 1; i < children.length; i++) {
+                            prev.after(children[i]);
+                            prev = children[i];
+                        }
                     }
                 }
             });
@@ -2676,7 +2705,9 @@ document.addEventListener("DOMContentLoaded", async () => {
             getHowDecided: () => currentRecommendation ? currentRecommendation.howDecided : null,
             openDecisionSystemGuide: (mode = null) => openDecisionSystemGuide(mode),
             closeDecisionSystemGuide: () => closeDecisionSystemGuide(),
-            getDecisionGuideData: (mode = null) => fetchDecisionGuide(mode || currentExperienceMode || "beginner")
+            getDecisionGuideData: (mode = null) => fetchDecisionGuide(mode || currentExperienceMode || "beginner"),
+            getAssumptions: () => currentAssumptions,
+            applyAssumptionCorrection: (id, promptText) => applyAssumptionCorrection(id, promptText)
         };
     }
 
@@ -2800,6 +2831,137 @@ document.addEventListener("DOMContentLoaded", async () => {
         if (overlay) {
             overlay.classList.remove("active");
         }
+    }
+
+    // =========================================================
+    // EXPLAINABLE AI ASSUMPTIONS (FEATURE #20)
+    // =========================================================
+
+    function applyAssumptionCorrection(id, promptText) {
+        const input = document.getElementById("messageInput");
+        if (input) {
+            input.value = promptText || "";
+            input.focus();
+            input.scrollIntoView({ behavior: "smooth" });
+        }
+    }
+
+    function renderAssumptionsCardHtml(assumptions, mode = "beginner") {
+        if (!assumptions) return "";
+
+        const hasAssumptions = Boolean(assumptions.hasAssumptions && assumptions.assumed && assumptions.assumed.length > 0);
+
+        const userProvidedList = Array.isArray(assumptions.userProvided) ? assumptions.userProvided : [];
+        const inferredList = Array.isArray(assumptions.inferred) ? assumptions.inferred : [];
+        const assumedList = Array.isArray(assumptions.assumed) ? assumptions.assumed : [];
+
+        const userProvidedHtml = userProvidedList.length > 0 ? `
+            <div class="assumption-group">
+                <div class="assumption-group-title user-provided">
+                    <i class="fa-solid fa-circle-check"></i>
+                    <span>WHAT YOU TOLD US</span>
+                </div>
+                <div class="assumption-items-list">
+                    ${userProvidedList.map(u => `
+                        <div class="assumption-item user-provided-item">
+                            <span class="assumption-bullet"><i class="fa-solid fa-check"></i></span>
+                            <div class="assumption-text">
+                                <strong>${u.description}:</strong> ${u.value}
+                            </div>
+                        </div>
+                    `).join("")}
+                </div>
+            </div>
+        ` : "";
+
+        const inferredHtml = inferredList.length > 0 ? `
+            <div class="assumption-group">
+                <div class="assumption-group-title inferred">
+                    <i class="fa-solid fa-brain"></i>
+                    <span>WHAT CLOUDEx INFERRED</span>
+                </div>
+                <div class="assumption-items-list">
+                    ${inferredList.map(inf => `
+                        <div class="assumption-item inferred-item">
+                            <span class="assumption-bullet">•</span>
+                            <div class="assumption-text">
+                                <strong>${inf.description}:</strong> ${inf.value}
+                            </div>
+                        </div>
+                    `).join("")}
+                </div>
+            </div>
+        ` : "";
+
+        const assumedHtml = hasAssumptions ? `
+            <div class="assumption-group">
+                <div class="assumption-group-title assumed">
+                    <i class="fa-solid fa-circle-question"></i>
+                    <span>WHAT CLOUDEx ASSUMED</span>
+                </div>
+                <div class="assumption-items-list">
+                    ${assumedList.map(a => {
+                        const impactLevel = (a.impact || "medium").toLowerCase();
+                        const safePrompt = (a.promptTemplate || a.changeAction || "").replace(/'/g, "\\'").replace(/"/g, '&quot;');
+                        return `
+                            <div class="assumption-item assumed-item">
+                                <div class="assumption-item-header">
+                                    <div class="assumption-text">
+                                        <span class="assumption-bullet">•</span>
+                                        <strong>${a.description}:</strong> ${a.value}
+                                    </div>
+                                    <span class="assumption-impact-pill impact-${impactLevel}">${impactLevel.toUpperCase()} IMPACT</span>
+                                </div>
+                                <div class="assumption-reason-box">
+                                    <i class="fa-solid fa-info-circle"></i>
+                                    <span>${a.reason}</span>
+                                </div>
+                                ${a.impactExplanation ? `
+                                    <div class="assumption-influence-note">
+                                        <i class="fa-solid fa-chart-simple"></i>
+                                        <span>${a.impactExplanation}</span>
+                                    </div>
+                                ` : ''}
+                                ${a.changeable ? `
+                                    <div class="assumption-action-row">
+                                        <button type="button" class="assumption-change-btn" onclick="window.CloudExPreferences.applyAssumptionCorrection('${a.id}', '${safePrompt}')">
+                                            <i class="fa-solid fa-pen-to-square"></i> ${a.changeAction || "Change this"}
+                                        </button>
+                                    </div>
+                                ` : ''}
+                            </div>
+                        `;
+                    }).join("")}
+                </div>
+            </div>
+        ` : `
+            <div class="assumption-group">
+                <div class="assumption-group-title assumed">
+                    <i class="fa-solid fa-circle-question"></i>
+                    <span>WHAT CLOUDEx ASSUMED</span>
+                </div>
+                <p class="assumptions-none-text">
+                    <i class="fa-solid fa-circle-check" style="color: #35d99a;"></i> CloudEx did not need to make major assumptions.
+                </p>
+            </div>
+        `;
+
+        return `
+            <div class="assumptions-card" id="assumptionsCard">
+                <div class="assumptions-header">
+                    <div class="assumptions-tag">
+                        <i class="fa-solid fa-lightbulb"></i>
+                        <span>WHAT CLOUDEx ASSUMED</span>
+                    </div>
+                    <span class="assumptions-badge">${assumedList.length} Assumption${assumedList.length === 1 ? '' : 's'}</span>
+                </div>
+                <div class="assumptions-body">
+                    ${userProvidedHtml}
+                    ${inferredHtml}
+                    ${assumedHtml}
+                </div>
+            </div>
+        `;
     }
 
     // =========================================================
@@ -3094,6 +3256,7 @@ document.addEventListener("DOMContentLoaded", async () => {
                     </div>
                 </div>
             </div>
+            ${rec.assumptions ? renderAssumptionsCardHtml(rec.assumptions, mode) : ""}
             ${rec.howDecided ? renderHowDecidedHtml(rec.howDecided, mode) : ""}
         `;
     }
@@ -3397,12 +3560,17 @@ document.addEventListener("DOMContentLoaded", async () => {
 
             if (data.recommendation) {
                 currentRecommendation = data.recommendation;
+                if (data.recommendation.assumptions) {
+                    currentAssumptions = data.recommendation.assumptions;
+                }
                 if (!originalRecommendation && !isRecalculated) {
                     originalRecommendation = data.recommendation;
                 }
                 if (isRecalculated) {
                     updatedRecommendation = data.recommendation;
                 }
+            } else if (data.assumptions) {
+                currentAssumptions = data.assumptions;
             }
 
             addMessage(
