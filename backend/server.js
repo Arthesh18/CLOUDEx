@@ -86,6 +86,9 @@ const {
 const {
     evaluateProvidersMCDM
 } = require("./data/mcdmEngine");
+const {
+    generatePersonalizedRecommendation
+} = require("./data/recommendationEngine");
 
 dotenv.config();
 
@@ -477,6 +480,39 @@ app.post("/api/advisor/mcdm", (req, res) => {
         res.status(500).json({
             success: false,
             message: "Failed to evaluate providers via MCDM."
+        });
+    }
+});
+
+
+// ==================================================
+// PERSONALIZED FINAL RECOMMENDATION (FEATURE #16)
+// ==================================================
+
+app.post("/api/advisor/recommend", (req, res) => {
+    try {
+        const {
+            requirements = {},
+            preferences = {},
+            source = "ai_generated",
+            mode = "beginner",
+            tradeoffs = []
+        } = req.body;
+
+        const recommendation = generatePersonalizedRecommendation({
+            requirements,
+            preferences,
+            source,
+            mode,
+            tradeoffs
+        });
+
+        res.json(recommendation);
+    } catch (error) {
+        console.error("Personalized recommendation API error:", error.message);
+        res.status(500).json({
+            success: false,
+            message: "Failed to generate personalized recommendation."
         });
     }
 });
@@ -1108,6 +1144,20 @@ if (userId && chatId) {
 
 
             // ==================================================
+            // PERSONALIZED FINAL RECOMMENDATION (FEATURE #16)
+            // ==================================================
+
+            const recommendation =
+                generatePersonalizedRecommendation({
+                    requirements: extractedRequirements,
+                    preferences: fuzzyPreferences,
+                    source: isRecalculatedPreferences ? "user_updated" : "ai_generated",
+                    mode: experienceMode,
+                    tradeoffs: tradeoffAnalysis.tradeoffs
+                });
+
+
+            // ==================================================
             // RESPONSE
             // ==================================================
 
@@ -1132,6 +1182,8 @@ if (userId && chatId) {
                 fuzzyRequirements,
 
                 mcdm: mcdmResult,
+
+                recommendation,
 
                 isRecalculatedPreferences: Boolean(isRecalculatedPreferences)
 

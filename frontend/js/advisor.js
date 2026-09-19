@@ -1429,6 +1429,7 @@ document.addEventListener("DOMContentLoaded", async () => {
             updatedPreferences = null;
             currentFuzzyRequirements = null;
             currentMcdmResult = null;
+            currentRecommendation = null;
             isRecalculated = false;
             recalculatedAt = null;
 
@@ -1587,6 +1588,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     let recalculatedAt = null;
     let currentFuzzyRequirements = null;
     let currentMcdmResult = null;
+    let currentRecommendation = null;
 
     const PREFERENCE_DIMENSION_CONFIG = [
         {
@@ -2332,6 +2334,41 @@ document.addEventListener("DOMContentLoaded", async () => {
         // Refresh trade-offs for recalculated values (Feature #12)
         updateTradeoffsDisplay(container, updatedPreferences, currentExperienceMode);
 
+        // Update or refresh personalized recommendation (Feature #16)
+        if (typeof fetch !== "undefined") {
+            const apiBase = "http://localhost:5000";
+            fetch(`${apiBase}/api/advisor/recommend`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    requirements: (currentFuzzyRequirements && currentFuzzyRequirements.requirementSignals) || {},
+                    preferences: updatedPreferences,
+                    source: "user_updated",
+                    mode: currentExperienceMode || "beginner"
+                })
+            })
+            .then((res) => res.json())
+            .then((newRec) => {
+                if (newRec && newRec.success) {
+                    currentRecommendation = newRec;
+                    const recCards = document.querySelectorAll(".final-recommendation-card");
+                    recCards.forEach((card) => {
+                        const parent = card.parentElement;
+                        if (parent) {
+                            const temp = document.createElement("div");
+                            temp.innerHTML = createPersonalizedRecommendationCard(newRec, currentExperienceMode);
+                            if (temp.firstElementChild) {
+                                parent.replaceChild(temp.firstElementChild, card);
+                            }
+                        }
+                    });
+                }
+            })
+            .catch((err) => {
+                console.warn("Could not dynamically refresh recommendation after recalculation:", err);
+            });
+        }
+
         console.log("Feature #11, #12 & #13: Preferences recalculated:", {
             original: originalFuzzyPreferences,
             updated: updatedPreferences,
@@ -2398,6 +2435,21 @@ document.addEventListener("DOMContentLoaded", async () => {
 
         });
 
+        // Refresh personalized recommendation cards for new mode (Feature #16)
+        const recCards = document.querySelectorAll(".final-recommendation-card");
+        if (recCards.length > 0 && currentRecommendation) {
+            recCards.forEach((card) => {
+                const parent = card.parentElement;
+                if (parent) {
+                    const temp = document.createElement("div");
+                    temp.innerHTML = createPersonalizedRecommendationCard(currentRecommendation, mode);
+                    if (temp.firstElementChild) {
+                        parent.replaceChild(temp.firstElementChild, card);
+                    }
+                }
+            });
+        }
+
     }
 
     // Expose preferences accessor for tests and subsequent features
@@ -2425,10 +2477,126 @@ document.addEventListener("DOMContentLoaded", async () => {
                 return generatePreferenceComparison(originalFuzzyPreferences, updatedPreferences, mode || currentExperienceMode || "beginner");
             },
             getFuzzyRequirements: () => currentFuzzyRequirements,
-            getMcdmResult: () => currentMcdmResult
+            getMcdmResult: () => currentMcdmResult,
+            getRecommendation: () => currentRecommendation
         };
     }
 
+
+    // =========================================================
+    // PERSONALIZED FINAL RECOMMENDATION CARD (FEATURE #16)
+    // =========================================================
+
+    function createPersonalizedRecommendationCard(rec, mode = "beginner") {
+        if (!rec || !rec.recommendedProvider) {
+            return "";
+        }
+
+        const provider = rec.recommendedProvider;
+        const confidence = rec.confidence || { level: "Medium", percentage: 75, basis: "" };
+        const levelClass = (confidence.level || "medium").toLowerCase();
+        const scorePct = rec.matchPercentage || Math.round((rec.recommendationScore || 0.85) * 100);
+
+        let whyLines = [];
+        if (Array.isArray(rec.whyRecommended) && rec.whyRecommended.length > 0) {
+            whyLines = rec.whyRecommended;
+        } else {
+            whyLines = [`${provider.name} emerged as the best overall match across your active criteria.`];
+        }
+
+        const whyHtml = whyLines.map((line) => `<p class="final-rec-why-text">${line}</p>`).join("");
+
+        let strongestHtml = "";
+        if (Array.isArray(rec.strongestMatches) && rec.strongestMatches.length > 0) {
+            strongestHtml = `
+                <div class="final-rec-matches-list">
+                    ${rec.strongestMatches.map((m) => `
+                        <div class="final-rec-match-item">
+                            <i class="fa-solid fa-check"></i>
+                            <span><strong>${m.label}:</strong> ${m.note}</span>
+                        </div>
+                    `).join("")}
+                </div>
+            `;
+        }
+
+        let tradeoffHtml = "";
+        if (Array.isArray(rec.tradeoffs) && rec.tradeoffs.length > 0) {
+            const topTradeoff = rec.tradeoffs[0];
+            const tradeExplanation = (topTradeoff.explanations && topTradeoff.explanations[mode]) || topTradeoff.explanation || "";
+            tradeoffHtml = `
+                <div class="final-rec-section trade-off-section">
+                    <div class="final-rec-section-title">
+                        <i class="fa-solid fa-scale-balanced"></i>
+                        <span>Where The Trade-Off Is (${topTradeoff.title})</span>
+                    </div>
+                    <p class="final-rec-tradeoff-text">${tradeExplanation}</p>
+                </div>
+            `;
+        }
+
+        let compromiseHtml = "";
+        if (Array.isArray(rec.weakerMatches) && rec.weakerMatches.length > 0) {
+            compromiseHtml = `
+                <div class="final-rec-section relative-compromise-section">
+                    <div class="final-rec-section-title">
+                        <i class="fa-solid fa-circle-info"></i>
+                        <span>Relative Compromises</span>
+                    </div>
+                    <div class="final-rec-matches-list">
+                        ${rec.weakerMatches.map((w) => `
+                            <div class="final-rec-compromise-item">
+                                <i class="fa-solid fa-arrow-right"></i>
+                                <span>${w.note}</span>
+                            </div>
+                        `).join("")}
+                    </div>
+                </div>
+            `;
+        }
+
+        const runnerUpNote = rec.runnerUp ? ` (Runner-up: ${rec.runnerUp.name} at ${rec.runnerUp.matchPercentage}%)` : "";
+
+        return `
+            <div class="final-recommendation-card" id="finalRecommendationCard">
+                <div class="final-rec-badge-row">
+                    <div class="final-rec-tag">
+                        <i class="fa-solid fa-award"></i>
+                        <span>Personalized Recommendation</span>
+                    </div>
+                    <span class="final-rec-confidence-pill ${levelClass}" title="${confidence.basis || ''}">
+                        Confidence: ${confidence.level} (${confidence.percentage}%)
+                    </span>
+                </div>
+                <div class="final-rec-hero">
+                    <div class="final-rec-hero-info">
+                        <h3 class="final-rec-provider-name">${provider.name}</h3>
+                        <p class="final-rec-provider-desc">${provider.description || (Array.isArray(provider.categories) ? provider.categories.join(" • ") : "")}</p>
+                    </div>
+                    <div class="final-rec-score-badge">
+                        <span class="final-rec-score-value">${scorePct}%</span>
+                        <span class="final-rec-score-label">Fit Score</span>
+                    </div>
+                </div>
+                <div class="final-rec-section">
+                    <div class="final-rec-section-title">
+                        <i class="fa-solid fa-circle-check"></i>
+                        <span>Why This Matches You</span>
+                    </div>
+                    ${whyHtml}
+                    ${strongestHtml}
+                </div>
+                ${tradeoffHtml}
+                ${compromiseHtml}
+                <div class="final-rec-footer">
+                    <div class="final-rec-method-note">
+                        <i class="fa-solid fa-microchip"></i>
+                        <span>Ranked #1 using Weighted MCDM across all 15 Cloud Service Providers based on your active priority weights.${runnerUpNote}</span>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
 
     // =========================================================
     // ADD MESSAGE TO CHAT
@@ -2437,7 +2605,8 @@ document.addEventListener("DOMContentLoaded", async () => {
     function addMessage(
         role,
         text,
-        fuzzyPreferences = null
+        fuzzyPreferences = null,
+        recommendation = null
     ) {
 
         const message =
@@ -2467,6 +2636,11 @@ document.addEventListener("DOMContentLoaded", async () => {
                 ? createProviderActions(text)
                 : "";
 
+        const recommendationHtml =
+            (role === "assistant" && (recommendation || currentRecommendation) && (detectProvider(text) || text.includes("MY RECOMMENDATION") || text.includes("MY PICK") || (recommendation && recommendation.recommendedProvider)))
+                ? createPersonalizedRecommendationCard(recommendation || currentRecommendation, currentExperienceMode)
+                : "";
+
         const preferencesHtml =
             (role === "assistant" && fuzzyPreferences && (detectProvider(text) || text.includes("MY RECOMMENDATION") || text.includes("MY PICK")))
                 ? createInitialPreferencesPanel(fuzzyPreferences, currentExperienceMode)
@@ -2490,6 +2664,8 @@ document.addEventListener("DOMContentLoaded", async () => {
                 <div class="message-bubble">
 
                     ${formatMessage(text)}
+
+                    ${recommendationHtml}
 
                     ${preferencesHtml}
 
@@ -2719,10 +2895,15 @@ document.addEventListener("DOMContentLoaded", async () => {
                 currentMcdmResult = data.mcdm;
             }
 
+            if (data.recommendation) {
+                currentRecommendation = data.recommendation;
+            }
+
             addMessage(
                 "assistant",
                 data.reply,
-                data.fuzzyPreferences
+                data.fuzzyPreferences,
+                data.recommendation
             );
 
 
