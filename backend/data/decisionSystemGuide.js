@@ -22,20 +22,20 @@ const DECISION_GUIDE_SECTIONS = [
         icon: "fa-brain",
         example: "You say: 'I am a student building a small website and I want to spend as little as possible.'",
         content: {
-            beginner: "When you describe your project in plain language, CLOUDEx reads between the lines. In our student example, it infers that low cost is Very High priority, setup simplicity is High, and heavy compute power is Medium. For details you haven't mentioned, it applies safe, conservative defaults so you never get stuck.",
-            intermediate: "The requirement translator extracts workload characteristics (traffic profile, persistence needs, deployment ergonomics) and maps conversational expressions into quantitative dimensional requirements while identifying unstated assumptions.",
-            expert: "Conversational input undergoes natural language and rule-based feature extraction, producing normalized requirement signals across compute, memory, latency, FinOps, and SLA constraints with explicit uncertainty tracking."
+            beginner: "When you describe your project in plain language, CLOUDEx reads between the lines. In our student example, it infers that low cost is Very High priority, setup simplicity is High, and heavy compute power is Medium. CLOUDEx categorizes details into 3 transparent levels: 1) User Facts (what you explicitly tell us), 2) Inferred Context (logical deductions based on your project type), and 3) Assumed Safe Defaults (when you say 'I don't know', we adopt safe, conservative baselines like sub-500 user scale so you never get stuck).",
+            intermediate: "The requirement translator extracts workload characteristics (traffic profile, persistence needs, deployment ergonomics) and maps conversational expressions into quantitative dimensional requirements while identifying unstated assumptions across user facts, inferred context, and safe defaults.",
+            expert: "Conversational input undergoes natural language and rule-based feature extraction, producing normalized requirement signals across compute, memory, latency, FinOps, and SLA constraints with explicit uncertainty tracking and assumption stratification."
         }
     },
     {
         id: "what_fuzzy_preferences_mean",
         number: 3,
-        title: "What Fuzzy Preferences Mean",
+        title: "What Fuzzy Preferences Mean (User Priority ≠ Provider Score)",
         icon: "fa-sliders",
         content: {
-            beginner: "A 'fuzzy preference' is not uncertainty about a cloud provider; it represents how important something is to you on a continuous scale from 0% to 100%. For example, a 90% Cost preference means keeping hosting costs low is one of your top goals.",
-            intermediate: "Fuzzy preferences quantify priority degrees along continuous evaluation intervals [0.0, 1.0], transforming qualitative requirements into mathematically operational priority weights.",
-            expert: "Fuzzy priority values parameterize continuous utility membership functions, mapping subjective user criteria into normalized dimensional weights for multi-criteria synthesis."
+            beginner: "A 'fuzzy preference' is not uncertainty about a cloud provider; it represents how important something is to you on a continuous scale from 0% to 100%. CRITICAL DISTINCTION: User Priority is NOT Provider Score. User Priority is how much YOU care about a dimension (e.g. 90% Cost). Provider Score is how well a cloud actually performs on that dimension. Setting your cost slider to 90% doesn't make a cloud cheaper; it tells the mathematical formula that cost should carry 90% of the weight when evaluating clouds for your project.",
+            intermediate: "Fuzzy preferences quantify priority degrees along continuous evaluation intervals [0.0, 1.0], transforming qualitative requirements into mathematically operational priority weights. User Priority (W_d) governs weighting, distinct from intrinsic Provider Capability Scores (S_P,d).",
+            expert: "Fuzzy priority values parameterize continuous utility membership functions, mapping subjective user criteria into normalized dimensional weights for multi-criteria synthesis, maintaining strict mathematical orthogonality between user utility vector W and candidate attribute matrix S."
         }
     },
     {
@@ -63,12 +63,13 @@ const DECISION_GUIDE_SECTIONS = [
     {
         id: "what_mcdm_means",
         number: 6,
-        title: "What MCDM Means",
+        title: "What MCDM Means (The Laptop Analogy)",
         icon: "fa-calculator",
         formula: "Score = Σ(User Preference × Provider Fit)",
+        analogy: "Imagine buying a laptop. You care 90% about battery life and 20% about gaming. The best laptop for you isn't the one with the biggest GPU; it's the one that matches what YOU care about most. That's MCDM. Instead of ranking clouds purely by price or size, CLOUDEx calculates a personalized balance across Cost, Simplicity, Speed, Reliability, Tools, Support, and AI/GPU.",
         content: {
-            beginner: "MCDM stands for Multi-Criteria Decision Making. It means CLOUDEx doesn't just rank clouds by price; it balances cost, simplicity, speed, and reliability all together. If cost matters twice as much to you as speed, the cost score carries twice as much weight in the final result.",
-            intermediate: "Weighted MCDM calculates utility scores using normalized scalar weighting: Score(P) = Σ (W_d × S_P,d), ensuring deterministic, mathematically traceable provider comparisons.",
+            beginner: "MCDM stands for Multi-Criteria Decision Making. Imagine buying a laptop: you care 90% about battery life and 20% about gaming. The best laptop for you isn't the one with the biggest GPU; it's the one that matches what YOU care about most. That's MCDM. CLOUDEx doesn't just rank clouds by price; it balances cost, simplicity, speed, and reliability all together. If cost matters twice as much to you as speed, the cost score carries twice as much weight in the final result.",
+            intermediate: "Weighted MCDM calculates utility scores using normalized scalar weighting: Score(P) = Σ (W_d × S_P,d), ensuring deterministic, mathematically traceable provider comparisons analogous to multi-factor consumer selection.",
             expert: "The Weighted Linear Combination (WLC) MCDM formulation synthesizes normalized criterion scores S_P,d with user utility weights W_d via Utility(P) = Σ (W_d × S_P,d), satisfying monotonicity and additive independence."
         }
     },
@@ -145,6 +146,7 @@ function getDecisionSystemGuide(mode = "beginner") {
         icon: s.icon,
         example: s.example || null,
         formula: s.formula || null,
+        analogy: s.analogy || null,
         text: s.content[activeMode] || s.content.beginner
     }));
 

@@ -327,26 +327,359 @@
             gap: 9px;
 
             transition: 0.2s;
-        }
-
-        .home-button {
+        .advisor-button {
             background: #5b5ce2;
             color: white;
         }
 
-        .home-button:hover {
+        .advisor-button:hover {
             background: #4c4dcc;
+            box-shadow: 0 4px 14px rgba(91, 92, 226, 0.3);
+        }
+
+        .guide-button {
+            background: #f0efff;
+            color: #5b5ce2;
+            border: 1px solid #dcd9ff;
+        }
+
+        .guide-button:hover {
+            background: #e5e3ff;
+            color: #4849c7;
+        }
+
+        .explorer-button {
+            background: #f5f5fa;
+            color: #33344a;
+            border: 1px solid #e2e2ed;
+        }
+
+        .explorer-button:hover {
+            background: #ececf5;
+            color: #111225;
+        }
+
+        .home-button {
+            background: #ffffff;
+            color: #55566b;
+            border: 1px solid #e0e0ec;
+        }
+
+        .home-button:hover {
+            background: #f7f7fc;
+            color: #111225;
         }
 
         .logout-button {
             background: #fff0f0;
             color: #dc4444;
-
             border: 1px solid #ffdada;
         }
 
         .logout-button:hover {
             background: #ffe4e4;
+        }
+
+        /* Profile Identity Badge */
+        .profile-identity-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 10px;
+            background: #ebfbf5;
+            color: #0d9f67;
+            border: 1px solid #b8f2db;
+            border-radius: 999px;
+            font-size: 12px;
+            font-weight: 700;
+            margin-top: 6px;
+        }
+
+        /* Advisor Experience Preference Section */
+        .advisor-pref-section {
+            margin-top: 35px;
+            padding-top: 30px;
+            border-top: 1px solid #eeeff4;
+        }
+
+        .pref-section-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 8px;
+        }
+
+        .advisor-pref-section h2 {
+            font-size: 19px;
+            color: #111225;
+        }
+
+        .pref-storage-tag {
+            font-size: 11px;
+            font-weight: 700;
+            color: #5b5ce2;
+            background: #f0efff;
+            border: 1px solid #dcd9ff;
+            padding: 4px 10px;
+            border-radius: 999px;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .pref-desc {
+            color: #74758a;
+            font-size: 14px;
+            margin-bottom: 18px;
+        }
+
+        .mode-pref-options {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 14px;
+        }
+
+        .mode-pref-card {
+            background: #f8f8fc;
+            border: 2px solid #e8e8f1;
+            border-radius: 16px;
+            padding: 16px 18px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            position: relative;
+            display: block;
+        }
+
+        .mode-pref-card:hover {
+            border-color: #5b5ce2;
+            background: #fafaff;
+        }
+
+        .mode-pref-card.active {
+            border-color: #5b5ce2;
+            background: #f5f4ff;
+            box-shadow: 0 4px 15px rgba(91, 92, 226, 0.12);
+        }
+
+        .mode-pref-card input {
+            position: absolute;
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .mode-card-top {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 8px;
+        }
+
+        .mode-card-icon {
+            font-size: 20px;
+        }
+
+        .mode-card-title {
+            font-size: 16px;
+            font-weight: 700;
+            color: #171827;
+        }
+
+        .mode-card-desc {
+            font-size: 13px;
+            color: #68697d;
+            line-height: 1.5;
+        }
+
+        .mode-pref-feedback {
+            margin-top: 14px;
+            padding: 10px 15px;
+            background: #ebfbf5;
+            color: #0d9f67;
+            border: 1px solid #b8f2db;
+            border-radius: 10px;
+            font-size: 13px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        /* Decision Guide Modal on Profile */
+        .decision-guide-modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(10, 12, 25, 0.75);
+            backdrop-filter: blur(8px);
+            z-index: 1000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .decision-guide-modal-overlay.active {
+            display: flex;
+        }
+
+        .decision-guide-modal {
+            background: #111326;
+            color: #f5f5ff;
+            border: 1px solid rgba(139, 124, 255, 0.28);
+            border-radius: 20px;
+            width: min(840px, 94vw);
+            max-height: 88vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            box-shadow: 0 25px 60px rgba(0, 0, 0, 0.5);
+        }
+
+        .decision-guide-modal-header {
+            padding: 18px 24px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .decision-guide-modal-title {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 17px;
+            font-weight: 700;
+            color: #f5f5ff;
+        }
+
+        .decision-guide-modal-title i {
+            color: #9b8cff;
+        }
+
+        .decision-guide-close-btn {
+            background: transparent;
+            border: none;
+            color: #a8abc4;
+            font-size: 24px;
+            cursor: pointer;
+            padding: 0 4px;
+            transition: color 0.2s;
+        }
+
+        .decision-guide-close-btn:hover {
+            color: #ffffff;
+        }
+
+        .decision-guide-modal-body {
+            padding: 24px;
+            overflow-y: auto;
+            flex: 1;
+        }
+
+        .decision-guide-intro-banner {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 14px 18px;
+            background: rgba(117, 97, 255, 0.12);
+            border: 1px solid rgba(139, 124, 255, 0.25);
+            border-radius: 12px;
+            font-size: 14px;
+            color: #c5beff;
+            margin-bottom: 20px;
+        }
+
+        .decision-guide-section-item {
+            background: rgba(20, 24, 48, 0.6);
+            border: 1px solid rgba(139, 124, 255, 0.16);
+            border-radius: 14px;
+            padding: 16px 20px;
+            margin-bottom: 14px;
+        }
+
+        .decision-guide-section-head {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 15px;
+            font-weight: 700;
+            color: #ffffff;
+            margin-bottom: 8px;
+        }
+
+        .decision-guide-section-num {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: rgba(117, 97, 255, 0.25);
+            color: #c5beff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: 700;
+        }
+
+        .decision-guide-section-text {
+            font-size: 13.5px;
+            color: #a8abc4;
+            line-height: 1.6;
+        }
+
+        .decision-guide-example-box {
+            margin-top: 10px;
+            padding: 10px 14px;
+            background: rgba(53, 217, 154, 0.08);
+            border: 1px solid rgba(53, 217, 154, 0.2);
+            border-radius: 10px;
+            font-size: 13px;
+            color: #b7f5df;
+            display: flex;
+            align-items: flex-start;
+            gap: 8px;
+        }
+
+        .decision-guide-formula-box {
+            margin-top: 10px;
+            padding: 10px 14px;
+            background: rgba(117, 97, 255, 0.1);
+            border: 1px solid rgba(139, 124, 255, 0.25);
+            border-radius: 10px;
+            font-family: monospace;
+            font-size: 13px;
+            color: #c5beff;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .decision-guide-analogy-box {
+            margin-top: 10px;
+            padding: 12px 16px;
+            background: rgba(245, 158, 11, 0.1);
+            border: 1px solid rgba(245, 158, 11, 0.3);
+            border-radius: 10px;
+            font-size: 13px;
+            color: #fde68a;
+            line-height: 1.5;
+            display: flex;
+            align-items: flex-start;
+            gap: 8px;
+        }
+
+        .decision-guide-disclaimer-box {
+            margin-top: 18px;
+            padding: 14px 18px;
+            background: rgba(255, 107, 107, 0.08);
+            border: 1px solid rgba(255, 107, 107, 0.22);
+            border-radius: 12px;
+            font-size: 12.5px;
+            color: #ffc9c9;
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            line-height: 1.5;
         }
 
         /* =========================
@@ -531,6 +864,10 @@
                         Loading...
                     </div>
 
+                    <span class="profile-identity-badge">
+                        <i class="fa-solid fa-circle-check"></i> Verified Member
+                    </span>
+
                 </div>
 
 
@@ -581,38 +918,153 @@
                     </div>
 
 
+                    <div class="info-box">
+
+                        <div class="info-label">
+                            Account Tier
+                        </div>
+
+                        <div class="info-value">
+                            Community Decision Support
+                        </div>
+
+                    </div>
+
+
+                    <div class="info-box">
+
+                        <div class="info-label">
+                            Browser Storage
+                        </div>
+
+                        <div class="info-value">
+                            Connected (localStorage)
+                        </div>
+
+                    </div>
+
+
                 </div>
 
             </div>
 
 
 
+            <!-- Advisor Experience Mode Preference Section -->
+            <div class="advisor-pref-section">
+
+                <div class="pref-section-header">
+
+                    <h2>
+                        Advisor Experience Mode Preference
+                    </h2>
+
+                    <span class="pref-storage-tag">
+                        <i class="fa-solid fa-hard-drive"></i> Stored locally in your browser (localStorage)
+                    </span>
+
+                </div>
+
+                <p class="pref-desc">
+                    Choose which experience mode Cloudex AI defaults to whenever you start a conversation.
+                    Changes are saved immediately to your browser's <code>localStorage</code> (key: <code>cloudex_experience_mode</code>).
+                </p>
+
+
+                <div class="mode-pref-options" id="modePrefOptions">
+
+                    <label class="mode-pref-card active" data-mode="beginner">
+                        <input type="radio" name="advisorMode" value="beginner" checked>
+                        <div class="mode-card-content">
+                            <div class="mode-card-top">
+                                <span class="mode-card-icon">🌱</span>
+                                <span class="mode-card-title">Beginner</span>
+                            </div>
+                            <p class="mode-card-desc">
+                                Plain English, guided clarifying questions, zero unexplained jargon, and predictable flat low-cost setups.
+                            </p>
+                        </div>
+                    </label>
+
+                    <label class="mode-pref-card" data-mode="intermediate">
+                        <input type="radio" name="advisorMode" value="intermediate">
+                        <div class="mode-card-content">
+                            <div class="mode-card-top">
+                                <span class="mode-card-icon">⚡</span>
+                                <span class="mode-card-title">Intermediate</span>
+                            </div>
+                            <p class="mode-card-desc">
+                                Pragmatic architectural dialogue, containers, managed DBs, bandwidth quotas, and operational trade-offs.
+                            </p>
+                        </div>
+                    </label>
+
+                    <label class="mode-pref-card" data-mode="expert">
+                        <input type="radio" name="advisorMode" value="expert">
+                        <div class="mode-card-content">
+                            <div class="mode-card-top">
+                                <span class="mode-card-icon">🚀</span>
+                                <span class="mode-card-title">Expert</span>
+                            </div>
+                            <p class="mode-card-desc">
+                                Deep technical dialogue, Kubernetes, VPC topology, InfiniBand, multi-region SLAs, and FinOps constraints.
+                            </p>
+                        </div>
+                    </label>
+
+                </div>
+
+                <div class="mode-pref-feedback" id="modePrefFeedback" style="display: none;">
+                    <i class="fa-solid fa-check"></i> Default mode updated to <strong id="savedModeLabel">Beginner</strong> in browser storage.
+                </div>
+
+            </div>
+
+
+
+            <!-- Quick Actions -->
             <div class="profile-actions">
 
+                <a
+                    href="advisor.html"
+                    class="action-button advisor-button"
+                >
+                    <i class="fa-solid fa-wand-magic-sparkles"></i>
+                    Open AI Advisor
+                </a>
+
+                <button
+                    type="button"
+                    class="action-button guide-button"
+                    id="profileGuideButton"
+                >
+                    <i class="fa-solid fa-circle-question"></i>
+                    How CLOUDEx Works
+                </button>
+
+                <a
+                    href="cloud-explorer.html"
+                    class="action-button explorer-button"
+                >
+                    <i class="fa-solid fa-cloud"></i>
+                    Explore Providers
+                </a>
 
                 <a
                     href="index.html"
                     class="action-button home-button"
                 >
-
                     <i class="fa-solid fa-house"></i>
-
                     Back to Dashboard
-
                 </a>
-
 
                 <button
                     class="action-button logout-button"
                     id="logoutButton"
                 >
-
                     <i class="fa-solid fa-right-from-bracket"></i>
-
                     Logout
-
                 </button>
-
 
             </div>
 
@@ -760,19 +1212,179 @@
 
 
         // =====================================================
-        // LOGOUT
+        // ADVISOR EXPERIENCE MODE PREFERENCE (localStorage)
         // =====================================================
-    document
-        .getElementById("logoutButton")
-        .addEventListener(
-            "click",
-            () => {
 
-            cloudexLogout();
+        function initAdvisorModePreference() {
+            const savedMode = localStorage.getItem("cloudex_experience_mode") || "beginner";
+            const cards = document.querySelectorAll(".mode-pref-card");
+            const feedbackEl = document.getElementById("modePrefFeedback");
+            const labelEl = document.getElementById("savedModeLabel");
 
+            cards.forEach(card => {
+                const mode = card.dataset.mode;
+                const radio = card.querySelector("input[type='radio']");
+
+                if (mode === savedMode) {
+                    card.classList.add("active");
+                    if (radio) radio.checked = true;
+                } else {
+                    card.classList.remove("active");
+                    if (radio) radio.checked = false;
+                }
+
+                card.addEventListener("click", () => {
+                    cards.forEach(c => c.classList.remove("active"));
+                    card.classList.add("active");
+                    if (radio) radio.checked = true;
+
+                    localStorage.setItem("cloudex_experience_mode", mode);
+
+                    if (feedbackEl && labelEl) {
+                        const capitalized = mode.charAt(0).toUpperCase() + mode.slice(1);
+                        labelEl.textContent = capitalized;
+                        feedbackEl.style.display = "flex";
+                        setTimeout(() => {
+                            feedbackEl.style.display = "none";
+                        }, 3500);
+                    }
+                });
+            });
         }
-    );
 
+
+        // =====================================================
+        // DECISION SYSTEM GUIDE MODAL ON PROFILE
+        // =====================================================
+
+        async function fetchDecisionGuide(mode = "beginner") {
+            try {
+                const res = await fetch(`/api/advisor/decision-guide?mode=${mode}`);
+                if (res.ok) {
+                    return await res.json();
+                }
+            } catch (e) {
+                console.warn("Could not load guide from API:", e);
+            }
+            return null;
+        }
+
+        function renderGuideContentHtml(guide) {
+            if (!guide || !Array.isArray(guide.sections)) return "";
+
+            const sectionsHtml = guide.sections.map(sec => `
+                <div class="decision-guide-section-item">
+                    <div class="decision-guide-section-head">
+                        <span class="decision-guide-section-num">${sec.number}</span>
+                        <i class="fa-solid ${sec.icon || 'fa-info-circle'}"></i>
+                        <span>${sec.title}</span>
+                    </div>
+                    <p class="decision-guide-section-text">${sec.text}</p>
+                    ${sec.example ? `
+                        <div class="decision-guide-example-box">
+                            <i class="fa-solid fa-lightbulb"></i>
+                            <span><strong>Example:</strong> ${sec.example}</span>
+                        </div>
+                    ` : ''}
+                    ${sec.analogy ? `
+                        <div class="decision-guide-analogy-box">
+                            <i class="fa-solid fa-laptop"></i>
+                            <span><strong>Analogy:</strong> ${sec.analogy}</span>
+                        </div>
+                    ` : ''}
+                    ${sec.formula ? `
+                        <div class="decision-guide-formula-box">
+                            <i class="fa-solid fa-calculator"></i>
+                            <span>${sec.formula}</span>
+                        </div>
+                    ` : ''}
+                </div>
+            `).join("");
+
+            const disc = guide.disclaimers || {};
+
+            return `
+                <div class="decision-guide-intro-banner">
+                    <i class="fa-solid fa-graduation-cap"></i>
+                    <span>${guide.subtitle || "Learn how CLOUDEx interprets requirements and calculates matches."}</span>
+                </div>
+                ${sectionsHtml}
+                <div class="decision-guide-disclaimer-box">
+                    <i class="fa-solid fa-triangle-exclamation"></i>
+                    <span><strong>Important Notice:</strong> ${disc.cspEvaluationDisclaimer || "Provider evaluation values are project-maintained decision-support data."}</span>
+                </div>
+            `;
+        }
+
+        async function openDecisionGuideModal() {
+            let overlay = document.getElementById("profileDecisionGuideOverlay");
+            const activeMode = localStorage.getItem("cloudex_experience_mode") || "beginner";
+
+            if (!overlay) {
+                overlay = document.createElement("div");
+                overlay.className = "decision-guide-modal-overlay";
+                overlay.id = "profileDecisionGuideOverlay";
+                overlay.innerHTML = `
+                    <div class="decision-guide-modal" role="dialog" aria-modal="true">
+                        <div class="decision-guide-modal-header">
+                            <div class="decision-guide-modal-title">
+                                <i class="fa-solid fa-circle-question"></i>
+                                <span>Understanding CLOUDEx's Decision System</span>
+                            </div>
+                            <button type="button" class="decision-guide-close-btn" id="closeProfileGuideBtn">&times;</button>
+                        </div>
+                        <div class="decision-guide-modal-body" id="profileGuideBody">
+                            <div style="text-align: center; color: #a8abc4; padding: 30px;">
+                                <i class="fa-solid fa-spinner fa-spin"></i> Loading guide...
+                            </div>
+                        </div>
+                    </div>
+                `;
+                document.body.appendChild(overlay);
+
+                overlay.addEventListener("click", (e) => {
+                    if (e.target === overlay) {
+                        overlay.classList.remove("active");
+                    }
+                });
+
+                overlay.querySelector("#closeProfileGuideBtn").addEventListener("click", () => {
+                    overlay.classList.remove("active");
+                });
+
+                document.addEventListener("keydown", (e) => {
+                    if (e.key === "Escape" && overlay.classList.contains("active")) {
+                        overlay.classList.remove("active");
+                    }
+                });
+            }
+
+            overlay.classList.add("active");
+            const bodyEl = overlay.querySelector("#profileGuideBody");
+            const data = await fetchDecisionGuide(activeMode);
+            if (data && bodyEl) {
+                bodyEl.innerHTML = renderGuideContentHtml(data);
+            }
+        }
+
+
+        // =====================================================
+        // LOGOUT & GUIDE HOOKS
+        // =====================================================
+
+        const logoutBtn = document.getElementById("logoutButton");
+        if (logoutBtn) {
+            logoutBtn.addEventListener("click", () => {
+                cloudexLogout();
+            });
+        }
+
+        const guideBtn = document.getElementById("profileGuideButton");
+        if (guideBtn) {
+            guideBtn.addEventListener("click", () => {
+                openDecisionGuideModal();
+            });
+        }
 
 
         // =====================================================
@@ -780,6 +1392,7 @@
         // =====================================================
 
         loadUser();
+        initAdvisorModePreference();
 
     </script>
     <script src="js/auth.js"></script>

@@ -14,6 +14,11 @@
         rel="stylesheet"
     >
 
+    <link
+        rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
+    >
+
     <link rel="stylesheet" href="css/advisor.css">
 </head>
 
@@ -41,7 +46,19 @@
         <div class="nav-right">
 
             <a href="index.html" class="back-link">
-                ← Home
+                Home
+            </a>
+
+            <a href="cloud-explorer.html" class="back-link">
+                Cloud Explorer
+            </a>
+
+            <button type="button" class="nav-guide-btn" id="navDecisionGuideBtn" title="Learn how CLOUDEx makes decisions">
+                <i class="fa-solid fa-circle-question"></i> How CLOUDEx Works
+            </button>
+
+            <a href="profile.html" class="back-link">
+                Profile
             </a>
 
             <div class="status-pill">
@@ -115,7 +132,7 @@
                     <div>
 
                         <span class="history-label">
-                            YOUR CHATS
+                            YOUR CONVERSATIONS
                         </span>
 
                         <h3>
@@ -124,17 +141,16 @@
 
                     </div>
 
-
-                    <button
-                        type="button"
-                        class="history-new-btn"
-                        id="newChatButton"
-                        title="Start a new conversation"
-                    >
-                        +
-                    </button>
-
                 </div>
+
+                <button
+                    type="button"
+                    class="history-new-btn-prominent"
+                    id="newChatButton"
+                    title="Start a new conversation"
+                >
+                    <i class="fa-solid fa-plus"></i> New Conversation
+                </button>
 
 
                 <div
@@ -166,6 +182,16 @@
 
                     <div class="ai-profile">
 
+                        <button
+                            type="button"
+                            class="history-toggle-btn"
+                            id="historyToggleBtn"
+                            title="Toggle chat history"
+                            aria-label="Toggle chat history"
+                        >
+                            <i class="fa-solid fa-bars"></i>
+                        </button>
+
                         <div class="ai-avatar">
                             ☁
                         </div>
@@ -186,13 +212,26 @@
                     </div>
 
 
-                    <button
-                        class="clear-btn"
-                        id="clearChat"
-                        type="button"
-                    >
-                        New conversation
-                    </button>
+                    <div class="chat-header-actions">
+
+                        <button
+                            type="button"
+                            class="chat-header-guide-btn"
+                            id="headerDecisionGuideBtn"
+                            title="Learn how CLOUDEx makes decisions"
+                        >
+                            <i class="fa-solid fa-book-open"></i> Decision Guide
+                        </button>
+
+                        <button
+                            class="clear-btn"
+                            id="clearChat"
+                            type="button"
+                        >
+                            + New conversation
+                        </button>
+
+                    </div>
 
                 </div>
 

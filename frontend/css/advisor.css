@@ -156,6 +156,29 @@ body {
     color: white;
 }
 
+.nav-guide-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    background: rgba(117, 97, 255, 0.15);
+    border: 1px solid rgba(139, 124, 255, 0.35);
+    color: #c5beff;
+    padding: 7px 15px;
+    border-radius: 999px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-family: inherit;
+}
+
+.nav-guide-btn:hover {
+    background: rgba(117, 97, 255, 0.28);
+    color: #ffffff;
+    border-color: rgba(139, 124, 255, 0.6);
+    box-shadow: 0 0 16px rgba(117, 97, 255, 0.25);
+}
+
 .status-pill {
     display: flex;
     align-items: center;
@@ -206,9 +229,9 @@ body {
    ========================================================= */
 
 .advisor-container {
-    width: min(1080px, 92%);
+    width: min(1520px, 96%);
     margin: 0 auto;
-    padding: 70px 0 90px;
+    padding: 30px 0 60px;
 }
 
 
@@ -374,6 +397,54 @@ body {
 .ai-profile span {
     color: var(--text-muted);
     font-size: 11px;
+}
+
+.chat-header-actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.chat-header-guide-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    padding: 8px 14px;
+    border: 1px solid rgba(139, 124, 255, 0.28);
+    border-radius: 9px;
+    background: rgba(117, 97, 255, 0.12);
+    color: #c5beff;
+    font-family: inherit;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.chat-header-guide-btn:hover {
+    background: rgba(117, 97, 255, 0.25);
+    border-color: rgba(139, 124, 255, 0.5);
+    color: #ffffff;
+}
+
+.history-toggle-btn {
+    display: none;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    border-radius: 9px;
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    color: var(--text-main);
+    cursor: pointer;
+    font-size: 14px;
+    transition: all 0.2s ease;
+}
+
+.history-toggle-btn:hover {
+    background: rgba(117, 97, 255, 0.2);
+    border-color: rgba(139, 124, 255, 0.4);
 }
 
 .clear-btn {
@@ -2885,9 +2956,9 @@ body {
 
     display: grid;
 
-    grid-template-columns: 250px minmax(0, 1fr);
+    grid-template-columns: 290px minmax(0, 1fr);
 
-    gap: 18px;
+    gap: 22px;
 
     align-items: stretch;
 }
@@ -3024,6 +3095,34 @@ body {
 
     box-shadow:
         0 12px 25px rgba(95, 80, 230, 0.28);
+}
+
+.history-new-btn-prominent {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 12px 16px;
+    margin-bottom: 14px;
+    border-radius: 12px;
+    background: linear-gradient(135deg, rgba(117, 97, 255, 0.28), rgba(80, 102, 255, 0.16));
+    border: 1px solid rgba(139, 124, 255, 0.4);
+    color: #e5e3ff;
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.25s ease;
+    box-shadow: 0 4px 15px rgba(117, 97, 255, 0.12);
+}
+
+.history-new-btn-prominent:hover {
+    background: linear-gradient(135deg, rgba(117, 97, 255, 0.48), rgba(80, 102, 255, 0.32));
+    border-color: rgba(139, 124, 255, 0.7);
+    color: #ffffff;
+    transform: translateY(-1px);
+    box-shadow: 0 6px 22px rgba(117, 97, 255, 0.25);
 }
 
 
@@ -3239,4 +3338,142 @@ body {
     color: #ff6b6b;
 
     opacity: 1;
+}
+
+/* =========================================================
+   WHAT CLOUDEx UNDERSTANDS (PROGRESSIVE DISCLOSURE)
+   ========================================================= */
+
+.understood-summary-card {
+    margin: 14px 0 6px;
+    padding: 14px 18px;
+    background: linear-gradient(135deg, rgba(20, 24, 48, 0.85), rgba(12, 14, 28, 0.9));
+    border: 1px solid rgba(139, 124, 255, 0.26);
+    border-radius: 16px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+}
+
+.understood-summary-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 1px;
+    color: #a99eff;
+    margin-bottom: 10px;
+    text-transform: uppercase;
+}
+
+.understood-summary-header i {
+    font-size: 13px;
+    color: var(--purple-light);
+}
+
+.understood-chips-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.understood-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    padding: 6px 13px;
+    background: rgba(26, 30, 58, 0.9);
+    border: 1px solid rgba(139, 124, 255, 0.28);
+    border-radius: 999px;
+    font-size: 12px;
+    color: #f0efff;
+    font-weight: 500;
+}
+
+.understood-chip i {
+    color: var(--purple-light);
+    font-size: 11px;
+}
+
+.understood-chip strong {
+    color: #c5beff;
+    font-weight: 700;
+}
+
+/* =========================================================
+   DECISION GUIDE ANALOGY & CALLOUT BOXES
+   ========================================================= */
+
+.decision-guide-analogy-box {
+    margin-top: 10px;
+    padding: 12px 16px;
+    background: rgba(245, 158, 11, 0.08);
+    border: 1px solid rgba(245, 158, 11, 0.28);
+    border-radius: 12px;
+    font-size: 13px;
+    color: #fde68a;
+    line-height: 1.55;
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+}
+
+.decision-guide-analogy-box i {
+    color: #f59e0b;
+    font-size: 15px;
+    margin-top: 2px;
+    flex-shrink: 0;
+}
+
+/* =========================================================
+   MOBILE DRAWER & RESPONSIVENESS OVERRIDES
+   ========================================================= */
+
+@media (max-width: 900px) {
+    .advisor-container {
+        width: 96%;
+        padding: 20px 0 50px;
+    }
+
+    .advisor-intro {
+        margin-bottom: 24px;
+    }
+
+    .advisor-intro h1 {
+        font-size: 32px;
+        letter-spacing: -1.5px;
+    }
+
+    .advisor-workspace {
+        grid-template-columns: 1fr;
+        gap: 14px;
+    }
+
+    .history-toggle-btn {
+        display: inline-flex;
+    }
+
+    .chat-history {
+        position: fixed;
+        top: 0;
+        left: -320px;
+        bottom: 0;
+        width: 290px;
+        z-index: 1050;
+        border-radius: 0;
+        min-height: 100vh;
+        max-height: 100vh;
+        overflow-y: auto;
+        transition: left 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        box-shadow: none;
+        background: rgba(11, 13, 27, 0.98);
+    }
+
+    .chat-history.drawer-open {
+        left: 0;
+        box-shadow: 0 0 60px rgba(0, 0, 0, 0.9);
+    }
+
+    .history-list {
+        max-height: calc(100vh - 160px);
+    }
 }

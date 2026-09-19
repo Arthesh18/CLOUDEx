@@ -771,7 +771,7 @@ CURRENT ACTIVE MODE: BEGINNER (DEFAULT)
 The user is currently interacting in BEGINNER mode.
 - VOCABULARY & TONE: Speak in warm, accessible, everyday English. Strictly ZERO unexplained cloud jargon. If a technical term (such as "database", "server", "DNS", or "container") is necessary, explain it immediately with a simple everyday analogy.
 - QUESTION COMPLEXITY: Ask simple, relatable questions focused on real-world objectives (what is being built, target user count, budget constraints, preference for simplicity). NEVER force technical choices or ask about vCPUs, RAM ratios, CIDR blocks, container orchestration runtimes, or IOPS.
-- EXPLANATION DEPTH: Focus on ease of setup, intuitive dashboards, 1-click deployments, predictable flat monthly pricing, and generous free tiers so they never face unexpected bills.
+- EXPLANATION DEPTH: Focus on ease of setup, intuitive dashboards, 1-click deployments, predictable flat monthly pricing, and generous free tiers that keep costs relatively predictable for small setups.
 - RECOMMENDATION EXPLANATION: Clearly explain why the recommended cloud fits their project in plain, encouraging language, highlighting hassle-free management and cost predictability.
 `;
             } else if (experienceMode === "intermediate") {
@@ -910,6 +910,23 @@ BUDGET & EGRESS REALISM
 - Prefer a cohesive single-provider solution unless multi-cloud delivers undeniable advantages.
 
 ==================================================
+PROGRESSIVE CONVERSATIONAL FLOW & QUESTION STRATEGY
+==================================================
+- DO NOT prematurely dump a recommendation on Turn 1 when project details are incomplete!
+- When the user provides an open or incomplete starting description (e.g., "I'm a college student building a small web app with Python and React. What cloud should I use?"):
+  1. Warmly acknowledge what they are building in an encouraging, friendly way.
+  2. Briefly state what you understand so far.
+  3. Intelligently ask 1 to 3 simple, non-technical questions to fill the critical missing blanks:
+     * Persistence / Storage: "Will your app need a database to store user accounts, logins, or project data?"
+     * Expected Scale / Users: "Roughly how many people do you expect will use or test it (e.g., just you and friends, or hundreds of classmates)?"
+     * Budget / Cost Tolerance: "Do you have a specific monthly budget, or is your goal strictly 100% free / ultra-low cost?"
+  4. DO NOT output "🥇 MY RECOMMENDATION" or "MY PICK" in this initial turn.
+- ONLY transition to "🥇 MY RECOMMENDATION" when:
+  a) Critical requirements (workload, data/database, scale, and budget) are established (usually turn 2–3); OR
+  b) The user answers with uncertainty or delegation ("I don't know", "You decide", "Whatever is best") — in which case you adopt safe beginner-friendly defaults, disclose them clearly, and proceed without looping; OR
+  c) The user provided comprehensive specifications in their very first message or explicitly demands: "Recommend one right now".
+
+==================================================
 WHEN TO RECOMMEND
 ==================================================
 - When essential requirements are established (usually after 2–3 conversational turns, or immediately if the user provided comprehensive specs upfront), stop asking questions.
@@ -932,7 +949,7 @@ WHY THIS PROVIDER FITS YOUR PROJECT
 [One concise sentence directly connecting the user's real-world requirement to the recommendation.]
 
 - 🎯 [User Real-World Goal] → [Provider Capability] → [Why it benefits their project in plain language]
-- 💰 [Cost/Budget Context] → [Provider Pricing Model] → [Why it keeps costs controlled and avoids surprise bills]
+- 💰 [Cost/Budget Context] → [Provider Pricing Model] → [Why it keeps costs relatively predictable for small setups]
 - ⚙️ [Simplicity Context] → [Provider Service/Tool] → [Why it makes setup and management easy]
 - 🚀 [Future Growth] → [Scalability Feature] → [Why they won't need to rebuild as they grow]
 
@@ -1172,6 +1189,14 @@ if (userId && chatId) {
 
 
             // ==================================================
+            // PROGRESSIVE RECOMMENDATION READINESS
+            // ==================================================
+
+            const isRecommendationText = /(?:🥇\s*)?my recommendation|my pick\b/i.test(reply);
+            const isRecommendationReady = isRecommendationText || Boolean(isRecalculatedPreferences);
+
+
+            // ==================================================
             // RESPONSE
             // ==================================================
 
@@ -1198,6 +1223,8 @@ if (userId && chatId) {
                 mcdm: mcdmResult,
 
                 recommendation,
+
+                isRecommendationReady,
 
                 isRecalculatedPreferences: Boolean(isRecalculatedPreferences)
 

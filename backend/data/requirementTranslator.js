@@ -65,23 +65,29 @@ function extractCloudRequirements(message = "", conversation = []) {
     const trafficNumberMatch = lower.match(/(\d+(?:,\d+)?|\d+k|\d+m)\s*(?:people|users|visitors|hits|requests|students|daily|monthly)/i);
     if (trafficNumberMatch) {
         req.traffic = trafficNumberMatch[0];
+        req.rawTrafficMetric = trafficNumberMatch[0];
     }
 
     if (lower.match(/\b(thousands|10k|50k|100k|million|millions|heavy traffic|high traffic|huge traffic|viral)\b/i)) {
         req.expectedScale = "High / Large Scale";
+    } else if (req.traffic && req.traffic.match(/\b\d+\s*users\b/i)) {
+        req.expectedScale = `Expected users: ~${req.traffic}`;
     } else if (lower.match(/\b(hundreds|500|moderate|classmates|college campus|few hundred|small to medium)\b/i) || (req.traffic && req.traffic.includes("500"))) {
         req.expectedScale = "Low to Moderate (~100s of users)";
     } else if (lower.match(/\b(just me|few friends|testing|demo|very small|portfolio|small project)\b/i)) {
         req.expectedScale = "Very Low / Small (~few users)";
     }
 
-    // 4. Budget Sensitivity
+    // 4. Budget Sensitivity / Cost Priority
     if (lower.match(/\b(cheap|very little budget|little budget|limited budget|tight budget|low budget|lowest cost|free tier|free|student budget|don't want to spend much|not much|minimum cost|\$0|\$5|\$10|\$15|\$20)\b/i)) {
-        req.budgetSensitivity = "High (Very Low Budget / Free-Tier Preferred)";
+        req.budgetSensitivity = "Cost Priority: Very High (Free Tier / Sub-$10 Preferred)";
+        req.costPriority = "Very High";
     } else if (lower.match(/\b(reasonable|moderate budget|fair price|\$50|\$100)\b/i)) {
-        req.budgetSensitivity = "Moderate";
+        req.budgetSensitivity = "Cost Priority: Moderate";
+        req.costPriority = "Moderate";
     } else if (lower.match(/\b(budget is not an issue|unlimited budget|enterprise budget|flexible budget|cost is not a factor)\b/i)) {
-        req.budgetSensitivity = "Flexible / Enterprise";
+        req.budgetSensitivity = "Cost Priority: Flexible / Enterprise";
+        req.costPriority = "Flexible";
     }
 
     // 5. Simplicity Preference
@@ -139,8 +145,9 @@ function extractCloudRequirements(message = "", conversation = []) {
             req.assumptions.push("Assumed small-to-moderate academic scale (typically under 500–1,000 visitors).");
         }
         if (!req.budgetSensitivity) {
-            req.assumptions.push("Assumed high budget sensitivity with a strong preference for free tiers or sub-$10/month hosting.");
-            req.budgetSensitivity = "High (Student / Academic Context)";
+            req.assumptions.push("Assumed cost priority is very high with a strong preference for free tiers or sub-$10/month hosting.");
+            req.budgetSensitivity = "Cost Priority: Very High (Student / Academic Context)";
+            req.costPriority = "Very High";
         }
         if (!req.simplicityPreference) {
             req.assumptions.push("Assumed low-maintenance or managed setup is preferred so student can focus on code rather than complex cloud administration.");

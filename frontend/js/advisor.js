@@ -2197,6 +2197,50 @@ document.addEventListener("DOMContentLoaded", async () => {
         return "Very High";
     }
 
+    function renderUnderstoodSummaryCard(reqs, mode = "beginner") {
+        if (!reqs) return "";
+        const sigs = reqs.requirementSignals || reqs;
+        const chips = [];
+
+        if (sigs.workloadType) {
+            chips.push(`<span class="understood-chip"><i class="fa-solid fa-laptop-code"></i> ${sigs.workloadType}</span>`);
+        }
+        if (sigs.projectPurpose) {
+            chips.push(`<span class="understood-chip"><i class="fa-solid fa-graduation-cap"></i> ${sigs.projectPurpose}</span>`);
+        }
+        if (sigs.traffic) {
+            chips.push(`<span class="understood-chip"><i class="fa-solid fa-users"></i> Expected users: ~${sigs.traffic.replace(/users/i, '').trim()}</span>`);
+        } else if (sigs.expectedScale) {
+            chips.push(`<span class="understood-chip"><i class="fa-solid fa-users"></i> ${sigs.expectedScale}</span>`);
+        }
+        if (sigs.databaseNeeds && sigs.databaseNeeds.toLowerCase().includes("yes")) {
+            chips.push(`<span class="understood-chip"><i class="fa-solid fa-database"></i> Database / Accounts Needed</span>`);
+        }
+        if (sigs.costPriority) {
+            chips.push(`<span class="understood-chip"><i class="fa-solid fa-tag"></i> Cost Priority: <strong>${sigs.costPriority}</strong></span>`);
+        } else if (sigs.budgetSensitivity) {
+            const bWord = sigs.budgetSensitivity.includes("Very High") ? "Very High" : sigs.budgetSensitivity.split(" ")[0];
+            chips.push(`<span class="understood-chip"><i class="fa-solid fa-tag"></i> Cost Priority: <strong>${bWord}</strong></span>`);
+        }
+        if (sigs.simplicityPreference && sigs.simplicityPreference.toLowerCase().includes("high")) {
+            chips.push(`<span class="understood-chip"><i class="fa-solid fa-wand-magic-sparkles"></i> Simple Setup Preferred</span>`);
+        }
+
+        if (chips.length === 0) return "";
+
+        return `
+            <div class="understood-summary-card">
+                <div class="understood-summary-header">
+                    <i class="fa-solid fa-brain"></i>
+                    <span>What CLOUDEx Understands</span>
+                </div>
+                <div class="understood-chips-list">
+                    ${chips.join("")}
+                </div>
+            </div>
+        `;
+    }
+
     function renderUnderstoodRequirementsHtml(fuzzyReqs, mode = "beginner") {
         const modeKey = ["beginner", "intermediate", "expert"].includes(mode) ? mode : "beginner";
 
@@ -2210,7 +2254,17 @@ document.addEventListener("DOMContentLoaded", async () => {
             const parts = [];
             if (sigs.workloadType) parts.push(sigs.workloadType);
             if (sigs.projectPurpose) parts.push(sigs.projectPurpose);
-            if (sigs.budgetSensitivity) parts.push(`Budget: ${sigs.budgetSensitivity.split(" ")[0]}`);
+            if (sigs.traffic) {
+                parts.push(`Expected users: ~${sigs.traffic.replace(/users/i, '').trim()}`);
+            } else if (sigs.expectedScale) {
+                parts.push(sigs.expectedScale);
+            }
+            if (sigs.costPriority) {
+                parts.push(`Cost Priority: ${sigs.costPriority}`);
+            } else if (sigs.budgetSensitivity) {
+                const bWord = sigs.budgetSensitivity.includes("Very High") ? "Very High" : sigs.budgetSensitivity.split(" ")[0];
+                parts.push(`Cost Priority: ${bWord}`);
+            }
             if (parts.length > 0) {
                 summaryText = parts.join(" • ");
             }
@@ -2336,7 +2390,7 @@ document.addEventListener("DOMContentLoaded", async () => {
                 </div>
                 <div class="preferences-actions-area">
                     <div class="preferences-status-hint" id="preferencesStatusHint" style="${isRecalculated ? "display: none;" : "display: block;"}">
-                        Your sliders have been adjusted. Apply your changes when you're ready.
+                        These are the initial priorities CLOUDEx generated from your answers.
                     </div>
                     <button type="button" class="recalculate-preferences-btn ${isRecalculated ? "applied" : ""}" id="recalculatePreferencesBtn">
                         <i class="fa-solid fa-arrows-rotate"></i>
@@ -2406,7 +2460,7 @@ document.addEventListener("DOMContentLoaded", async () => {
                     Math.round((newPct / 100) * 100) / 100;
 
                 if (statusHint) {
-                    statusHint.textContent = "Your sliders have been adjusted. Apply your changes when you're ready.";
+                    statusHint.textContent = "Your priorities have been changed. Apply your changes when you're ready.";
                     statusHint.style.display = "block";
                 }
 
@@ -2745,6 +2799,12 @@ document.addEventListener("DOMContentLoaded", async () => {
                     <div class="decision-guide-example-box">
                         <i class="fa-solid fa-lightbulb"></i>
                         <span><strong>Example:</strong> ${sec.example}</span>
+                    </div>
+                ` : ''}
+                ${sec.analogy ? `
+                    <div class="decision-guide-analogy-box">
+                        <i class="fa-solid fa-laptop"></i>
+                        <span><strong>Analogy:</strong> ${sec.analogy}</span>
                     </div>
                 ` : ''}
                 ${sec.formula ? `
@@ -3283,7 +3343,9 @@ document.addEventListener("DOMContentLoaded", async () => {
         role,
         text,
         fuzzyPreferences = null,
-        recommendation = null
+        recommendation = null,
+        isRecommendationReady = false,
+        requirementsData = null
     ) {
 
         const message =
@@ -3313,14 +3375,23 @@ document.addEventListener("DOMContentLoaded", async () => {
                 ? createProviderActions(text)
                 : "";
 
+        const isRecReady = Boolean(isRecommendationReady) ||
+            Boolean(isRecalculated) ||
+            (typeof text === "string" && (text.includes("🥇") || /my recommendation/i.test(text) || /my pick/i.test(text)));
+
         const recommendationHtml =
-            (role === "assistant" && (recommendation || currentRecommendation) && (detectProvider(text) || text.includes("MY RECOMMENDATION") || text.includes("MY PICK") || (recommendation && recommendation.recommendedProvider)))
+            (role === "assistant" && isRecReady && (recommendation || currentRecommendation))
                 ? createPersonalizedRecommendationCard(recommendation || currentRecommendation, currentExperienceMode)
                 : "";
 
         const preferencesHtml =
-            (role === "assistant" && fuzzyPreferences && (detectProvider(text) || text.includes("MY RECOMMENDATION") || text.includes("MY PICK")))
-                ? createInitialPreferencesPanel(fuzzyPreferences, currentExperienceMode)
+            (role === "assistant" && isRecReady && (fuzzyPreferences || currentFuzzyPreferences))
+                ? createInitialPreferencesPanel(fuzzyPreferences || currentFuzzyPreferences, currentExperienceMode)
+                : "";
+
+        const understoodHtml =
+            (role === "assistant" && !isRecReady && (requirementsData || currentFuzzyRequirements))
+                ? renderUnderstoodSummaryCard(requirementsData || currentFuzzyRequirements, currentExperienceMode)
                 : "";
 
 
@@ -3341,6 +3412,8 @@ document.addEventListener("DOMContentLoaded", async () => {
                 <div class="message-bubble">
 
                     ${formatMessage(text)}
+
+                    ${understoodHtml}
 
                     ${recommendationHtml}
 
@@ -3587,11 +3660,15 @@ document.addEventListener("DOMContentLoaded", async () => {
                 currentAssumptions = data.assumptions;
             }
 
+            const isRecReady = Boolean(data.isRecommendationReady) || isRecalculated;
+
             addMessage(
                 "assistant",
                 data.reply,
                 data.fuzzyPreferences,
-                data.recommendation
+                data.recommendation,
+                isRecReady,
+                data.fuzzyRequirements || data.requirements
             );
 
 
@@ -3694,6 +3771,44 @@ document.addEventListener("DOMContentLoaded", async () => {
 
         }
     );
+
+
+    // =========================================================
+    // HOW CLOUDEx WORKS / DECISION SYSTEM GUIDE BUTTONS
+    // =========================================================
+
+    const navDecisionGuideBtn = document.getElementById("navDecisionGuideBtn");
+    if (navDecisionGuideBtn) {
+        navDecisionGuideBtn.addEventListener("click", () => {
+            openDecisionSystemGuide();
+        });
+    }
+
+    const headerDecisionGuideBtn = document.getElementById("headerDecisionGuideBtn");
+    if (headerDecisionGuideBtn) {
+        headerDecisionGuideBtn.addEventListener("click", () => {
+            openDecisionSystemGuide();
+        });
+    }
+
+
+    // =========================================================
+    // MOBILE HISTORY DRAWER TOGGLE
+    // =========================================================
+
+    const historyToggleBtn = document.getElementById("historyToggleBtn");
+    if (historyToggleBtn && chatHistory) {
+        historyToggleBtn.addEventListener("click", (e) => {
+            e.stopPropagation();
+            chatHistory.classList.toggle("drawer-open");
+        });
+
+        document.addEventListener("click", (e) => {
+            if (chatHistory.classList.contains("drawer-open") && !chatHistory.contains(e.target) && e.target !== historyToggleBtn) {
+                chatHistory.classList.remove("drawer-open");
+            }
+        });
+    }
 
 
     // =========================================================
