@@ -2867,32 +2867,34 @@ document.addEventListener("DOMContentLoaded", () => {
 
         setTimeout(() => {
 
-            const checkbox =
-                findProviderCheckbox(
-                    compareFromAI
-                );
+            const providerIds = compareFromAI
+                .split(",")
+                .map(id => id.trim().toLowerCase())
+                .filter(Boolean);
 
+            let selectedAny = false;
 
-            if (checkbox) {
-
-                /*
-                 * Automatically select the
-                 * provider recommended by AI.
-                 */
-
-                if (!checkbox.checked) {
-
-                    checkbox.click();
-
+            providerIds.forEach(pId => {
+                const checkbox = findProviderCheckbox(pId);
+                if (checkbox) {
+                    if (!checkbox.checked) {
+                        checkbox.click();
+                        selectedAny = true;
+                    }
+                } else {
+                    console.warn(
+                        "Could not find comparison checkbox for:",
+                        pId
+                    );
                 }
+            });
 
-            } else {
-
-                console.warn(
-                    "Could not find comparison checkbox for:",
-                    compareFromAI
-                );
-
+            // Automatically trigger comparison view if at least 2 providers were pre-selected
+            const triggerBtn = document.getElementById("compareBtn");
+            if (providerIds.length >= 2 && triggerBtn && !triggerBtn.disabled) {
+                setTimeout(() => {
+                    triggerBtn.click();
+                }, 100);
             }
 
 

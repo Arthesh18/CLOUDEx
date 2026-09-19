@@ -76,8 +76,8 @@ document.addEventListener("DOMContentLoaded", async () => {
             id: "aws",
             name: "AWS",
             aliases: [
-                "aws",
                 "amazon web services",
+                "aws",
                 "amazon"
             ]
         },
@@ -86,8 +86,9 @@ document.addEventListener("DOMContentLoaded", async () => {
             id: "azure",
             name: "Microsoft Azure",
             aliases: [
+                "microsoft azure",
                 "azure",
-                "microsoft azure"
+                "microsoft"
             ]
         },
 
@@ -95,18 +96,21 @@ document.addEventListener("DOMContentLoaded", async () => {
             id: "gcp",
             name: "Google Cloud",
             aliases: [
-                "gcp",
+                "google cloud platform",
                 "google cloud",
-                "google cloud platform"
+                "gcp",
+                "google"
             ]
         },
 
-        digitalocean: {
-            id: "digitalocean",
-            name: "DigitalOcean",
+        oracle: {
+            id: "oracle",
+            name: "Oracle Cloud",
             aliases: [
-                "digitalocean",
-                "digital ocean"
+                "oracle cloud infrastructure",
+                "oracle cloud",
+                "oracle",
+                "oci"
             ]
         },
 
@@ -119,12 +123,99 @@ document.addEventListener("DOMContentLoaded", async () => {
             ]
         },
 
-        oracle: {
-            id: "oracle",
-            name: "Oracle Cloud",
+        digitalocean: {
+            id: "digitalocean",
+            name: "DigitalOcean",
             aliases: [
-                "oracle cloud",
-                "oracle"
+                "digitalocean",
+                "digital ocean",
+                "droplet"
+            ]
+        },
+
+        alibaba: {
+            id: "alibaba",
+            name: "Alibaba Cloud",
+            aliases: [
+                "alibaba cloud",
+                "alibaba",
+                "aliyun"
+            ]
+        },
+
+        huawei: {
+            id: "huawei",
+            name: "Huawei Cloud",
+            aliases: [
+                "huawei cloud",
+                "huawei"
+            ]
+        },
+
+        tencent: {
+            id: "tencent",
+            name: "Tencent Cloud",
+            aliases: [
+                "tencent cloud",
+                "tencent"
+            ]
+        },
+
+        vultr: {
+            id: "vultr",
+            name: "Vultr",
+            aliases: [
+                "vultr cloud",
+                "vultr"
+            ]
+        },
+
+        hetzner: {
+            id: "hetzner",
+            name: "Hetzner Cloud",
+            aliases: [
+                "hetzner cloud",
+                "hetzner"
+            ]
+        },
+
+        ovhcloud: {
+            id: "ovhcloud",
+            name: "OVHcloud",
+            aliases: [
+                "ovhcloud",
+                "ovh cloud",
+                "ovh"
+            ]
+        },
+
+        cloudflare: {
+            id: "cloudflare",
+            name: "Cloudflare",
+            aliases: [
+                "cloudflare workers",
+                "cloudflare r2",
+                "cloudflare"
+            ]
+        },
+
+        akamai: {
+            id: "akamai",
+            name: "Akamai Cloud",
+            aliases: [
+                "akamai connected cloud",
+                "akamai cloud",
+                "akamai",
+                "linode"
+            ]
+        },
+
+        coreweave: {
+            id: "coreweave",
+            name: "CoreWeave",
+            aliases: [
+                "coreweave cloud",
+                "coreweave"
             ]
         }
 
@@ -181,68 +272,68 @@ document.addEventListener("DOMContentLoaded", async () => {
         const lowerText =
             text.toLowerCase();
 
-        const recommendationPatterns = [
+        // 1. Extract exact provider line directly following "MY RECOMMENDATION"
+        const headerMatch =
+            lowerText.match(/(?:🥇\s*)?my recommendation\s*[\r\n]+([^\r\n]+)/i);
 
-            /my recommendation[\s\S]{0,300}/i,
-
-            /recommend(?:ed|ation)?[\s\S]{0,300}/i,
-
-            /best (?:choice|fit|option)[\s\S]{0,300}/i,
-
-            /my pick[\s\S]{0,300}/i
-
-        ];
-
-        let recommendationArea =
-            lowerText;
-
-
-        for (
-            const pattern
-            of recommendationPatterns
-        ) {
-
-            const match =
-                lowerText.match(pattern);
-
-            if (match) {
-
-                recommendationArea =
-                    match[0];
-
-                break;
-            }
-        }
-
-
-        for (
-            const key in providerMap
-        ) {
-
-            const provider =
-                providerMap[key];
+        if (headerMatch && headerMatch[1]) {
+            const line =
+                headerMatch[1].trim();
 
             for (
-                const alias
-                of provider.aliases
+                const key in providerMap
             ) {
+                const provider =
+                    providerMap[key];
 
-                if (
-                    recommendationArea.includes(
-                        alias.toLowerCase()
-                    )
+                for (
+                    const alias
+                    of provider.aliases
                 ) {
-
-                    return provider;
+                    if (
+                        line.includes(
+                            alias.toLowerCase()
+                        )
+                    ) {
+                        return provider;
+                    }
                 }
             }
         }
 
+        // 2. Extract provider from "MY PICK" or "I recommend [Provider]"
+        const pickMatch =
+            lowerText.match(/i recommend\s+([^\r\n,.]+)/i);
 
+        if (pickMatch && pickMatch[1]) {
+            const line =
+                pickMatch[1].trim();
+
+            for (
+                const key in providerMap
+            ) {
+                const provider =
+                    providerMap[key];
+
+                for (
+                    const alias
+                    of provider.aliases
+                ) {
+                    if (
+                        line.includes(
+                            alias.toLowerCase()
+                        )
+                    ) {
+                        return provider;
+                    }
+                }
+            }
+        }
+
+        // 3. Fallback: match anywhere in text
         for (
             const key in providerMap
         ) {
-
             const provider =
                 providerMap[key];
 
@@ -250,18 +341,74 @@ document.addEventListener("DOMContentLoaded", async () => {
                 const alias
                 of provider.aliases
             ) {
-
                 if (
                     lowerText.includes(
                         alias.toLowerCase()
                     )
                 ) {
-
                     return provider;
                 }
             }
         }
 
+        return null;
+
+    }
+
+
+    // =====================================================
+    // DETECT ALTERNATIVE PROVIDER (FEATURE #5)
+    // =====================================================
+
+    function detectAlternativeProvider(text, primaryId) {
+
+        if (!text) {
+            return null;
+        }
+
+        const lowerText =
+            text.toLowerCase();
+
+        const altPattern =
+            /why not the others\?[\s\S]{0,400}/i;
+
+        const match =
+            lowerText.match(altPattern);
+
+        if (match) {
+
+            const chunk =
+                match[0];
+
+            for (
+                const key in providerMap
+            ) {
+
+                if (key === primaryId) {
+                    continue;
+                }
+
+                const provider =
+                    providerMap[key];
+
+                for (
+                    const alias
+                    of provider.aliases
+                ) {
+
+                    if (
+                        chunk.includes(
+                            alias.toLowerCase()
+                        )
+                    ) {
+                        return provider;
+                    }
+
+                }
+
+            }
+
+        }
 
         return null;
 
@@ -1240,6 +1387,19 @@ document.addEventListener("DOMContentLoaded", async () => {
             return "";
         }
 
+        const altProvider =
+            detectAlternativeProvider(text, provider.id);
+
+        const compareTarget =
+            altProvider
+                ? `${provider.id},${altProvider.id}`
+                : provider.id;
+
+        const compareLabel =
+            altProvider
+                ? `Compare ${provider.name} vs ${altProvider.name}`
+                : "Compare Providers";
+
 
         return `
 
@@ -1261,12 +1421,12 @@ document.addEventListener("DOMContentLoaded", async () => {
                 <button
                     type="button"
                     class="ai-action-btn compare-provider-btn"
-                    data-provider="${provider.id}"
+                    data-provider="${compareTarget}"
                 >
 
                     <i class="fa-solid fa-chart-column"></i>
 
-                    Compare Providers
+                    ${compareLabel}
 
                 </button>
 
