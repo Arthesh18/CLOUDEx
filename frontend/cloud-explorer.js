@@ -694,6 +694,13 @@ document.addEventListener("DOMContentLoaded", () => {
 
         renderServiceComparison(selected);
 
+
+        /* ---------------------------------------------
+           PRICING INTELLIGENCE (FEATURE #4)
+        --------------------------------------------- */
+
+        renderPricingIntelligence(selected);
+
     }
 
 
@@ -1672,6 +1679,485 @@ document.addEventListener("DOMContentLoaded", () => {
             });
         });
 
+    }
+
+
+    /* =================================================
+       PRICING & COST INTELLIGENCE (FEATURE #4)
+    ================================================= */
+
+    let activePricingTab = "profiles";
+    let activeScenarioKey = "web-app";
+
+    const pricingModelsData = [
+        {
+            name: "Pay-As-You-Go (On-Demand)",
+            badge: "On-Demand",
+            icon: "fa-clock",
+            description: "Billed strictly for instance-seconds, storage gigabytes, or capacity hours consumed.",
+            costDrivers: [
+                "Active runtime (hours/seconds powered on)",
+                "Instance sizing (vCPU and RAM capacity allocation)",
+                "Attached volume storage capacity whether written or idle"
+            ],
+            advantages: "Zero upfront commitment, instantaneous elasticity.",
+            pitfalls: "Idle servers continue to accrue charges; highest baseline unit rate."
+        },
+        {
+            name: "Consumption / Serverless",
+            badge: "Per-Invocation",
+            icon: "fa-bolt",
+            description: "Billed per function invocation, millisecond runtime, and allocated memory. Pure scale-to-zero.",
+            costDrivers: [
+                "Total request count (invocations per minute/hour)",
+                "Execution duration (runtime in milliseconds)",
+                "Allocated RAM memory size (MB/GB-seconds consumed)"
+            ],
+            advantages: "$0 cost when idle; automatic provisioning without OS maintenance.",
+            pitfalls: "Can surpass dedicated VM costs under continuous sustained load; cold starts."
+        },
+        {
+            name: "Tiered Storage & API Operations",
+            badge: "Per-GB + Ops",
+            icon: "fa-box-archive",
+            description: "Storage billed per GB-month stored, coupled with per-thousand read/write requests and egress bandwidth.",
+            costDrivers: [
+                "Total data volume stored (GB/month across tiers)",
+                "Data transfer out (internet egress fees)",
+                "API operation count (PUT, GET, LIST requests)"
+            ],
+            advantages: "Sub-cent gigabyte economics with high durability; automated lifecycle archiving.",
+            pitfalls: "Outbound egress charges can dwarf raw storage cost; high-frequency API bills."
+        },
+        {
+            name: "Predictable / Flat-Rate Bundles",
+            badge: "Flat-Rate",
+            icon: "fa-receipt",
+            description: "Fixed monthly billing for a bundled specification (vCPU, RAM, SSD storage, and generous included bandwidth).",
+            costDrivers: [
+                "Selected server plan tier (fixed cost per month)",
+                "Bandwidth overage if exceeding high included pool (e.g. >20TB)"
+            ],
+            advantages: "100% predictable monthly bills; zero surprise egress overages.",
+            pitfalls: "Does not autoscale down during lulls; fewer managed compliance certifications."
+        },
+        {
+            name: "Zero-Egress / Edge Model",
+            badge: "Zero Egress",
+            icon: "fa-shield-halved",
+            description: "Zero outbound network transfer fees, shifting billing exclusively to storage volume or compute invocations.",
+            costDrivers: [
+                "Raw storage volume and write operations",
+                "Edge worker request counts and CPU execution time"
+            ],
+            advantages: "Eliminates the most volatile and unpredictable cloud cost driver (egress).",
+            pitfalls: "Specialized edge execution environments; compute CPU limits."
+        }
+    ];
+
+    const providerCostProfilesData = {
+        aws: {
+            pricingLevel: "Enterprise Tiered",
+            costPredictability: "Moderate (complex fine print)",
+            egressProfile: "High ($0.09/GB egress after 100GB)",
+            bestBillingStrategy: "Savings Plans (1-3 yr) + S3 Intelligent Tiering",
+            costDriversToWatch: "NAT Gateways ($32/mo each + $0.045/GB), cross-AZ traffic ($0.01/GB), EBS gp3 provisioned IOPS, CloudWatch custom metrics.",
+            recommendedForBudget: "Funded scale-ups & enterprises with dedicated FinOps tooling."
+        },
+        azure: {
+            pricingLevel: "Enterprise Tiered",
+            costPredictability: "Moderate (enterprise agreements)",
+            egressProfile: "High ($0.087/GB egress after 100GB)",
+            bestBillingStrategy: "Azure Savings Plans + Hybrid Benefit for Windows/SQL",
+            costDriversToWatch: "VNet peering data egress, Managed Disks tier lock-in, Application Gateway ingress controllers, premium support plans.",
+            recommendedForBudget: "Enterprises with existing Microsoft EA contracts & Windows workloads."
+        },
+        gcp: {
+            pricingLevel: "Enterprise Tiered",
+            costPredictability: "High (Sustained Use Discounts)",
+            egressProfile: "High ($0.085/GB egress after 100GB)",
+            bestBillingStrategy: "Sustained Use Discounts (auto-applied) + Committed Use Discounts",
+            costDriversToWatch: "Premium Tier networking (default), BigQuery analysis query bytes scanned, Cloud Logging ingestion fees.",
+            recommendedForBudget: "Container-first, data-heavy, and AI engineering teams."
+        },
+        oracle: {
+            pricingLevel: "Aggressive Enterprise Value",
+            costPredictability: "High (low flat-rate networking)",
+            egressProfile: "Ultra-Low (First 10TB/month FREE, then $0.0085/GB)",
+            bestBillingStrategy: "Universal Credits + BYOL for Oracle database software",
+            costDriversToWatch: "Boot volumes retained when compute is terminated, fast connect port hours.",
+            recommendedForBudget: "Database-intensive workloads & cost-conscious enterprise compute."
+        },
+        ibm: {
+            pricingLevel: "Enterprise Dedicated",
+            costPredictability: "Moderate",
+            egressProfile: "Standard ($0.09/GB egress)",
+            bestBillingStrategy: "Reserved Instances + Enterprise Hybrid Savings",
+            costDriversToWatch: "Direct Link interconnect port speeds, bare-metal licensing addons.",
+            recommendedForBudget: "Regulated banking, government, and legacy hybrid enterprise systems."
+        },
+        digitalocean: {
+            pricingLevel: "Predictable Developer Tier",
+            costPredictability: "Very High (flat monthly packages)",
+            egressProfile: "Low (Includes 1TB - 5TB pooled transfer per Droplet)",
+            bestBillingStrategy: "Standard Droplets with pooled bandwidth + Spaces Object Storage",
+            costDriversToWatch: "Droplet automated backups (+20% of droplet cost), Managed Database standby nodes.",
+            recommendedForBudget: "Startups, early-stage SaaS, indie hackers, and SMB workloads."
+        },
+        alibaba: {
+            pricingLevel: "High Asia-Pacific Value",
+            costPredictability: "Moderate",
+            egressProfile: "Moderate to Low ($0.05 - $0.08/GB depending on region)",
+            bestBillingStrategy: "Annual Subscription packages + Resource Packages",
+            costDriversToWatch: "Cross-region bandwidth between mainland China and international nodes.",
+            recommendedForBudget: "Cross-border ecommerce and multinational APAC businesses."
+        },
+        huawei: {
+            pricingLevel: "Cost-Effective Global Enterprise",
+            costPredictability: "Moderate",
+            egressProfile: "Moderate ($0.06/GB)",
+            bestBillingStrategy: "Yearly subscriptions + Reserved capacity",
+            costDriversToWatch: "Multi-AZ interconnect bandwidth, global acceleration network.",
+            recommendedForBudget: "Pan-Asian enterprise operations & government digitization."
+        },
+        tencent: {
+            pricingLevel: "High APAC & Gaming Value",
+            costPredictability: "Moderate",
+            egressProfile: "Moderate ($0.06/GB)",
+            bestBillingStrategy: "Prepaid monthly instance tiers + Content Delivery bundles",
+            costDriversToWatch: "Game-server dynamic scaling over-provisioning, media transcoding units.",
+            recommendedForBudget: "Audio/video streaming, mobile gaming backends, APAC consumer apps."
+        },
+        vultr: {
+            pricingLevel: "High-Performance Predictable",
+            costPredictability: "Very High (flat hourly/monthly)",
+            egressProfile: "Low (Generous pooled transfer included with each VM)",
+            bestBillingStrategy: "Standard / Optimized Cloud Compute with monthly caps",
+            costDriversToWatch: "Floating IP reservations, Block Storage storage volume allocation.",
+            recommendedForBudget: "Cost-sensitive developers, game servers, and unmanaged GPU compute."
+        },
+        hetzner: {
+            pricingLevel: "Ultra-Low Cost Infrastructure",
+            costPredictability: "Extremely High (rock-solid monthly pricing)",
+            egressProfile: "Zero / Negligible (20TB FREE egress included per server)",
+            bestBillingStrategy: "Dedicated server lines or CX cloud compute paid monthly",
+            costDriversToWatch: "IPv4 address reservation surcharge, European datacenter proximity requirement.",
+            recommendedForBudget: "Bootstrapped startups, EU privacy-focused teams, bandwidth-heavy workloads."
+        },
+        ovhcloud: {
+            pricingLevel: "Transparent European Value",
+            costPredictability: "Very High (all-inclusive flat rates)",
+            egressProfile: "Zero / Negligible (Unmetered public traffic on most tiers)",
+            bestBillingStrategy: "Monthly/annual commitment discounts on Hosted Private Cloud",
+            costDriversToWatch: "Anti-DDoS configuration tiers, optional OS licensing surcharges.",
+            recommendedForBudget: "European compliance, high-volume streaming, data sovereignty mandates."
+        },
+        cloudflare: {
+            pricingLevel: "Zero-Egress Modern Edge",
+            costPredictability: "Extremely High (predictable scale-to-zero)",
+            egressProfile: "ZERO ($0 outbound egress fees on R2 Storage & Workers)",
+            bestBillingStrategy: "Workers Paid plan ($5/mo) + R2 Object Storage",
+            costDriversToWatch: "Workers Paid CPU time overage (beyond 50ms default execution).",
+            recommendedForBudget: "API-driven startups, media distribution, and edge-first web applications."
+        },
+        akamai: {
+            pricingLevel: "Predictable Cloud & CDN Scale",
+            costPredictability: "High (simple compute pricing with Linode heritage)",
+            egressProfile: "Low (Pooled bandwidth across cloud fleet)",
+            bestBillingStrategy: "Linode compute instances with bundled transfer pools",
+            costDriversToWatch: "Dedicated CPU instance upgrade surcharges, CDN edge purge requests.",
+            recommendedForBudget: "Content-rich applications, media streaming, global edge compute."
+        },
+        coreweave: {
+            pricingLevel: "Specialized GPU Efficiency",
+            costPredictability: "High (pure usage-based GPU billing)",
+            egressProfile: "Low to Moderate",
+            bestBillingStrategy: "On-demand or reserved GPU node clusters with spin-down policies",
+            costDriversToWatch: "Fast storage cache retention during suspended GPU workloads.",
+            recommendedForBudget: "AI research labs, LLM fine-tuning, and massive batch inference pipelines."
+        }
+    };
+
+    const simulationScenariosData = {
+        "web-app": {
+            key: "web-app",
+            title: "Standard Web Application & API",
+            icon: "fa-globe",
+            description: "Small to mid-sized production app with 2 vCPU compute, 4GB RAM, 80GB SSD storage, and 300GB monthly outbound traffic.",
+            assumptions: "2 vCPU / 4GB RAM general-purpose instance, 80GB block volume, 300GB monthly internet egress, 1 managed relational database.",
+            baselineCost: 65
+        },
+        "media-storage": {
+            key: "media-storage",
+            title: "High-Traffic Content & Media Storage",
+            icon: "fa-photo-film",
+            description: "Asset-heavy application with 3TB object storage, 500,000 monthly API requests, and 2.5TB outbound bandwidth.",
+            assumptions: "3TB active object storage, 2.5TB outbound internet egress, 500k GET/PUT operations, global CDN edge caching.",
+            baselineCost: 180
+        },
+        "ai-inference": {
+            key: "ai-inference",
+            title: "AI / ML Inference & Batch Pipeline",
+            icon: "fa-brain",
+            description: "Dedicated acceleration workload with 1x modern GPU instance running 150 hours/month, 200GB fast SSD, and model checkpoints.",
+            assumptions: "1x mid-tier GPU instance (e.g. L4/A10G or equivalent), 150 active compute hours, 200GB NVMe storage.",
+            baselineCost: 290
+        }
+    };
+
+    function calculateClientScenarioEstimate(scenarioKey, selectedList) {
+        const scenario = simulationScenariosData[scenarioKey] || simulationScenariosData["web-app"];
+        const estimates = (selectedList || []).map(p => {
+            const pId = String(p.id).toLowerCase();
+            const profile = providerCostProfilesData[pId] || {
+                pricingLevel: p.pricingLevel || "Flexible",
+                costPredictability: "Moderate",
+                egressProfile: "Standard",
+                costDriversToWatch: "Standard compute and egress."
+            };
+            const score = typeof p.affordability === "number" ? p.affordability : 7.0;
+            const multiplier = Math.max(0.45, Math.min(1.5, 1.85 - (score * 0.125)));
+
+            let egressModifier = 1.0;
+            if (scenario.key === "media-storage") {
+                if (profile.egressProfile.includes("ZERO") || profile.egressProfile.includes("20TB") || profile.egressProfile.includes("Unmetered")) {
+                    egressModifier = 0.55;
+                } else if (profile.egressProfile.includes("Pooled") || profile.egressProfile.includes("FREE")) {
+                    egressModifier = 0.75;
+                }
+            }
+
+            const estMonthly = Math.round(scenario.baselineCost * multiplier * egressModifier);
+            const rangeMin = Math.round(estMonthly * 0.85);
+            const rangeMax = Math.round(estMonthly * 1.18);
+
+            return {
+                providerId: p.id,
+                providerName: p.name,
+                icon: p.icon || "fa-cloud",
+                affordabilityScore: score,
+                pricingLevel: profile.pricingLevel,
+                costPredictability: profile.costPredictability,
+                egressProfile: profile.egressProfile,
+                estimatedMonthlyRange: `$${rangeMin} – $${rangeMax}/mo`,
+                relativeCostIndex: (multiplier * egressModifier).toFixed(2) + "x baseline",
+                keyDriverNote: profile.costDriversToWatch
+            };
+        });
+
+        return {
+            scenario,
+            estimates
+        };
+    }
+
+    function renderPricingIntelligence(selected) {
+        const container = document.getElementById("pricingIntelligenceContent");
+        const section = document.getElementById("pricingIntelligenceSection");
+
+        if (!container) return;
+
+        if (!selected || selected.length < 2) {
+            if (section) section.style.display = "none";
+            return;
+        }
+
+        if (section) section.style.display = "block";
+
+        // Render tab headers
+        const tabsHTML = `
+            <div class="pi-tabs">
+                <button class="pi-tab-btn ${activePricingTab === "profiles" ? "active" : ""}" data-pitab="profiles">
+                    <i class="fa-solid fa-file-invoice-dollar"></i> Provider Cost Profiles (${selected.length})
+                </button>
+                <button class="pi-tab-btn ${activePricingTab === "models" ? "active" : ""}" data-pitab="models">
+                    <i class="fa-solid fa-sitemap"></i> Billing Models & Cost Drivers
+                </button>
+                <button class="pi-tab-btn ${activePricingTab === "estimator" ? "active" : ""}" data-pitab="estimator">
+                    <i class="fa-solid fa-calculator"></i> Workload Scenario Estimator
+                </button>
+            </div>
+        `;
+
+        let contentHTML = "";
+
+        if (activePricingTab === "profiles") {
+            // Render selected provider cost profiles
+            const cardsHTML = selected.map(p => {
+                const pId = String(p.id).toLowerCase();
+                const profile = providerCostProfilesData[pId] || {
+                    pricingLevel: p.pricingLevel || "Enterprise Tiered",
+                    costPredictability: "Moderate",
+                    egressProfile: "Standard",
+                    bestBillingStrategy: "On-demand + commitments",
+                    costDriversToWatch: "Compute uptime and outbound data transfer.",
+                    recommendedForBudget: "General production workloads."
+                };
+                const score = typeof p.affordability === "number" ? p.affordability : 7.0;
+
+                return `
+                    <div class="pi-profile-card">
+                        <div class="pi-profile-header">
+                            <div class="pi-profile-icon">
+                                <i class="fa-solid ${p.icon || "fa-cloud"}"></i>
+                            </div>
+                            <div>
+                                <h4>${p.name}</h4>
+                                <span>${profile.pricingLevel}</span>
+                            </div>
+                        </div>
+
+                        <div class="pi-score-badge">
+                            <span>Affordability Rating</span>
+                            <span class="pi-score-val">${score} / 10</span>
+                        </div>
+
+                        <div class="pi-metric-pills">
+                            <div class="pi-pill-item">
+                                <strong>Predictability:</strong> ${profile.costPredictability}
+                            </div>
+                            <div class="pi-pill-item">
+                                <strong>Egress Policy:</strong> ${profile.egressProfile}
+                            </div>
+                            <div class="pi-pill-item">
+                                <strong>Best Strategy:</strong> ${profile.bestBillingStrategy}
+                            </div>
+                            <div class="pi-pill-item">
+                                <strong>Recommended For:</strong> ${profile.recommendedForBudget}
+                            </div>
+                        </div>
+
+                        <div class="pi-watchouts-box">
+                            <strong><i class="fa-solid fa-triangle-exclamation"></i> Cost Drivers to Watch:</strong>
+                            ${profile.costDriversToWatch}
+                        </div>
+                    </div>
+                `;
+            }).join("");
+
+            contentHTML = `
+                <div class="pi-profiles-grid">
+                    ${cardsHTML}
+                </div>
+            `;
+
+        } else if (activePricingTab === "models") {
+            // Render 5 core cloud billing models
+            const modelsHTML = pricingModelsData.map(m => `
+                <div class="pi-model-card">
+                    <h4>
+                        <i class="fa-solid ${m.icon}"></i>
+                        ${m.name}
+                    </h4>
+                    <p>${m.description}</p>
+                    <div class="pi-metric-pills">
+                        <div class="pi-pill-item">
+                            <strong>Key Drivers:</strong> ${m.costDrivers.join(", ")}
+                        </div>
+                        <div class="pi-pill-item">
+                            <strong>Advantage:</strong> ${m.advantages}
+                        </div>
+                        <div class="pi-pill-item" style="border-left: 3px solid #ff7675;">
+                            <strong>Pitfall to Avoid:</strong> ${m.pitfalls}
+                        </div>
+                    </div>
+                </div>
+            `).join("");
+
+            contentHTML = `
+                <div class="pi-models-grid">
+                    ${modelsHTML}
+                </div>
+            `;
+
+        } else if (activePricingTab === "estimator") {
+            // Render scenario estimator
+            const calculation = calculateClientScenarioEstimate(activeScenarioKey, selected);
+            const curScenario = calculation.scenario;
+
+            const scenarioButtonsHTML = Object.values(simulationScenariosData).map(sc => `
+                <button
+                    class="pi-scenario-btn ${activeScenarioKey === sc.key ? "active" : ""}"
+                    data-scenario="${sc.key}"
+                >
+                    <i class="fa-solid ${sc.icon}"></i>
+                    ${sc.title}
+                </button>
+            `).join("");
+
+            const estimateCardsHTML = calculation.estimates.map(est => `
+                <div class="pi-estimate-card">
+                    <div class="pi-profile-header" style="border-bottom: none; padding-bottom: 0;">
+                        <div class="pi-profile-icon">
+                            <i class="fa-solid ${est.icon}"></i>
+                        </div>
+                        <div>
+                            <h4>${est.providerName}</h4>
+                            <span>Score: ${est.affordabilityScore}/10</span>
+                        </div>
+                    </div>
+
+                    <div>
+                        <div class="pi-est-range">${est.estimatedMonthlyRange}</div>
+                        <span class="pi-est-index">${est.relativeCostIndex}</span>
+                    </div>
+
+                    <div class="pi-metric-pills">
+                        <div class="pi-pill-item">
+                            <strong>Egress Profile:</strong> ${est.egressProfile}
+                        </div>
+                        <div class="pi-pill-item">
+                            <strong>Predictability:</strong> ${est.costPredictability}
+                        </div>
+                    </div>
+
+                    <div class="pi-watchouts-box" style="margin-top: 4px;">
+                        <strong>Key Variable:</strong> ${est.keyDriverNote}
+                    </div>
+                </div>
+            `).join("");
+
+            contentHTML = `
+                <div class="pi-disclaimer-box">
+                    <i class="fa-solid fa-circle-info"></i>
+                    <div>
+                        <strong>Simulated Benchmark Disclaimer:</strong>
+                        All estimated values are simulated comparative benchmarks derived from qualitative affordability scores, published baseline tiers, and architectural egress policies. They are designed for relative cost comparison and are not official quotes or guaranteed billing prices.
+                    </div>
+                </div>
+
+                <div class="pi-scenario-nav">
+                    ${scenarioButtonsHTML}
+                </div>
+
+                <div class="pi-scenario-banner">
+                    <strong><i class="fa-solid ${curScenario.icon}"></i> ${curScenario.title}</strong>
+                    <p><strong>Workload Assumptions:</strong> ${curScenario.assumptions}</p>
+                </div>
+
+                <div class="pi-estimates-grid">
+                    ${estimateCardsHTML}
+                </div>
+            `;
+        }
+
+        container.innerHTML = tabsHTML + contentHTML;
+
+        // Wire tab buttons
+        container.querySelectorAll(".pi-tab-btn").forEach(btn => {
+            btn.addEventListener("click", () => {
+                activePricingTab = btn.dataset.pitab;
+                renderPricingIntelligence(selected);
+            });
+        });
+
+        // Wire scenario buttons
+        container.querySelectorAll(".pi-scenario-btn").forEach(btn => {
+            btn.addEventListener("click", () => {
+                activeScenarioKey = btn.dataset.scenario;
+                renderPricingIntelligence(selected);
+            });
+        });
     }
 
 

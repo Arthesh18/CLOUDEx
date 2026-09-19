@@ -59,6 +59,16 @@ const {
     compareEquivalentServices,
     findEquivalenceGroupForService
 } = require("./data/serviceEquivalence");
+const {
+    pricingModelsGuide,
+    costDriversByCategory,
+    providerCostProfiles,
+    simulationScenarios,
+    calculateScenarioEstimate,
+    getPricingIntelligenceData,
+    getCostProfileForProvider,
+    compareProviderCostProfiles
+} = require("./data/pricingIntelligence");
 
 dotenv.config();
 
@@ -300,6 +310,72 @@ app.get("/api/services/equivalence/:key", (req, res) => {
         res.status(500).json({
             success: false,
             message: "Could not compare equivalent services."
+        });
+    }
+});
+
+
+// ==================================================
+// PRICING & COST INTELLIGENCE (FEATURE #4)
+// ==================================================
+
+app.get("/api/pricing/models", (req, res) => {
+    try {
+        res.json({
+            success: true,
+            ...getPricingIntelligenceData()
+        });
+    } catch (error) {
+        console.error("Pricing models API error:", error.message);
+        res.status(500).json({
+            success: false,
+            message: "Could not load pricing models guide."
+        });
+    }
+});
+
+app.get("/api/pricing/profiles", (req, res) => {
+    try {
+        const providersQuery = req.query.providers;
+        const providerIds = providersQuery
+            ? providersQuery.split(",").map(p => p.trim().toLowerCase()).filter(Boolean)
+            : [];
+
+        const profiles = compareProviderCostProfiles(providerIds);
+
+        res.json({
+            success: true,
+            count: profiles.length,
+            profiles
+        });
+    } catch (error) {
+        console.error("Pricing profiles API error:", error.message);
+        res.status(500).json({
+            success: false,
+            message: "Could not load provider cost profiles."
+        });
+    }
+});
+
+app.get("/api/pricing/scenario", (req, res) => {
+    try {
+        const scenarioKey = req.query.scenario || "web-app";
+        const providersQuery = req.query.providers;
+        const providerIds = providersQuery
+            ? providersQuery.split(",").map(p => p.trim().toLowerCase()).filter(Boolean)
+            : [];
+
+        const result = calculateScenarioEstimate(scenarioKey, providerIds);
+
+        res.json({
+            success: true,
+            ...result
+        });
+    } catch (error) {
+        console.error("Scenario estimation API error:", error.message);
+        res.status(500).json({
+            success: false,
+            message: "Could not calculate scenario cost estimates."
         });
     }
 });
