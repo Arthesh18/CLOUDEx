@@ -819,6 +819,87 @@ body {
     user-select: none;
 }
 
+/* Preferences Actions & Recalculate (Feature #11) */
+.preferences-actions-area {
+    margin-top: 16px;
+    padding-top: 14px;
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.preferences-status-hint {
+    font-size: 11px;
+    color: var(--text-muted);
+    font-style: italic;
+    line-height: 1.4;
+}
+
+.recalculate-preferences-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 10px 18px;
+    border-radius: 10px;
+    border: 1px solid rgba(139, 124, 255, 0.35);
+    background: linear-gradient(135deg, rgba(117, 97, 255, 0.25), rgba(92, 124, 255, 0.15));
+    color: #ffffff;
+    font-family: inherit;
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.25s ease;
+    box-shadow: 0 4px 14px rgba(92, 124, 255, 0.15);
+}
+
+.recalculate-preferences-btn:hover {
+    background: linear-gradient(135deg, rgba(117, 97, 255, 0.4), rgba(92, 124, 255, 0.25));
+    border-color: rgba(139, 124, 255, 0.6);
+    box-shadow: 0 6px 20px rgba(117, 97, 255, 0.3);
+    transform: translateY(-1px);
+}
+
+.recalculate-preferences-btn.applied {
+    background: linear-gradient(135deg, rgba(53, 217, 154, 0.25), rgba(16, 185, 129, 0.15));
+    border-color: rgba(53, 217, 154, 0.45);
+    color: #a7f3d0;
+    box-shadow: 0 4px 14px rgba(53, 217, 154, 0.2);
+}
+
+.preferences-applied-banner {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 9px 14px;
+    border-radius: 9px;
+    background: rgba(53, 217, 154, 0.08);
+    border: 1px solid rgba(53, 217, 154, 0.22);
+    color: #a7f3d0;
+    font-size: 12px;
+    animation: message-in 0.25s ease both;
+}
+
+.banner-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: rgba(53, 217, 154, 0.25);
+    color: #35d99a;
+    font-weight: 800;
+    font-size: 11px;
+    flex-shrink: 0;
+}
+
+.banner-text {
+    flex: 1;
+    line-height: 1.4;
+}
+
 
 /* =========================================================
    TYPING INDICATOR

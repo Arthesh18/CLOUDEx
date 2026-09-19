@@ -404,7 +404,9 @@ app.post(
     conversation = [],
     userId,
     chatId,
-    experienceMode: rawExperienceMode
+    experienceMode: rawExperienceMode,
+    userPreferences,
+    isRecalculatedPreferences = false
 } = req.body;
 
 
@@ -961,14 +963,18 @@ if (userId && chatId) {
 }
 
             // ==================================================
-            // INITIAL FUZZY PREFERENCES (FEATURE #9)
+            // INITIAL FUZZY PREFERENCES (FEATURE #9 & #11)
             // ==================================================
 
-            const fuzzyPreferences =
+            const baseFuzzyPreferences =
                 generateInitialFuzzyValues(
                     extractedRequirements,
                     message
                 );
+
+            const fuzzyPreferences = (isRecalculatedPreferences && userPreferences && typeof userPreferences === "object")
+                ? { ...baseFuzzyPreferences, ...userPreferences }
+                : baseFuzzyPreferences;
 
 
             // ==================================================
@@ -989,7 +995,9 @@ if (userId && chatId) {
 
                 experienceMode,
 
-                fuzzyPreferences
+                fuzzyPreferences,
+
+                isRecalculatedPreferences: Boolean(isRecalculatedPreferences)
 
             });
 

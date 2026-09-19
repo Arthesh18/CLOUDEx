@@ -1572,11 +1572,14 @@ document.addEventListener("DOMContentLoaded", async () => {
 
 
     // =========================================================
-    // INITIAL CLOUD PREFERENCES & PRIORITY SLIDERS (FEATURES #9 & #10)
+    // INITIAL CLOUD PREFERENCES & PRIORITY SLIDERS (FEATURES #9 & #10 & #11)
     // =========================================================
 
     let originalFuzzyPreferences = null;
     let userModifiedPreferences = null;
+    let updatedPreferences = null;
+    let isRecalculated = false;
+    let recalculatedAt = null;
 
     const PREFERENCE_DIMENSION_CONFIG = [
         {
@@ -1700,6 +1703,19 @@ document.addEventListener("DOMContentLoaded", async () => {
                 <div class="preferences-list">
                     ${rowsHtml}
                 </div>
+                <div class="preferences-actions-area">
+                    <div class="preferences-status-hint" id="preferencesStatusHint" style="${isRecalculated ? "display: none;" : "display: block;"}">
+                        Your sliders have been adjusted. Apply your changes when you're ready.
+                    </div>
+                    <button type="button" class="recalculate-preferences-btn ${isRecalculated ? "applied" : ""}" id="recalculatePreferencesBtn">
+                        <i class="fa-solid fa-arrows-rotate"></i>
+                        <span>${isRecalculated ? "Changes Applied ✓" : "Make These Changes & Recalculate"}</span>
+                    </button>
+                    <div class="preferences-applied-banner" id="preferencesAppliedBanner" style="${isRecalculated ? "display: flex;" : "display: none;"}">
+                        <span class="banner-icon">✓</span>
+                        <span class="banner-text">Preferences updated. CloudEx will use these updated priorities for the next recommendation.</span>
+                    </div>
+                </div>
             </div>
         `;
 
@@ -1713,6 +1729,15 @@ document.addEventListener("DOMContentLoaded", async () => {
 
         const sliders =
             container.querySelectorAll(".priority-slider");
+
+        const statusHint =
+            container.querySelector("#preferencesStatusHint");
+
+        const appliedBanner =
+            container.querySelector("#preferencesAppliedBanner");
+
+        const recalcBtn =
+            container.querySelector("#recalculatePreferencesBtn");
 
         sliders.forEach((slider) => {
 
@@ -1740,8 +1765,87 @@ document.addEventListener("DOMContentLoaded", async () => {
                 userModifiedPreferences[dimKey] =
                     Math.round((newPct / 100) * 100) / 100;
 
+                if (statusHint) {
+                    statusHint.textContent = "Your sliders have been adjusted. Apply your changes when you're ready.";
+                    statusHint.style.display = "block";
+                }
+
+                if (appliedBanner && isRecalculated) {
+                    appliedBanner.style.display = "none";
+                }
+
+                if (recalcBtn) {
+                    recalcBtn.classList.remove("applied");
+                    const span = recalcBtn.querySelector("span");
+                    if (span) {
+                        span.textContent = "Make These Changes & Recalculate";
+                    }
+                }
+
             });
 
+        });
+
+        if (recalcBtn) {
+            recalcBtn.addEventListener("click", () => {
+                recalculatePreferences(container);
+            });
+        }
+
+    }
+
+    function recalculatePreferences(container = document) {
+
+        const sliders =
+            container.querySelectorAll(".priority-slider");
+
+        if (!userModifiedPreferences) {
+            userModifiedPreferences = originalFuzzyPreferences
+                ? { ...originalFuzzyPreferences }
+                : {};
+        }
+
+        sliders.forEach((slider) => {
+            const dimKey = slider.dataset.dimension;
+            const pct = parseInt(slider.value, 10);
+            userModifiedPreferences[dimKey] =
+                Math.round((pct / 100) * 100) / 100;
+        });
+
+        // Preserve original AI-generated values intact and store updated values separately
+        updatedPreferences = { ...userModifiedPreferences };
+
+        // Mark as recalculated
+        isRecalculated = true;
+        recalculatedAt = new Date().toISOString();
+
+        // Update UI
+        const statusHint =
+            container.querySelector("#preferencesStatusHint");
+        if (statusHint) {
+            statusHint.style.display = "none";
+        }
+
+        const appliedBanner =
+            container.querySelector("#preferencesAppliedBanner");
+        if (appliedBanner) {
+            appliedBanner.style.display = "flex";
+        }
+
+        const recalcBtn =
+            container.querySelector("#recalculatePreferencesBtn");
+        if (recalcBtn) {
+            recalcBtn.classList.add("applied");
+            const span = recalcBtn.querySelector("span");
+            if (span) {
+                span.textContent = "Changes Applied ✓";
+            }
+        }
+
+        console.log("Feature #11: Preferences recalculated and applied:", {
+            original: originalFuzzyPreferences,
+            updated: updatedPreferences,
+            isRecalculated
         });
 
     }
@@ -1793,12 +1897,18 @@ document.addEventListener("DOMContentLoaded", async () => {
     function getUserPreferences() {
         return {
             original: originalFuzzyPreferences ? { ...originalFuzzyPreferences } : null,
-            modified: userModifiedPreferences ? { ...userModifiedPreferences } : null
+            modified: userModifiedPreferences ? { ...userModifiedPreferences } : null,
+            updated: updatedPreferences ? { ...updatedPreferences } : null,
+            isRecalculated: isRecalculated,
+            recalculatedAt: recalculatedAt
         };
     }
 
     if (typeof window !== "undefined") {
-        window.CloudExPreferences = { getUserPreferences };
+        window.CloudExPreferences = {
+            getUserPreferences,
+            recalculatePreferences
+        };
     }
 
 
@@ -2010,7 +2120,13 @@ document.addEventListener("DOMContentLoaded", async () => {
                                 currentChatId,
 
                             experienceMode:
-                                currentExperienceMode
+                                currentExperienceMode,
+
+                            userPreferences:
+                                updatedPreferences || userModifiedPreferences || null,
+
+                            isRecalculatedPreferences:
+                                isRecalculated
 
                         })
                     }
