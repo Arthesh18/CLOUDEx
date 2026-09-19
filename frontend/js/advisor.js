@@ -1428,6 +1428,7 @@ document.addEventListener("DOMContentLoaded", async () => {
             userModifiedPreferences = null;
             updatedPreferences = null;
             currentFuzzyRequirements = null;
+            currentMcdmResult = null;
             isRecalculated = false;
             recalculatedAt = null;
 
@@ -1585,6 +1586,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     let isRecalculated = false;
     let recalculatedAt = null;
     let currentFuzzyRequirements = null;
+    let currentMcdmResult = null;
 
     const PREFERENCE_DIMENSION_CONFIG = [
         {
@@ -2422,7 +2424,8 @@ document.addEventListener("DOMContentLoaded", async () => {
                 if (!originalFuzzyPreferences || !updatedPreferences) return null;
                 return generatePreferenceComparison(originalFuzzyPreferences, updatedPreferences, mode || currentExperienceMode || "beginner");
             },
-            getFuzzyRequirements: () => currentFuzzyRequirements
+            getFuzzyRequirements: () => currentFuzzyRequirements,
+            getMcdmResult: () => currentMcdmResult
         };
     }
 
@@ -2710,6 +2713,10 @@ document.addEventListener("DOMContentLoaded", async () => {
 
             if (data.fuzzyRequirements) {
                 currentFuzzyRequirements = data.fuzzyRequirements;
+            }
+
+            if (data.mcdm) {
+                currentMcdmResult = data.mcdm;
             }
 
             addMessage(

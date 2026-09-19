@@ -83,6 +83,9 @@ const {
 const {
     processFuzzyRequirements
 } = require("./data/fuzzyRequirementProcessor");
+const {
+    evaluateProvidersMCDM
+} = require("./data/mcdmEngine");
 
 dotenv.config();
 
@@ -443,6 +446,37 @@ app.post("/api/advisor/fuzzy-process", (req, res) => {
         res.status(500).json({
             success: false,
             message: "Failed to process fuzzy requirements."
+        });
+    }
+});
+
+
+// ==================================================
+// MCDM-BASED CSP SELECTION (FEATURE #15)
+// ==================================================
+
+app.post("/api/advisor/mcdm", (req, res) => {
+    try {
+        const {
+            requirements = {},
+            preferences = {},
+            mode = "beginner",
+            tradeoffs = []
+        } = req.body;
+
+        const result = evaluateProvidersMCDM({
+            requirements,
+            preferences,
+            mode,
+            tradeoffs
+        });
+
+        res.json(result);
+    } catch (error) {
+        console.error("MCDM evaluation API error:", error.message);
+        res.status(500).json({
+            success: false,
+            message: "Failed to evaluate providers via MCDM."
         });
     }
 });
@@ -1061,6 +1095,19 @@ if (userId && chatId) {
 
 
             // ==================================================
+            // MCDM-BASED CSP SELECTION (FEATURE #15)
+            // ==================================================
+
+            const mcdmResult =
+                evaluateProvidersMCDM({
+                    preferences: fuzzyPreferences,
+                    requirements: extractedRequirements,
+                    tradeoffs: tradeoffAnalysis.tradeoffs,
+                    mode: experienceMode
+                });
+
+
+            // ==================================================
             // RESPONSE
             // ==================================================
 
@@ -1083,6 +1130,8 @@ if (userId && chatId) {
                 tradeoffs: tradeoffAnalysis,
 
                 fuzzyRequirements,
+
+                mcdm: mcdmResult,
 
                 isRecalculatedPreferences: Boolean(isRecalculatedPreferences)
 
