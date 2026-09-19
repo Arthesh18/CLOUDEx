@@ -80,6 +80,9 @@ const {
 const {
     detectTradeoffs
 } = require("./data/tradeoffDetection");
+const {
+    processFuzzyRequirements
+} = require("./data/fuzzyRequirementProcessor");
 
 dotenv.config();
 
@@ -409,6 +412,37 @@ app.post("/api/advisor/tradeoffs", (req, res) => {
         res.status(500).json({
             success: false,
             message: "Failed to evaluate preference trade-offs."
+        });
+    }
+});
+
+
+// ==================================================
+// FUZZY REQUIREMENT PROCESSING (FEATURE #14)
+// ==================================================
+
+app.post("/api/advisor/fuzzy-process", (req, res) => {
+    try {
+        const {
+            requirements = {},
+            preferences = {},
+            source = "ai_generated",
+            mode = "beginner"
+        } = req.body;
+
+        const result = processFuzzyRequirements({
+            requirements,
+            preferences,
+            source,
+            mode
+        });
+
+        res.json(result);
+    } catch (error) {
+        console.error("Fuzzy requirement processing API error:", error.message);
+        res.status(500).json({
+            success: false,
+            message: "Failed to process fuzzy requirements."
         });
     }
 });
@@ -1014,6 +1048,19 @@ if (userId && chatId) {
 
 
             // ==================================================
+            // FUZZY REQUIREMENT PROCESSING (FEATURE #14)
+            // ==================================================
+
+            const fuzzyRequirements =
+                processFuzzyRequirements({
+                    requirements: extractedRequirements,
+                    preferences: fuzzyPreferences,
+                    source: isRecalculatedPreferences ? "user_updated" : "ai_generated",
+                    mode: experienceMode
+                });
+
+
+            // ==================================================
             // RESPONSE
             // ==================================================
 
@@ -1034,6 +1081,8 @@ if (userId && chatId) {
                 fuzzyPreferences,
 
                 tradeoffs: tradeoffAnalysis,
+
+                fuzzyRequirements,
 
                 isRecalculatedPreferences: Boolean(isRecalculatedPreferences)
 

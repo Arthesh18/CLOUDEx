@@ -1427,6 +1427,7 @@ document.addEventListener("DOMContentLoaded", async () => {
             originalFuzzyPreferences = null;
             userModifiedPreferences = null;
             updatedPreferences = null;
+            currentFuzzyRequirements = null;
             isRecalculated = false;
             recalculatedAt = null;
 
@@ -1583,6 +1584,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     let updatedPreferences = null;
     let isRecalculated = false;
     let recalculatedAt = null;
+    let currentFuzzyRequirements = null;
 
     const PREFERENCE_DIMENSION_CONFIG = [
         {
@@ -2024,6 +2026,78 @@ document.addEventListener("DOMContentLoaded", async () => {
         compSlot.style.display = "block";
     }
 
+    // =========================================================
+    // HOW CLOUDEx UNDERSTANDS YOUR REQUIREMENTS (FEATURE #14)
+    // =========================================================
+
+    function toLinguisticLabel(val) {
+        const num = typeof val === "number" ? val : 0.5;
+        if (num <= 0.20) return "Very Low";
+        if (num <= 0.40) return "Low";
+        if (num <= 0.60) return "Medium";
+        if (num <= 0.80) return "High";
+        return "Very High";
+    }
+
+    function renderUnderstoodRequirementsHtml(fuzzyReqs, mode = "beginner") {
+        const modeKey = ["beginner", "intermediate", "expert"].includes(mode) ? mode : "beginner";
+
+        const confidenceLevel = (fuzzyReqs && fuzzyReqs.confidence && fuzzyReqs.confidence.level) || "Medium";
+        const confidencePct = (fuzzyReqs && fuzzyReqs.confidence && fuzzyReqs.confidence.percentage) || 75;
+        const levelClass = confidenceLevel.toLowerCase();
+
+        let summaryText = "General cloud workload inferred from your messages";
+        if (fuzzyReqs && fuzzyReqs.requirementSignals) {
+            const sigs = fuzzyReqs.requirementSignals;
+            const parts = [];
+            if (sigs.workloadType) parts.push(sigs.workloadType);
+            if (sigs.projectPurpose) parts.push(sigs.projectPurpose);
+            if (sigs.budgetSensitivity) parts.push(`Budget: ${sigs.budgetSensitivity.split(" ")[0]}`);
+            if (parts.length > 0) {
+                summaryText = parts.join(" • ");
+            }
+        }
+
+        const badgesHtml = PREFERENCE_DIMENSION_CONFIG.map((dim) => {
+            let level = "Medium";
+            if (fuzzyReqs && fuzzyReqs.fuzzyInterpretation && fuzzyReqs.fuzzyInterpretation[dim.key]) {
+                level = fuzzyReqs.fuzzyInterpretation[dim.key].linguisticLevel;
+            } else if (userModifiedPreferences && typeof userModifiedPreferences[dim.key] === "number") {
+                level = toLinguisticLabel(userModifiedPreferences[dim.key]);
+            } else if (originalFuzzyPreferences && typeof originalFuzzyPreferences[dim.key] === "number") {
+                level = toLinguisticLabel(originalFuzzyPreferences[dim.key]);
+            }
+
+            const cssLevel = level.toLowerCase().replace(/\s+/g, "-");
+            const dimLabel = dim[modeKey] || dim.beginner;
+
+            return `
+                <div class="understood-dim-badge level-${cssLevel}">
+                    <span>${dim.icon} ${dimLabel}:</span>
+                    <strong>${level}</strong>
+                </div>
+            `;
+        }).join("");
+
+        return `
+            <div class="understood-req-header">
+                <div class="understood-req-title">
+                    <i class="fa-solid fa-brain"></i>
+                    <span>How CLOUDEx Understands Your Requirements</span>
+                </div>
+                <span class="understood-confidence-pill ${levelClass}" title="Internal decision-support confidence indicator">
+                    Confidence: ${confidenceLevel} (${confidencePct}%)
+                </span>
+            </div>
+            <div class="understood-summary-line">
+                <strong>Context:</strong> ${summaryText}
+            </div>
+            <div class="understood-interpretations-grid">
+                ${badgesHtml}
+            </div>
+        `;
+    }
+
     function getPreferenceIntroText(mode) {
         if (mode === "expert") {
             return "Calibrate multidimensional utility weights across infrastructure and operational criteria. Sliders reflect current model understanding:";
@@ -2095,6 +2169,9 @@ document.addEventListener("DOMContentLoaded", async () => {
                 <div class="preferences-header">
                     <span class="preferences-tag">YOUR INITIAL CLOUD PREFERENCES</span>
                     <p class="preferences-intro" id="preferencesIntroText">${introText}</p>
+                </div>
+                <div class="understood-requirements-box" id="understoodRequirementsBox">
+                    ${renderUnderstoodRequirementsHtml(currentFuzzyRequirements, currentMode)}
                 </div>
                 <div class="preferences-list">
                     ${rowsHtml}
@@ -2311,6 +2388,12 @@ document.addEventListener("DOMContentLoaded", async () => {
                 updateTradeoffsDisplay(panel, activePrefs, mode);
             }
 
+            // Update understood requirements for new experience mode (Feature #14)
+            const understoodBox = panel.querySelector("#understoodRequirementsBox");
+            if (understoodBox) {
+                understoodBox.innerHTML = renderUnderstoodRequirementsHtml(currentFuzzyRequirements, mode);
+            }
+
         });
 
     }
@@ -2338,7 +2421,8 @@ document.addEventListener("DOMContentLoaded", async () => {
             getPreferenceComparison: (mode = null) => {
                 if (!originalFuzzyPreferences || !updatedPreferences) return null;
                 return generatePreferenceComparison(originalFuzzyPreferences, updatedPreferences, mode || currentExperienceMode || "beginner");
-            }
+            },
+            getFuzzyRequirements: () => currentFuzzyRequirements
         };
     }
 
@@ -2622,6 +2706,10 @@ document.addEventListener("DOMContentLoaded", async () => {
                 if (!originalFuzzyPreferences) {
                     originalFuzzyPreferences = { ...data.fuzzyPreferences };
                 }
+            }
+
+            if (data.fuzzyRequirements) {
+                currentFuzzyRequirements = data.fuzzyRequirements;
             }
 
             addMessage(
