@@ -414,7 +414,7 @@ app.get("/api/pricing/scenario", (req, res) => {
 
 app.post("/api/advisor/tradeoffs", (req, res) => {
     try {
-        const { preferences, experienceMode = "beginner" } = req.body;
+        const { preferences, experienceMode = "beginner" } = req.body || {};
         const analysis = detectTradeoffs(preferences || {}, experienceMode);
         res.json({
             success: true,
@@ -441,7 +441,7 @@ app.post("/api/advisor/fuzzy-process", (req, res) => {
             preferences = {},
             source = "ai_generated",
             mode = "beginner"
-        } = req.body;
+        } = req.body || {};
 
         const result = processFuzzyRequirements({
             requirements,
@@ -472,7 +472,7 @@ app.post("/api/advisor/mcdm", (req, res) => {
             preferences = {},
             mode = "beginner",
             tradeoffs = []
-        } = req.body;
+        } = req.body || {};
 
         const result = evaluateProvidersMCDM({
             requirements,
@@ -504,7 +504,7 @@ app.post("/api/advisor/recommend", (req, res) => {
             source = "ai_generated",
             mode = "beginner",
             tradeoffs = []
-        } = req.body;
+        } = req.body || {};
 
         const recommendation = generatePersonalizedRecommendation({
             requirements,
@@ -536,7 +536,7 @@ app.post("/api/advisor/compare-recommendations", (req, res) => {
             originalPreferences = {},
             updatedPreferences = {},
             mode = "beginner"
-        } = req.body;
+        } = req.body || {};
 
         const comparison = compareRecommendations({
             requirements,
@@ -568,7 +568,7 @@ app.post("/api/advisor/how-decided", (req, res) => {
             source = "ai_generated",
             mode = "beginner",
             tradeoffs = []
-        } = req.body;
+        } = req.body || {};
 
         const rec = generatePersonalizedRecommendation({
             requirements,

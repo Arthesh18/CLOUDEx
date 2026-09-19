@@ -2500,7 +2500,7 @@ document.addEventListener("DOMContentLoaded", async () => {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
-                    requirements: (currentFuzzyRequirements && currentFuzzyRequirements.requirementSignals) || {},
+                    requirements: (currentFuzzyRequirements && currentFuzzyRequirements.requirementSignals) || (currentRecommendation && currentRecommendation.requirementsUnderstood) || {},
                     originalPreferences: originalFuzzyPreferences || {},
                     updatedPreferences: updatedPreferences || {},
                     mode: currentExperienceMode || "beginner"
@@ -2528,7 +2528,7 @@ document.addEventListener("DOMContentLoaded", async () => {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
-                    requirements: (currentFuzzyRequirements && currentFuzzyRequirements.requirementSignals) || {},
+                    requirements: (currentFuzzyRequirements && currentFuzzyRequirements.requirementSignals) || (currentRecommendation && currentRecommendation.requirementsUnderstood) || {},
                     preferences: updatedPreferences,
                     source: "user_updated",
                     mode: currentExperienceMode || "beginner"
