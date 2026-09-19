@@ -52,6 +52,13 @@ const {
     getProviderById,
     getAllServices
 } = require("./data/cloudData");
+const {
+    serviceEquivalenceGroups,
+    getEquivalenceGroups,
+    getEquivalentService,
+    compareEquivalentServices,
+    findEquivalenceGroupForService
+} = require("./data/serviceEquivalence");
 
 dotenv.config();
 
@@ -246,6 +253,56 @@ app.get(
 
     }
 );
+
+
+// ==================================================
+// SERVICE EQUIVALENCE & COMPARISON
+// ==================================================
+
+app.get("/api/services/equivalence", (req, res) => {
+    try {
+        res.json({
+            success: true,
+            groups: getEquivalenceGroups()
+        });
+    } catch (error) {
+        console.error("Service equivalence API error:", error.message);
+        res.status(500).json({
+            success: false,
+            message: "Could not load service equivalence groups."
+        });
+    }
+});
+
+app.get("/api/services/equivalence/:key", (req, res) => {
+    try {
+        const { key } = req.params;
+        const providersQuery = req.query.providers;
+        const providerIds = providersQuery
+            ? providersQuery.split(",").map(p => p.trim().toLowerCase()).filter(Boolean)
+            : [];
+
+        const result = compareEquivalentServices(key, providerIds);
+
+        if (!result) {
+            return res.status(404).json({
+                success: false,
+                message: "Equivalence group not found."
+            });
+        }
+
+        res.json({
+            success: true,
+            ...result
+        });
+    } catch (error) {
+        console.error("Equivalence comparison error:", error.message);
+        res.status(500).json({
+            success: false,
+            message: "Could not compare equivalent services."
+        });
+    }
+});
 
 
 // ==================================================

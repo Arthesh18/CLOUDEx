@@ -1139,7 +1139,180 @@ document.addEventListener("DOMContentLoaded", () => {
 
 
     /* =================================================
-       SERVICE COMPARISON
+       SERVICE EQUIVALENCE DEFINITIONS (FEATURE #3)
+    ================================================= */
+
+    const serviceEquivalenceGroups = [
+        {
+            key: "virtual-machines",
+            title: "Virtual Machines & Core Compute",
+            category: "compute",
+            icon: "fa-server",
+            description: "General-purpose scalable compute instances and virtual machines for running application servers, web workloads, and custom operating systems.",
+            mappings: {
+                aws: "Amazon EC2",
+                azure: "Azure Virtual Machines",
+                gcp: "Compute Engine",
+                oracle: "OCI Compute",
+                ibm: "IBM Virtual Servers",
+                digitalocean: "Droplets",
+                alibaba: "Elastic Compute Service",
+                huawei: "Elastic Cloud Server",
+                tencent: "Cloud Virtual Machine",
+                vultr: "Vultr Cloud Compute",
+                hetzner: "Hetzner Cloud Servers",
+                ovhcloud: "OVHcloud Public Cloud",
+                akamai: "Akamai Cloud Compute",
+                coreweave: "CPU Compute"
+            }
+        },
+        {
+            key: "managed-kubernetes",
+            title: "Managed Kubernetes & Containers",
+            category: "compute",
+            icon: "fa-cubes",
+            description: "Container orchestration and managed Kubernetes clusters for deploying, scaling, and managing containerized microservices.",
+            mappings: {
+                aws: "Amazon ECS",
+                azure: "Azure Kubernetes Service",
+                gcp: "Google Kubernetes Engine",
+                oracle: "OCI Container Instances",
+                ibm: "IBM Code Engine",
+                alibaba: "Container Service for Kubernetes",
+                huawei: "Cloud Container Engine",
+                tencent: "Tencent Kubernetes Engine",
+                vultr: "Vultr Kubernetes Engine",
+                hetzner: "Hetzner Cloud Kubernetes",
+                ovhcloud: "Managed Kubernetes Service",
+                coreweave: "Kubernetes"
+            }
+        },
+        {
+            key: "serverless-functions",
+            title: "Serverless & Event-Driven Functions",
+            category: "compute",
+            icon: "fa-bolt",
+            description: "Event-driven execution environments where code runs on demand without managing or provisioning underlying servers.",
+            mappings: {
+                aws: "AWS Lambda",
+                azure: "Azure Functions",
+                gcp: "Cloud Run",
+                ibm: "IBM Code Engine",
+                digitalocean: "App Platform",
+                alibaba: "Function Compute",
+                huawei: "FunctionGraph",
+                tencent: "CloudBase",
+                cloudflare: "Cloudflare Workers",
+                akamai: "Akamai Edge Compute"
+            }
+        },
+        {
+            key: "object-storage",
+            title: "Object Storage",
+            category: "storage",
+            icon: "fa-box-archive",
+            description: "Highly scalable and durable storage for unstructured assets, backups, static websites, and media files with global HTTP API access.",
+            mappings: {
+                aws: "Amazon S3",
+                azure: "Azure Blob Storage",
+                gcp: "Cloud Storage",
+                oracle: "OCI Object Storage",
+                ibm: "IBM Cloud Object Storage",
+                digitalocean: "Spaces",
+                alibaba: "Object Storage Service",
+                huawei: "Object Storage Service",
+                tencent: "Cloud Object Storage",
+                vultr: "Vultr Object Storage",
+                hetzner: "Hetzner Object Storage",
+                ovhcloud: "Object Storage",
+                cloudflare: "Cloudflare R2",
+                akamai: "Akamai Cloud Storage",
+                coreweave: "Cloud Storage"
+            }
+        },
+        {
+            key: "block-storage",
+            title: "Block Storage & Persistent Volumes",
+            category: "storage",
+            icon: "fa-hard-drive",
+            description: "High-performance block volumes attachable to virtual instances for OS filesystems, transactional databases, and I/O-intensive workloads.",
+            mappings: {
+                aws: "Amazon EBS",
+                azure: "Azure Disk Storage",
+                vultr: "Vultr Block Storage",
+                hetzner: "Hetzner Volumes",
+                ovhcloud: "Block Storage",
+                coreweave: "Block Storage"
+            }
+        },
+        {
+            key: "relational-database",
+            title: "Managed Relational (SQL) Databases",
+            category: "database",
+            icon: "fa-database",
+            description: "Fully managed SQL database engines with automated backups, patching, replication, and high availability.",
+            mappings: {
+                aws: "Amazon RDS",
+                azure: "Azure SQL Database",
+                gcp: "Cloud SQL",
+                oracle: "Oracle Autonomous Database",
+                ibm: "IBM Cloud Databases",
+                digitalocean: "Managed Databases",
+                alibaba: "ApsaraDB RDS",
+                huawei: "Relational Database Service",
+                tencent: "TencentDB for MySQL",
+                vultr: "Vultr Managed Databases",
+                hetzner: "Managed Databases",
+                ovhcloud: "Managed Databases",
+                cloudflare: "D1",
+                akamai: "Managed Databases",
+                coreweave: "Managed Database Options"
+            }
+        },
+        {
+            key: "nosql-database",
+            title: "NoSQL & Distributed Key-Value Datastores",
+            category: "database",
+            icon: "fa-table-cells",
+            description: "Globally distributed, flexible-schema document and key-value datastores built for low latency at massive scale.",
+            mappings: {
+                aws: "Amazon DynamoDB",
+                azure: "Azure Cosmos DB",
+                gcp: "Firestore",
+                cloudflare: "Workers KV"
+            }
+        },
+        {
+            key: "ai-ml-platform",
+            title: "AI & Machine Learning Platforms",
+            category: "ai",
+            icon: "fa-brain",
+            description: "Comprehensive machine learning development environments, foundation model fine-tuning, and dedicated GPU computing.",
+            mappings: {
+                aws: "Amazon SageMaker",
+                azure: "Azure Machine Learning",
+                gcp: "Vertex AI",
+                oracle: "OCI Generative AI",
+                ibm: "watsonx.ai",
+                digitalocean: "GPU Droplets",
+                alibaba: "PAI",
+                huawei: "ModelArts",
+                tencent: "Tencent Cloud AI",
+                vultr: "Vultr GPU",
+                hetzner: "GPU Servers",
+                ovhcloud: "AI Endpoints",
+                cloudflare: "Workers AI",
+                akamai: "GPU Cloud",
+                coreweave: "AI Infrastructure"
+            }
+        }
+    ];
+
+    let activeEquivalenceGroup = "virtual-machines";
+
+
+    /* =================================================
+       SERVICE COMPARISON (FEATURE #3 SERVICE-TO-SERVICE)
     ================================================= */
 
     function renderServiceComparison(selected) {
@@ -1148,358 +1321,356 @@ document.addEventListener("DOMContentLoaded", () => {
             return;
         }
 
-
-        if (
-            !selected ||
-            selected.length < 2
-        ) {
+        if (!selected || selected.length < 2) {
 
             serviceComparison.innerHTML = `
-
                 <div class="empty-state">
-
                     <i class="fa-solid fa-table"></i>
-
-                    <h3>
-                        Select providers to compare
-                    </h3>
-
-                    <p>
-                        Choose at least two
-                        cloud providers.
-                    </p>
-
+                    <h3>Select providers to compare</h3>
+                    <p>Choose at least two cloud providers above to compare equivalent services side-by-side.</p>
                 </div>
-
             `;
-
             return;
 
         }
 
-
-        const categories = [
-
-            {
-                key: "compute",
-                title: "Compute",
-                icon: "fa-server",
-                description:
-                    "Virtual machines, containers and serverless computing."
-            },
-
-            {
-                key: "storage",
-                title: "Storage",
-                icon: "fa-hard-drive",
-                description:
-                    "Object, block and file storage services."
-            },
-
-            {
-                key: "database",
-                title: "Database",
-                icon: "fa-database",
-                description:
-                    "Managed SQL and NoSQL database services."
-            },
-
-            {
-                key: "ai",
-                title: "AI / ML",
-                icon: "fa-brain",
-                description:
-                    "Artificial intelligence and machine learning services."
-            }
-
-        ];
-
-
-        let html = `
-
-            <div class="service-comparison-intro">
-
-                <span>
-                    SERVICE COMPARISON
-                </span>
-
-                <h2>
-                    Compare cloud services
-                </h2>
-
-                <p>
-                    See what each selected provider
-                    offers in the same service category.
-                </p>
-
-            </div>
-
+        // Build archetype navigation buttons
+        const navButtonsHTML = serviceEquivalenceGroups.map(g => `
+            <button
+                class="eq-archetype-btn ${activeEquivalenceGroup === g.key ? "active" : ""}"
+                data-group="${g.key}"
+            >
+                <i class="fa-solid ${g.icon}"></i>
+                ${g.title}
+            </button>
+        `).join("") + `
+            <button
+                class="eq-archetype-btn ${activeEquivalenceGroup === "overview" ? "active" : ""}"
+                data-group="overview"
+            >
+                <i class="fa-solid fa-layer-group"></i>
+                All Categories Overview
+            </button>
         `;
 
+        let contentHTML = "";
 
-        categories.forEach(category => {
+        if (activeEquivalenceGroup !== "overview") {
 
-            html += `
+            const group =
+                serviceEquivalenceGroups.find(
+                    g => g.key === activeEquivalenceGroup
+                ) || serviceEquivalenceGroups[0];
 
-                <section
-                    class="service-category"
-                >
-
-                    <div
-                        class="service-category-title"
-                    >
-
-                        <div
-                            class="service-category-icon"
-                        >
-
-                            <i
-                                class="fa-solid ${
-                                    category.icon
-                                }"
-                            ></i>
-
-                        </div>
-
-
-                        <div>
-
-                            <span>
-                                SERVICE CATEGORY
-                            </span>
-
-                            <h3>
-                                ${category.title}
-                            </h3>
-
-                            <p>
-                                ${category.description}
-                            </p>
-
-                        </div>
-
+            // Banner
+            const bannerHTML = `
+                <div class="eq-archetype-banner">
+                    <div class="eq-banner-icon">
+                        <i class="fa-solid ${group.icon}"></i>
                     </div>
-
-
-                    <div
-                        class="service-comparison-grid"
-                    >
-
+                    <div class="eq-banner-content">
+                        <h3>${group.title}</h3>
+                        <p>${group.description}</p>
+                    </div>
+                </div>
             `;
 
+            // Matrix Cards
+            const matrixCardsHTML = selected.map(provider => {
 
-            selected.forEach(provider => {
+                const mappedName =
+                    group.mappings[provider.id];
 
-                const categoriesData =
-                    getServiceCategories(
-                        provider
-                    );
+                const allServices =
+                    Object.values(provider.services || {}).flat();
 
+                const svc =
+                    mappedName
+                        ? allServices.find(s => s.name === mappedName)
+                        : null;
 
-                const services =
-                    Array.isArray(
-                        categoriesData[
-                            category.key
-                        ]
-                    )
-                        ? categoriesData[
-                            category.key
-                        ]
-                        : [];
+                if (svc) {
 
+                    const advantagesHTML = Array.isArray(svc.advantages) && svc.advantages.length
+                        ? `
+                            <span class="eq-section-title eq-adv-title">
+                                <i class="fa-solid fa-circle-check"></i> Key Advantages
+                            </span>
+                            <ul class="eq-list">
+                                ${svc.advantages.map(a => `
+                                    <li class="eq-adv-li">
+                                        <i class="fa-solid fa-check"></i>
+                                        <span>${a}</span>
+                                    </li>
+                                `).join("")}
+                            </ul>
+                        `
+                        : "";
 
-                html += `
+                    const limitationsHTML = Array.isArray(svc.limitations) && svc.limitations.length
+                        ? `
+                            <span class="eq-section-title eq-lim-title">
+                                <i class="fa-solid fa-triangle-exclamation"></i> Limitations & Trade-offs
+                            </span>
+                            <ul class="eq-list">
+                                ${svc.limitations.map(l => `
+                                    <li class="eq-lim-li">
+                                        <i class="fa-solid fa-triangle-exclamation"></i>
+                                        <span>${l}</span>
+                                    </li>
+                                `).join("")}
+                            </ul>
+                        `
+                        : "";
 
-                    <article
-                        class="service-provider-card"
-                    >
-
-                        <div
-                            class="service-provider-header"
-                        >
-
-                            <div
-                                class="service-provider-icon"
-                            >
-
-                                <i
-                                    class="fa-solid ${
-                                        provider.icon ||
-                                        "fa-cloud"
-                                    }"
-                                ></i>
-
-                            </div>
-
-
+                    return `
+                        <article class="eq-service-card" data-provider="${provider.id}" data-svc="${svc.name}">
                             <div>
+                                <div class="eq-provider-header">
+                                    <div class="eq-provider-icon">
+                                        <i class="fa-solid ${provider.icon || "fa-cloud"}"></i>
+                                    </div>
+                                    <div>
+                                        <h4>${provider.name}</h4>
+                                    </div>
+                                </div>
 
-                                <h4>
-                                    ${
-                                        provider.name ||
-                                        "Provider"
-                                    }
-                                </h4>
+                                <h3 class="eq-service-name">${svc.name}</h3>
 
-                                <span>
-                                    ${services.length}
-                                    service${
-                                        services.length !== 1
-                                            ? "s"
-                                            : ""
-                                    }
-                                </span>
+                                <div class="eq-meta-tags">
+                                    ${svc.type ? `<span class="eq-type-badge">${svc.type}</span>` : ""}
+                                    ${svc.pricingModel ? `<span class="eq-pricing-badge"><i class="fa-solid fa-tag"></i> ${svc.pricingModel}</span>` : ""}
+                                </div>
 
+                                <p class="eq-desc">${svc.description || ""}</p>
+
+                                ${svc.bestFor ? `
+                                    <div class="eq-best-for">
+                                        <strong><i class="fa-solid fa-bullseye"></i> Best For</strong>
+                                        <p>${svc.bestFor}</p>
+                                    </div>
+                                ` : ""}
+
+                                ${advantagesHTML}
+                                ${limitationsHTML}
                             </div>
 
-                        </div>
-
-
-                        <div
-                            class="service-items"
-                        >
-
-                `;
-
-
-                if (services.length === 0) {
-
-                    html += `
-
-                        <div
-                            class="service-unavailable"
-                        >
-
-                            <i
-                                class="fa-solid fa-circle-info"
-                            ></i>
-
-                            No information
-                            available
-
-                        </div>
-
+                            <div class="eq-service-footer">
+                                <button
+                                    class="eq-open-modal-btn"
+                                    data-provider="${provider.id}"
+                                    data-svc="${svc.name}"
+                                >
+                                    View Full Details <i class="fa-solid fa-chevron-right"></i>
+                                </button>
+                            </div>
+                        </article>
                     `;
 
                 } else {
 
-                    services.forEach(service => {
-
-                        const name =
-                            getServiceName(
-                                service
-                            );
-
-                        const description =
-                            getServiceDescription(
-                                service
-                            );
-
-                        const type =
-                            getServiceType(
-                                service
-                            );
-
-                        const pricing =
-                            getServicePricing(
-                                service
-                            );
-
-
-                        html += `
-
-                            <div
-                                class="service-item"
-                            >
-
-                                <div
-                                    class="service-item-name"
-                                >
-
-                                    <i
-                                        class="fa-solid fa-check"
-                                    ></i>
-
-                                    <strong>
-                                        ${name}
-                                    </strong>
-
+                    return `
+                        <div class="eq-unmapped-card">
+                            <div class="eq-provider-header" style="border:none; margin:0 0 10px 0; padding:0;">
+                                <div class="eq-provider-icon">
+                                    <i class="fa-solid ${provider.icon || "fa-cloud"}"></i>
                                 </div>
-
-
-                                ${
-                                    type
-                                        ? `
-                                            <span
-                                                class="service-type"
-                                            >
-                                                ${type}
-                                            </span>
-                                        `
-                                        : ""
-                                }
-
-
-                                ${
-                                    description
-                                        ? `
-                                            <p>
-                                                ${description}
-                                            </p>
-                                        `
-                                        : ""
-                                }
-
-
-                                ${
-                                    pricing
-                                        ? `
-                                            <small>
-
-                                                <i
-                                                    class="fa-solid fa-tag"
-                                                ></i>
-
-                                                ${pricing}
-
-                                            </small>
-                                        `
-                                        : ""
-                                }
-
+                                <h4>${provider.name}</h4>
                             </div>
 
-                        `;
+                            <div class="eq-unmapped-icon">
+                                <i class="fa-solid fa-circle-minus"></i>
+                            </div>
 
-                    });
+                            <h4>No Direct Equivalent</h4>
+                            <p>${provider.shortName || provider.name} does not currently have a mapped equivalent in this dataset for ${group.title}.</p>
+                        </div>
+                    `;
 
                 }
 
+            }).join("");
 
-                html += `
+            contentHTML = `
+                ${bannerHTML}
+                <div class="eq-matrix-grid">
+                    ${matrixCardsHTML}
+                </div>
+            `;
 
+        } else {
+
+            // CATEGORY OVERVIEW
+            const categories = [
+                {
+                    key: "compute",
+                    title: "Compute",
+                    icon: "fa-server",
+                    description: "Virtual machines, containers and serverless computing."
+                },
+                {
+                    key: "storage",
+                    title: "Storage",
+                    icon: "fa-hard-drive",
+                    description: "Object, block and file storage services."
+                },
+                {
+                    key: "database",
+                    title: "Database",
+                    icon: "fa-database",
+                    description: "Managed SQL and NoSQL database services."
+                },
+                {
+                    key: "ai",
+                    title: "AI / ML",
+                    icon: "fa-brain",
+                    description: "Artificial intelligence and machine learning services."
+                }
+            ];
+
+            let overviewHTML = "";
+
+            categories.forEach(category => {
+
+                overviewHTML += `
+                    <section class="service-category">
+                        <div class="service-category-title">
+                            <div class="service-category-icon">
+                                <i class="fa-solid ${category.icon}"></i>
+                            </div>
+                            <div>
+                                <span>SERVICE CATEGORY</span>
+                                <h3>${category.title}</h3>
+                                <p>${category.description}</p>
+                            </div>
                         </div>
 
-                    </article>
+                        <div class="service-comparison-grid">
+                `;
 
+                selected.forEach(provider => {
+
+                    const categoriesData =
+                        getServiceCategories(provider);
+
+                    const services =
+                        Array.isArray(categoriesData[category.key])
+                            ? categoriesData[category.key]
+                            : [];
+
+                    overviewHTML += `
+                        <article class="service-provider-card">
+                            <div class="service-provider-header">
+                                <div class="service-provider-icon">
+                                    <i class="fa-solid ${provider.icon || "fa-cloud"}"></i>
+                                </div>
+                                <div>
+                                    <h4>${provider.name || "Provider"}</h4>
+                                    <span>${services.length} service${services.length !== 1 ? "s" : ""}</span>
+                                </div>
+                            </div>
+
+                            <div class="service-items">
+                    `;
+
+                    if (services.length === 0) {
+
+                        overviewHTML += `
+                            <div class="service-unavailable">
+                                <i class="fa-solid fa-circle-info"></i>
+                                No information available
+                            </div>
+                        `;
+
+                    } else {
+
+                        services.forEach(service => {
+
+                            const name = getServiceName(service);
+                            const description = getServiceDescription(service);
+                            const type = getServiceType(service);
+                            const pricing = getServicePricing(service);
+
+                            overviewHTML += `
+                                <div class="service-item">
+                                    <div class="service-item-name">
+                                        <i class="fa-solid fa-check"></i>
+                                        <strong>${name}</strong>
+                                    </div>
+                                    ${type ? `<span class="service-type">${type}</span>` : ""}
+                                    ${description ? `<p>${description}</p>` : ""}
+                                    ${pricing ? `<small><i class="fa-solid fa-tag"></i> ${pricing}</small>` : ""}
+                                </div>
+                            `;
+
+                        });
+
+                    }
+
+                    overviewHTML += `
+                            </div>
+                        </article>
+                    `;
+
+                });
+
+                overviewHTML += `
+                        </div>
+                    </section>
                 `;
 
             });
 
+            contentHTML = overviewHTML;
 
-            html += `
+        }
 
-                    </div>
+        serviceComparison.innerHTML = `
+            <div class="service-comparison-intro">
+                <span>SERVICE-TO-SERVICE EQUIVALENCE</span>
+                <h2>Compare Equivalent Cloud Services</h2>
+                <p>Directly compare equivalent services across your selected providers side-by-side with full specifications, best use cases, and trade-offs.</p>
+            </div>
 
-                </section>
+            <div class="eq-archetype-nav">
+                ${navButtonsHTML}
+            </div>
 
-            `;
+            <div class="eq-comparison-content">
+                ${contentHTML}
+            </div>
+        `;
 
+        // Wire archetype buttons
+        const navButtons =
+            serviceComparison.querySelectorAll(".eq-archetype-btn");
+
+        navButtons.forEach(btn => {
+            btn.addEventListener("click", () => {
+                const groupKey = btn.dataset.group;
+                activeEquivalenceGroup = groupKey;
+                renderServiceComparison(selected);
+            });
         });
 
+        // Wire "View Full Details" buttons on equivalent cards
+        const detailButtons =
+            serviceComparison.querySelectorAll(".eq-open-modal-btn");
 
-        serviceComparison.innerHTML =
-            html;
+        detailButtons.forEach(btn => {
+            btn.addEventListener("click", () => {
+                const pId = btn.dataset.provider;
+                const sName = btn.dataset.svc;
+                const p = providers.find(item => String(item.id) === String(pId));
+                if (p && p.services) {
+                    const allSvcs = Object.values(p.services).flat();
+                    const svc = allSvcs.find(s => s.name === sName);
+                    if (svc) {
+                        openServiceModal(svc, p, "Equivalent Service");
+                    }
+                }
+            });
+        });
 
     }
 
@@ -1888,6 +2059,11 @@ document.addEventListener("DOMContentLoaded", () => {
             </li>
         `).join("");
 
+        const eqGroup =
+            serviceEquivalenceGroups.find(
+                g => g.mappings && g.mappings[provider.id] === sName
+            );
+
         serviceModalContent.innerHTML = `
             <div class="service-modal-header">
                 <div class="service-modal-badges">
@@ -1937,6 +2113,16 @@ document.addEventListener("DOMContentLoaded", () => {
                     <i class="fa-solid fa-arrow-left"></i>
                     Back to ${provider.shortName || provider.name}
                 </button>
+                ${
+                    eqGroup
+                        ? `
+                            <button class="service-action-btn eq-modal-compare-btn" id="serviceCompareEquivalentsBtn">
+                                <i class="fa-solid fa-scale-balanced"></i>
+                                Compare Equivalent Services
+                            </button>
+                        `
+                        : ""
+                }
             </div>
         `;
 
@@ -1946,6 +2132,63 @@ document.addEventListener("DOMContentLoaded", () => {
                 serviceModal.classList.remove("show");
                 if (modal) {
                     modal.classList.add("show");
+                }
+            });
+        }
+
+        const compareEqBtn = serviceModalContent.querySelector("#serviceCompareEquivalentsBtn");
+        if (compareEqBtn && eqGroup) {
+            compareEqBtn.addEventListener("click", () => {
+                activeEquivalenceGroup = eqGroup.key;
+                const pId = String(provider.id);
+
+                if (!selectedProviders.includes(pId)) {
+                    if (selectedProviders.length >= 4) {
+                        selectedProviders.pop();
+                    }
+                    selectedProviders.push(pId);
+                }
+
+                if (selectedProviders.length < 2) {
+                    const mappedIds = Object.keys(eqGroup.mappings);
+                    const counterpart = mappedIds.find(id => id !== pId);
+                    if (counterpart && !selectedProviders.includes(counterpart)) {
+                        selectedProviders.push(counterpart);
+                    }
+                }
+
+                updateSelectionUI();
+
+                selectedProviders.forEach(id => {
+                    const cb = document.querySelector(`.provider-option input[value="${id}"]`);
+                    if (cb) {
+                        cb.checked = true;
+                        const opt = cb.closest(".provider-option");
+                        if (opt) {
+                            opt.classList.add("selected");
+                        }
+                    }
+                });
+
+                serviceModal.classList.remove("show");
+                if (modal) {
+                    modal.classList.remove("show");
+                }
+
+                const selected = providers.filter(p => selectedProviders.includes(String(p.id)));
+
+                if (comparisonResults) {
+                    comparisonResults.classList.remove("hidden");
+                }
+
+                renderComparison(selected);
+
+                const compSec =
+                    document.getElementById("serviceComparison") ||
+                    document.getElementById("comparisonResults");
+
+                if (compSec) {
+                    compSec.scrollIntoView({ behavior: "smooth", block: "start" });
                 }
             });
         }
