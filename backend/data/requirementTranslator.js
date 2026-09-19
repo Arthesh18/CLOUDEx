@@ -157,11 +157,71 @@ function extractCloudRequirements(message = "", conversation = []) {
         req.assumptions.push("Assumed dedicated GPU acceleration may be required based on AI/ML workload mention.");
     }
 
+    // Check if the current message contains an uncertainty signal (Feature #8)
+    const uncertaintySignal = detectUnknownIntent(message);
+    req.uncertaintySignal = uncertaintySignal;
+
+    // Feature #8: If user expressed uncertainty or delegation, formulate safe transparent assumptions
+    if (uncertaintySignal && (uncertaintySignal.type === "unknown" || uncertaintySignal.type === "delegation")) {
+        if (!req.budgetSensitivity) {
+            req.assumptions.push("Assumed cost-conscious priority (low cost / free-tier preference) as user expressed uncertainty on budget.");
+        }
+        if (!req.expectedScale) {
+            req.assumptions.push("Assumed small starting traffic (~few hundred visitors) as visitor scale was not specified.");
+        }
+        if (!req.simplicityPreference) {
+            req.assumptions.push("Assumed high priority on simplicity and managed setup as user requested best/simple defaults.");
+        }
+    }
+
     if (req.databaseNeeds === "Yes (Managed or Integrated Database)") {
         req.assumptions.push("Assumed a standard lightweight managed database (relational or document) without multi-region clustering.");
     }
 
     return req;
+}
+
+/**
+ * Detect user uncertainty, delegation, confusion, or "I don't know" signals (Feature #8)
+ */
+function detectUnknownIntent(message = "") {
+    if (typeof message !== "string") return null;
+    const lower = message.toLowerCase().trim();
+
+    // 1. Confusion / need plain-language explanation:
+    // "I don't understand", "what does that mean", "i don't know what that means", "explain", "confused"
+    if (lower.match(/\b(i don'?t understand|what does (?:that|this) mean|i don'?t know what (?:that|this) means?|confused|not sure what you mean|what is that|can you explain|what do you mean)\b/i)) {
+        return {
+            type: "confusion",
+            signal: "confusion",
+            label: "User needs explanation in plain language with simple choices",
+            requiresExplanation: true
+        };
+    }
+
+    // 2. Defer / delegate to Advisor:
+    // "You decide", "you choose", "can you choose", "whatever is best", "whatever you think", "up to you", "you pick"
+    if (lower.match(/\b(you decide|you choose|can you choose|whatever is best|whatever you (?:think|recommend|prefer|pick)|up to you|you pick|choose for me|decide for me|whatever works best|best option|what would you pick)\b/i)) {
+        return {
+            type: "delegation",
+            signal: "delegation",
+            label: "User delegates choice to Advisor; adopt safe default and disclose",
+            requiresAssumption: true
+        };
+    }
+
+    // 3. Direct uncertainty / unknown:
+    // "I don't know", "not sure", "no idea", "i have no idea", "dunno", "not certain", "haven't decided"
+    if (lower.match(/\b(i don'?t know|not sure|no idea|i have no idea|dunno|not certain|haven'?t decided|no clue|doesn'?t matter|don'?t care|whatever)\b/i)) {
+        return {
+            type: "unknown",
+            signal: "unknown",
+            label: "User does not know; adopt reasonable assumption, disclose it, do not repeat question",
+            requiresAssumption: true
+        };
+    }
+
+    return null;
 }
 
 function formatRequirementsForPrompt(req) {
@@ -184,6 +244,20 @@ function formatRequirementsForPrompt(req) {
         lines.push(`- Compliance / Privacy: ${req.complianceNeeds}`);
     }
 
+    if (req.uncertaintySignal) {
+        lines.push("");
+        lines.push("==================================================");
+        lines.push("CURRENT TURN UNCERTAINTY SIGNAL (FEATURE #8)");
+        lines.push("==================================================");
+        lines.push(`- Signal Type: ${req.uncertaintySignal.type.toUpperCase()}`);
+        lines.push(`- Guidance: ${req.uncertaintySignal.label}`);
+        if (req.uncertaintySignal.type === "confusion") {
+            lines.push("- DIRECTIVE: The user does not understand a prior term. Explain the concept in simple everyday language with an analogy, then provide 2 simple non-technical options. Do NOT repeat the technical question.");
+        } else {
+            lines.push("- DIRECTIVE: Do NOT repeat the question or loop. Acknowledge warmly, adopt a sensible default, clearly disclose the assumption, and advance the conversation.");
+        }
+    }
+
     if (Array.isArray(req.assumptions) && req.assumptions.length > 0) {
         lines.push("");
         lines.push("ACTIVE TRANSPARENT ASSUMPTIONS:");
@@ -198,5 +272,6 @@ function formatRequirementsForPrompt(req) {
 
 module.exports = {
     extractCloudRequirements,
+    detectUnknownIntent,
     formatRequirementsForPrompt
 };
