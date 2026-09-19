@@ -90,6 +90,9 @@ const {
     generatePersonalizedRecommendation,
     compareRecommendations
 } = require("./data/recommendationEngine");
+const {
+    getDecisionSystemGuide
+} = require("./data/decisionSystemGuide");
 
 dotenv.config();
 
@@ -578,6 +581,39 @@ app.post("/api/advisor/how-decided", (req, res) => {
         res.status(500).json({
             success: false,
             message: "Failed to generate decision pipeline explainability."
+        });
+    }
+});
+
+
+// ==================================================
+// UNDERSTANDING CLOUDEx DECISION SYSTEM GUIDE (FEATURE #19)
+// ==================================================
+
+app.get("/api/advisor/decision-guide", (req, res) => {
+    try {
+        const mode = req.query.mode || "beginner";
+        const guide = getDecisionSystemGuide(mode);
+        res.json(guide);
+    } catch (error) {
+        console.error("Decision guide API error:", error.message);
+        res.status(500).json({
+            success: false,
+            message: "Failed to load decision system guide."
+        });
+    }
+});
+
+app.post("/api/advisor/decision-guide", (req, res) => {
+    try {
+        const mode = (req.body && req.body.mode) || "beginner";
+        const guide = getDecisionSystemGuide(mode);
+        res.json(guide);
+    } catch (error) {
+        console.error("Decision guide API error:", error.message);
+        res.status(500).json({
+            success: false,
+            message: "Failed to load decision system guide."
         });
     }
 });

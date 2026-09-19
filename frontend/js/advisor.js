@@ -732,6 +732,12 @@ document.addEventListener("DOMContentLoaded", async () => {
                             I won't recommend a provider immediately — I'll ask you a few simple questions first so the recommendation makes sense for your budget and goals.
                         </p>
 
+                        <p style="margin-top: 8px; margin-bottom: 0;">
+                            <button type="button" class="decision-guide-trigger-btn" id="openDecisionGuideBtn">
+                                <i class="fa-solid fa-circle-question"></i> How does CLOUDEx make decisions?
+                            </button>
+                        </p>
+
                     </div>
 
                 </div>
@@ -739,6 +745,11 @@ document.addEventListener("DOMContentLoaded", async () => {
             </div>
 
         `;
+
+        const guideBtn = chatMessages.querySelector("#openDecisionGuideBtn");
+        if (guideBtn) {
+            guideBtn.addEventListener("click", () => openDecisionSystemGuide());
+        }
 
     }
 
@@ -1436,6 +1447,7 @@ document.addEventListener("DOMContentLoaded", async () => {
             isRecalculated = false;
             recalculatedAt = null;
 
+            closeDecisionSystemGuide();
 
             showWelcomeMessage();
 
@@ -2661,8 +2673,133 @@ document.addEventListener("DOMContentLoaded", async () => {
             getOriginalRecommendation: () => originalRecommendation,
             getUpdatedRecommendation: () => updatedRecommendation,
             getRecommendationComparison: () => currentRecommendationComparison,
-            getHowDecided: () => currentRecommendation ? currentRecommendation.howDecided : null
+            getHowDecided: () => currentRecommendation ? currentRecommendation.howDecided : null,
+            openDecisionSystemGuide: (mode = null) => openDecisionSystemGuide(mode),
+            closeDecisionSystemGuide: () => closeDecisionSystemGuide(),
+            getDecisionGuideData: (mode = null) => fetchDecisionGuide(mode || currentExperienceMode || "beginner")
         };
+    }
+
+    // =========================================================
+    // UNDERSTANDING CLOUDEx DECISION SYSTEM GUIDE (FEATURE #19)
+    // =========================================================
+
+    async function fetchDecisionGuide(mode = "beginner") {
+        try {
+            const apiBase = "http://localhost:5000";
+            const res = await fetch(`${apiBase}/api/advisor/decision-guide?mode=${mode}`);
+            if (res.ok) {
+                return await res.json();
+            }
+        } catch (e) {
+            console.warn("Could not fetch remote decision guide:", e);
+        }
+        return null;
+    }
+
+    function renderGuideContentHtml(guide) {
+        if (!guide || !Array.isArray(guide.sections)) {
+            return "";
+        }
+
+        const sectionsHtml = guide.sections.map((sec) => `
+            <div class="decision-guide-section-item">
+                <div class="decision-guide-section-head">
+                    <span class="decision-guide-section-num">${sec.number}</span>
+                    <i class="fa-solid ${sec.icon || 'fa-info-circle'}"></i>
+                    <span>${sec.title}</span>
+                </div>
+                <p class="decision-guide-section-text">${sec.text}</p>
+                ${sec.example ? `
+                    <div class="decision-guide-example-box">
+                        <i class="fa-solid fa-lightbulb"></i>
+                        <span><strong>Example:</strong> ${sec.example}</span>
+                    </div>
+                ` : ''}
+                ${sec.formula ? `
+                    <div class="decision-guide-formula-box">
+                        <i class="fa-solid fa-calculator"></i>
+                        <span>${sec.formula}</span>
+                    </div>
+                ` : ''}
+            </div>
+        `).join("");
+
+        const disc = guide.disclaimers || {};
+
+        return `
+            <div class="decision-guide-intro-banner">
+                <i class="fa-solid fa-graduation-cap"></i>
+                <span>${guide.subtitle || "Learn how CLOUDEx interprets requirements and calculates matches."}</span>
+            </div>
+            ${sectionsHtml}
+            <div class="decision-guide-disclaimer-box">
+                <i class="fa-solid fa-triangle-exclamation"></i>
+                <span><strong>Important Notice:</strong> ${disc.cspEvaluationDisclaimer || "Provider evaluation values are project-maintained decision-support data."}</span>
+            </div>
+        `;
+    }
+
+    async function openDecisionSystemGuide(mode = null) {
+        const targetMode = mode || currentExperienceMode || "beginner";
+        let overlay = document.getElementById("decisionGuideOverlay");
+
+        if (!overlay) {
+            overlay = document.createElement("div");
+            overlay.className = "decision-guide-modal-overlay";
+            overlay.id = "decisionGuideOverlay";
+            overlay.innerHTML = `
+                <div class="decision-guide-modal" role="dialog" aria-modal="true" aria-labelledby="decisionGuideTitle">
+                    <div class="decision-guide-modal-header">
+                        <div class="decision-guide-modal-title" id="decisionGuideTitle">
+                            <i class="fa-solid fa-circle-question"></i>
+                            <span>Understanding CLOUDEx's Decision System</span>
+                        </div>
+                        <button type="button" class="decision-guide-close-btn" id="decisionGuideCloseBtn" aria-label="Close Guide">
+                            &times;
+                        </button>
+                    </div>
+                    <div class="decision-guide-modal-body" id="decisionGuideBody">
+                        <div style="text-align: center; color: var(--text-muted); padding: 20px;">
+                            <i class="fa-solid fa-spinner fa-spin"></i> Loading guide...
+                        </div>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(overlay);
+
+            overlay.addEventListener("click", (e) => {
+                if (e.target === overlay) {
+                    closeDecisionSystemGuide();
+                }
+            });
+
+            const closeBtn = overlay.querySelector("#decisionGuideCloseBtn");
+            if (closeBtn) {
+                closeBtn.addEventListener("click", closeDecisionSystemGuide);
+            }
+
+            document.addEventListener("keydown", (e) => {
+                if (e.key === "Escape" && overlay.classList.contains("active")) {
+                    closeDecisionSystemGuide();
+                }
+            });
+        }
+
+        overlay.classList.add("active");
+
+        const bodyEl = overlay.querySelector("#decisionGuideBody");
+        const guideData = await fetchDecisionGuide(targetMode);
+        if (guideData && bodyEl) {
+            bodyEl.innerHTML = renderGuideContentHtml(guideData);
+        }
+    }
+
+    function closeDecisionSystemGuide() {
+        const overlay = document.getElementById("decisionGuideOverlay");
+        if (overlay) {
+            overlay.classList.remove("active");
+        }
     }
 
     // =========================================================
