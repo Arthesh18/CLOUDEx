@@ -900,6 +900,170 @@ body {
     line-height: 1.4;
 }
 
+/* Trade-off & Conflict Detection (Feature #12) */
+.tradeoff-notice-panel {
+    margin-top: 14px;
+    padding: 12px 14px;
+    background: rgba(18, 22, 34, 0.7);
+    border: 1px solid rgba(245, 158, 11, 0.25);
+    border-radius: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    animation: message-in 0.25s ease both;
+}
+
+.tradeoff-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid rgba(245, 158, 11, 0.15);
+}
+
+.tradeoff-header-title {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 0.8px;
+    color: #fbbf24;
+    text-transform: uppercase;
+}
+
+.tradeoff-count-pill {
+    padding: 2px 8px;
+    border-radius: 999px;
+    background: rgba(245, 158, 11, 0.2);
+    border: 1px solid rgba(245, 158, 11, 0.4);
+    color: #fef08a;
+    font-size: 10px;
+    font-weight: 700;
+}
+
+.tradeoff-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.tradeoff-card {
+    background: rgba(255, 255, 255, 0.03);
+    border-radius: 9px;
+    padding: 10px 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    border-left: 3px solid #3b82f6;
+    transition: background 0.2s ease;
+}
+
+.tradeoff-card.severity-high {
+    border-left-color: #f59e0b;
+    background: rgba(245, 158, 11, 0.04);
+}
+
+.tradeoff-card.severity-moderate {
+    border-left-color: #6366f1;
+    background: rgba(99, 102, 241, 0.04);
+}
+
+.tradeoff-title-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+}
+
+.tradeoff-card-title {
+    font-size: 12px;
+    font-weight: 700;
+    color: #f3f4f6;
+}
+
+.tradeoff-severity-pill {
+    font-size: 9.5px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    padding: 2px 6px;
+    border-radius: 4px;
+}
+
+.tradeoff-severity-pill.high {
+    background: rgba(245, 158, 11, 0.25);
+    color: #fef08a;
+    border: 1px solid rgba(245, 158, 11, 0.4);
+}
+
+.tradeoff-severity-pill.moderate {
+    background: rgba(99, 102, 241, 0.25);
+    color: #c7d2fe;
+    border: 1px solid rgba(99, 102, 241, 0.4);
+}
+
+.tradeoff-dimensions-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 10.5px;
+    color: var(--text-muted);
+}
+
+.tradeoff-dim-pill {
+    padding: 1px 6px;
+    border-radius: 4px;
+    background: rgba(255, 255, 255, 0.07);
+    color: #e2e8f0;
+    font-weight: 600;
+}
+
+.tradeoff-explanation {
+    font-size: 11.5px;
+    line-height: 1.45;
+    color: #cbd5e1;
+    margin: 0;
+}
+
+.tradeoff-hint {
+    display: flex;
+    align-items: flex-start;
+    gap: 6px;
+    padding: 6px 8px;
+    border-radius: 6px;
+    background: rgba(56, 189, 248, 0.08);
+    border: 1px solid rgba(56, 189, 248, 0.18);
+    color: #bae6fd;
+    font-size: 11px;
+    line-height: 1.4;
+}
+
+.tradeoff-hint i {
+    color: #38bdf8;
+    margin-top: 2px;
+    font-size: 10px;
+    flex-shrink: 0;
+}
+
+.tradeoff-balanced-notice {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 12px;
+    border-radius: 8px;
+    background: rgba(53, 217, 154, 0.06);
+    border: 1px solid rgba(53, 217, 154, 0.18);
+    color: #a7f3d0;
+    font-size: 11.5px;
+}
+
+.tradeoff-balanced-notice i {
+    color: #35d99a;
+    font-size: 12px;
+}
+
 
 /* =========================================================
    TYPING INDICATOR

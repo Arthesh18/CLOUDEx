@@ -77,6 +77,9 @@ const {
     generateInitialFuzzyValues,
     DIMENSION_METADATA
 } = require("./data/fuzzyPreferences");
+const {
+    detectTradeoffs
+} = require("./data/tradeoffDetection");
 
 dotenv.config();
 
@@ -384,6 +387,28 @@ app.get("/api/pricing/scenario", (req, res) => {
         res.status(500).json({
             success: false,
             message: "Could not calculate scenario cost estimates."
+        });
+    }
+});
+
+
+// ==================================================
+// TRADE-OFF & CONFLICT DETECTION (FEATURE #12)
+// ==================================================
+
+app.post("/api/advisor/tradeoffs", (req, res) => {
+    try {
+        const { preferences, experienceMode = "beginner" } = req.body;
+        const analysis = detectTradeoffs(preferences || {}, experienceMode);
+        res.json({
+            success: true,
+            ...analysis
+        });
+    } catch (error) {
+        console.error("Tradeoff detection API error:", error.message);
+        res.status(500).json({
+            success: false,
+            message: "Failed to evaluate preference trade-offs."
         });
     }
 });
@@ -978,6 +1003,17 @@ if (userId && chatId) {
 
 
             // ==================================================
+            // TRADE-OFF & CONFLICT DETECTION (FEATURE #12)
+            // ==================================================
+
+            const tradeoffAnalysis =
+                detectTradeoffs(
+                    fuzzyPreferences,
+                    experienceMode
+                );
+
+
+            // ==================================================
             // RESPONSE
             // ==================================================
 
@@ -996,6 +1032,8 @@ if (userId && chatId) {
                 experienceMode,
 
                 fuzzyPreferences,
+
+                tradeoffs: tradeoffAnalysis,
 
                 isRecalculatedPreferences: Boolean(isRecalculatedPreferences)
 
