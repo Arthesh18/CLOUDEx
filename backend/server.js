@@ -163,7 +163,7 @@ app.get(
 // ==================================================
 
 app.get(
-    "/api/providers/:id",
+    ["/api/providers/:id", "/api/cloud/providers/:id"],
     (req, res) => {
 
         try {
@@ -214,7 +214,7 @@ app.get(
 // ==================================================
 
 app.get(
-    "/api/services",
+    ["/api/services", "/api/cloud/services"],
     (req, res) => {
 
         try {

@@ -48,6 +48,15 @@ document.addEventListener("DOMContentLoaded", () => {
     const modalClose =
         document.getElementById("modalClose");
 
+    const serviceModal =
+        document.getElementById("serviceModal");
+
+    const serviceModalContent =
+        document.getElementById("serviceModalContent");
+
+    const serviceModalClose =
+        document.getElementById("serviceModalClose");
+
 
     /* =================================================
        DATA
@@ -90,6 +99,24 @@ document.addEventListener("DOMContentLoaded", () => {
             renderProviders();
 
             renderProviderSelector();
+
+            // Handle URL query parameter ?provider=<id>
+            const urlParams = new URLSearchParams(window.location.search);
+            const providerParam = urlParams.get("provider");
+            if (providerParam) {
+                const targetProvider = providers.find(
+                    p => String(p.id).toLowerCase() === providerParam.toLowerCase()
+                );
+                if (targetProvider) {
+                    setTimeout(() => {
+                        const card = document.querySelector(`[data-provider="${targetProvider.id}"]`);
+                        if (card) {
+                            card.scrollIntoView({ behavior: "smooth", block: "center" });
+                        }
+                        openProviderModal(targetProvider);
+                    }, 150);
+                }
+            }
 
         } catch (error) {
 
@@ -154,6 +181,11 @@ document.addEventListener("DOMContentLoaded", () => {
                         provider.name || ""
                     ).toLowerCase();
 
+                const shortName =
+                    String(
+                        provider.shortName || ""
+                    ).toLowerCase();
+
                 const description =
                     String(
                         provider.description || ""
@@ -164,9 +196,30 @@ document.addEventListener("DOMContentLoaded", () => {
                         ? provider.categories
                         : [];
 
+                // Check services within this provider
+                let matchesService = false;
+                if (searchTerm && provider.services && typeof provider.services === "object") {
+                    const allServices = Object.values(provider.services).flat();
+                    matchesService = allServices.some(s => {
+                        const sName = String(s.name || "").toLowerCase();
+                        const sType = String(s.type || "").toLowerCase();
+                        const sDesc = String(s.description || "").toLowerCase();
+                        const sBest = String(s.bestFor || "").toLowerCase();
+                        return (
+                            sName.includes(searchTerm) ||
+                            sType.includes(searchTerm) ||
+                            sDesc.includes(searchTerm) ||
+                            sBest.includes(searchTerm)
+                        );
+                    });
+                }
+
                 const matchesSearch =
+                    !searchTerm ||
                     name.includes(searchTerm) ||
-                    description.includes(searchTerm);
+                    shortName.includes(searchTerm) ||
+                    description.includes(searchTerm) ||
+                    matchesService;
 
                 const matchesFilter =
                     currentFilter === "all" ||
@@ -279,24 +332,13 @@ document.addEventListener("DOMContentLoaded", () => {
 
 
         return `
-            <article class="provider-card">
+            <article class="provider-card" data-provider="${provider.id}">
 
                 <div class="provider-top">
 
                     <div class="provider-icon">
                         <i class="fa-solid ${icon}"></i>
                     </div>
-
-                    ${
-                        provider.rating
-                            ? `
-                                <div class="provider-rating">
-                                    <i class="fa-solid fa-star"></i>
-                                    ${provider.rating}
-                                </div>
-                            `
-                            : ""
-                    }
 
                 </div>
 
@@ -1463,268 +1505,488 @@ document.addEventListener("DOMContentLoaded", () => {
 
 
     /* =================================================
-       PROVIDER DETAILS MODAL
+       ADD PROVIDER TO COMPARISON
     ================================================= */
 
-    function openProviderModal(provider) {
+    function addProviderToComparison(providerId) {
 
-        if (
-            !modal ||
-            !modalContent
-        ) {
+        const id = String(providerId);
+
+        if (selectedProviders.length >= 4 && !selectedProviders.includes(id)) {
+
+            alert("You can compare up to 4 providers.");
             return;
+
         }
 
+        if (!selectedProviders.includes(id)) {
 
-        const services =
-            getServiceCategories(
-                provider
+            selectedProviders.push(id);
+
+        }
+
+        const checkbox =
+            document.querySelector(
+                `.provider-option input[value="${id}"]`
             );
 
+        if (checkbox) {
 
-        let serviceList = [];
+            checkbox.checked = true;
 
+            const option =
+                checkbox.closest(".provider-option");
 
-        /* ---------------------------------------------
-           NEW SERVICE STRUCTURE
-        --------------------------------------------- */
+            if (option) {
 
-        if (
-            services &&
-            typeof services === "object" &&
-            !Array.isArray(services)
-        ) {
+                option.classList.add("selected");
 
-            Object.keys(services)
-                .forEach(category => {
+            }
 
-                    const categoryServices =
-                        Array.isArray(
-                            services[category]
-                        )
-                            ? services[category]
-                            : [];
+        }
 
+        updateSelectionUI();
 
-                    categoryServices.forEach(
-                        service => {
+        if (modal) {
 
-                            serviceList.push(
-                                getServiceName(
-                                    service
-                                )
-                            );
+            modal.classList.remove("show");
 
-                        }
-                    );
+        }
 
+        if (serviceModal) {
+
+            serviceModal.classList.remove("show");
+
+        }
+
+        if (selectedProviders.length >= 2) {
+
+            const selected =
+                providers.filter(p =>
+                    selectedProviders.includes(String(p.id))
+                );
+
+            if (comparisonResults) {
+
+                comparisonResults.classList.remove("hidden");
+
+            }
+
+            renderComparison(selected);
+
+            if (comparisonResults) {
+
+                comparisonResults.scrollIntoView({
+                    behavior: "smooth",
+                    block: "start"
                 });
 
-        }
+            }
 
+        } else {
 
-        /* ---------------------------------------------
-           OLD SERVICE STRUCTURE
-        --------------------------------------------- */
+            const compSection =
+                document.getElementById("comparisonSection");
 
-        if (
-            serviceList.length === 0 &&
-            Array.isArray(provider.services)
-        ) {
+            if (compSection) {
 
-            serviceList =
-                provider.services;
+                compSection.scrollIntoView({
+                    behavior: "smooth",
+                    block: "start"
+                });
 
-        }
-
-
-        const serviceHTML =
-            serviceList.length
-                ? serviceList
-                    .map(
-                        service => `
-
-                            <span
-                                class="modal-service"
-                            >
-                                ${service}
-                            </span>
-
-                        `
-                    )
-                    .join("")
-                : `
-
-                    <span
-                        class="modal-service"
-                    >
-                        Information coming soon
-                    </span>
-
-                `;
-
-
-        let strengthsHTML =
-            "";
-
-
-        if (
-            Array.isArray(
-                provider.strengths
-            ) &&
-            provider.strengths.length > 0
-        ) {
-
-            strengthsHTML = `
-
-                <div class="modal-section">
-
-                    <h3>
-                        Why consider it?
-                    </h3>
-
-
-                    <div class="modal-points">
-
-                        ${
-                            provider.strengths
-                                .map(
-                                    strength => `
-
-                                        <div
-                                            class="modal-point"
-                                        >
-
-                                            <strong>
-                                                ${
-                                                    strength.title ||
-                                                    strength
-                                                }
-                                            </strong>
-
-                                            
-                                            <span>
-                                                ${
-                                                    strength.description ||
-                                                    ""
-                                                }
-                                            </span>
-
-                                        </div>
-
-                                    `
-                                )
-                                .join("")
-                        }
-
-                    </div>
-
-                </div>
-
-            `;
+            }
 
         }
-
-
-        modalContent.innerHTML = `
-
-            <div class="modal-header">
-
-                <div
-                    class="modal-provider-icon"
-                >
-
-                    <i
-                        class="fa-solid ${
-                            provider.icon ||
-                            "fa-cloud"
-                        }"
-                    ></i>
-
-                </div>
-
-
-                <h2>
-                    ${
-                        provider.name ||
-                        "Cloud Provider"
-                    }
-                </h2>
-
-
-                <p>
-                    ${
-                        provider.description ||
-                        ""
-                    }
-                </p>
-
-            </div>
-
-
-            <div class="modal-section">
-
-                <h3>
-                    Popular services
-                </h3>
-
-
-                <div class="modal-list">
-
-                    ${serviceHTML}
-
-                </div>
-
-            </div>
-
-
-            ${strengthsHTML}
-
-        `;
-
-
-        modal.classList.add("show");
 
     }
 
 
     /* =================================================
-       CLOSE MODAL
+       PROVIDER DETAILS MODAL
     ================================================= */
 
-    if (
-        modalClose &&
-        modal
-    ) {
+    function openProviderModal(provider) {
 
-        modalClose.addEventListener(
-            "click",
-            () => {
+        if (!modal || !modalContent) {
+            return;
+        }
 
-                modal.classList.remove(
-                    "show"
-                );
+        // 1. Metric Scores
+        const metricDefs = [
+            { key: "beginnerFriendly", label: "Beginner Friendly" },
+            { key: "affordability", label: "Affordability / Cost" },
+            { key: "scalability", label: "Scalability" },
+            { key: "enterprise", label: "Enterprise Readiness" },
+            { key: "aiMl", label: "AI & ML Capabilities" },
+            { key: "globalReach", label: "Global Reach" }
+        ];
 
+        const scoresHTML = metricDefs.map(m => {
+            const val = typeof provider[m.key] === "number" ? provider[m.key] : 0;
+            const pct = Math.min(Math.max(val * 10, 0), 100);
+            return `
+                <div class="modal-score-item">
+                    <div class="modal-score-header">
+                        <span class="modal-score-label">${m.label}</span>
+                        <span class="modal-score-val">${val} <small>/ 10</small></span>
+                    </div>
+                    <div class="modal-score-track">
+                        <div class="modal-score-fill" style="width: ${pct}%"></div>
+                    </div>
+                </div>
+            `;
+        }).join("");
+
+        // 2. Core Platform Capabilities
+        const capabilities = provider.capabilities || {};
+        const capKeys = [
+            { key: "security", label: "Security & IAM", icon: "fa-shield-halved" },
+            { key: "reliability", label: "Reliability & HA", icon: "fa-server" },
+            { key: "performance", label: "Performance", icon: "fa-bolt" },
+            { key: "compliance", label: "Compliance & Governance", icon: "fa-certificate" },
+            { key: "support", label: "Support & SLA", icon: "fa-headset" }
+        ];
+
+        const capabilitiesHTML = capKeys.map(c => {
+            const desc = capabilities[c.key] || "High-grade cloud platform capability.";
+            return `
+                <div class="modal-capability-card">
+                    <div class="capability-icon">
+                        <i class="fa-solid ${c.icon}"></i>
+                    </div>
+                    <div class="capability-content">
+                        <h4>${c.label}</h4>
+                        <p>${desc}</p>
+                    </div>
+                </div>
+            `;
+        }).join("");
+
+        // 3. Strengths & Trade-offs
+        const strengths = Array.isArray(provider.strengths) ? provider.strengths : [];
+        const weaknesses = Array.isArray(provider.weaknesses) ? provider.weaknesses : [];
+
+        const strengthsHTML = strengths.map(s => {
+            const title = typeof s === "object" ? (s.title || "") : s;
+            const desc = typeof s === "object" ? (s.description || "") : "";
+            return `
+                <li class="modal-point-pro">
+                    <i class="fa-solid fa-circle-check"></i>
+                    <div>
+                        <strong>${title}</strong>
+                        ${desc ? `<span>${desc}</span>` : ""}
+                    </div>
+                </li>
+            `;
+        }).join("");
+
+        const weaknessesHTML = weaknesses.map(w => {
+            const title = typeof w === "object" ? (w.title || "") : w;
+            const desc = typeof w === "object" ? (w.description || "") : "";
+            return `
+                <li class="modal-point-con">
+                    <i class="fa-solid fa-circle-exclamation"></i>
+                    <div>
+                        <strong>${title}</strong>
+                        ${desc ? `<span>${desc}</span>` : ""}
+                    </div>
+                </li>
+            `;
+        }).join("");
+
+        // 4. Categorized Services
+        const serviceCategoryDefs = [
+            { key: "compute", title: "Compute", icon: "fa-server" },
+            { key: "storage", title: "Storage", icon: "fa-hard-drive" },
+            { key: "database", title: "Database", icon: "fa-database" },
+            { key: "ai", title: "AI / ML", icon: "fa-brain" }
+        ];
+
+        const providerServices = provider.services || {};
+
+        let servicesSectionsHTML = "";
+        serviceCategoryDefs.forEach(cat => {
+            const svcList = Array.isArray(providerServices[cat.key]) ? providerServices[cat.key] : [];
+            if (svcList.length > 0) {
+                const cardsHTML = svcList.map((svc, idx) => {
+                    const sName = getServiceName(svc);
+                    const sType = getServiceType(svc);
+                    const sPricing = getServicePricing(svc);
+                    const sDesc = svc.description || svc.bestFor || "Click to inspect service capabilities and trade-offs.";
+                    return `
+                        <div class="modal-service-card" data-cat="${cat.key}" data-idx="${idx}">
+                            <div class="service-card-top">
+                                <h4>${sName}</h4>
+                                ${sType ? `<span class="service-type-badge">${sType}</span>` : ""}
+                            </div>
+                            <p class="service-card-desc">${sDesc}</p>
+                            <div class="service-card-bottom">
+                                ${sPricing ? `<span class="service-pricing-pill"><i class="fa-solid fa-tag"></i> ${sPricing}</span>` : "<span></span>"}
+                                <span class="service-details-link">Details <i class="fa-solid fa-chevron-right"></i></span>
+                            </div>
+                        </div>
+                    `;
+                }).join("");
+
+                servicesSectionsHTML += `
+                    <div class="modal-service-group">
+                        <div class="modal-service-group-title">
+                            <i class="fa-solid ${cat.icon}"></i>
+                            <h4>${cat.title}</h4>
+                            <span class="group-count">${svcList.length} service${svcList.length !== 1 ? "s" : ""}</span>
+                        </div>
+                        <div class="modal-service-cards-grid">
+                            ${cardsHTML}
+                        </div>
+                    </div>
+                `;
             }
-        );
+        });
 
+        if (!servicesSectionsHTML) {
+            servicesSectionsHTML = `<p class="modal-empty-notice">No service details cataloged yet.</p>`;
+        }
 
-        modal.addEventListener(
-            "click",
-            event => {
+        modalContent.innerHTML = `
+            <div class="modal-header">
+                <div class="modal-provider-icon">
+                    <i class="fa-solid ${provider.icon || "fa-cloud"}"></i>
+                </div>
+                <h2>${provider.name || "Cloud Provider"}</h2>
+                ${provider.shortName ? `<span class="modal-shortname-badge">${provider.shortName}</span>` : ""}
+                <p class="modal-intro">${provider.description || ""}</p>
+                
+                <div class="modal-top-actions">
+                    <button class="modal-action-btn modal-compare-btn" id="modalCompareActionBtn">
+                        <i class="fa-solid fa-scale-balanced"></i>
+                        Compare this Provider
+                    </button>
+                    <a href="advisor.html" class="modal-action-btn modal-advisor-btn">
+                        <i class="fa-solid fa-robot"></i>
+                        Ask AI Advisor
+                    </a>
+                </div>
+            </div>
 
-                if (
-                    event.target === modal
-                ) {
+            <!-- 6 BENCHMARK SCORES -->
+            <div class="modal-section">
+                <div class="modal-section-title">
+                    <i class="fa-solid fa-chart-simple"></i>
+                    <h3>Core Benchmark Metrics</h3>
+                </div>
+                <div class="modal-scores-grid">
+                    ${scoresHTML}
+                </div>
+            </div>
 
-                    modal.classList.remove(
-                        "show"
-                    );
+            <!-- CORE CAPABILITIES -->
+            <div class="modal-section">
+                <div class="modal-section-title">
+                    <i class="fa-solid fa-layer-group"></i>
+                    <h3>Platform Capabilities</h3>
+                </div>
+                <div class="modal-capabilities-grid">
+                    ${capabilitiesHTML}
+                </div>
+            </div>
 
+            <!-- STRENGTHS & TRADEOFFS -->
+            <div class="modal-section">
+                <div class="modal-section-title">
+                    <i class="fa-solid fa-arrows-split-up-and-left"></i>
+                    <h3>Key Strengths & Considerations</h3>
+                </div>
+                <div class="modal-pros-cons-grid">
+                    <div class="modal-pro-column">
+                        <h4><i class="fa-solid fa-thumbs-up"></i> Key Strengths</h4>
+                        <ul class="modal-checklist">
+                            ${strengthsHTML || "<li>Solid cloud foundation</li>"}
+                        </ul>
+                    </div>
+                    <div class="modal-con-column">
+                        <h4><i class="fa-solid fa-triangle-exclamation"></i> Considerations & Trade-offs</h4>
+                        <ul class="modal-checklist">
+                            ${weaknessesHTML || "<li>Standard architectural trade-offs</li>"}
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <!-- CATEGORIZED SERVICES -->
+            <div class="modal-section">
+                <div class="modal-section-title">
+                    <i class="fa-solid fa-cubes"></i>
+                    <h3>Cataloged Services</h3>
+                </div>
+                <p class="modal-section-subtitle">Click on any service card below to view detailed specifications, best use cases, and limitations.</p>
+                <div class="modal-service-categories">
+                    ${servicesSectionsHTML}
+                </div>
+            </div>
+        `;
+
+        // Wire "Compare this Provider" button
+        const compareActionBtn = modalContent.querySelector("#modalCompareActionBtn");
+        if (compareActionBtn) {
+            compareActionBtn.addEventListener("click", () => {
+                addProviderToComparison(provider.id);
+            });
+        }
+
+        // Wire clickable service cards
+        const serviceCards = modalContent.querySelectorAll(".modal-service-card");
+        serviceCards.forEach(card => {
+            card.addEventListener("click", () => {
+                const catKey = card.dataset.cat;
+                const idx = parseInt(card.dataset.idx, 10);
+                const catDef = serviceCategoryDefs.find(c => c.key === catKey);
+                const svc = providerServices[catKey] && providerServices[catKey][idx];
+                if (svc) {
+                    openServiceModal(svc, provider, catDef ? catDef.title : "Service");
                 }
+            });
+        });
 
+        modal.classList.add("show");
+    }
+
+
+    /* =================================================
+       SERVICE DETAILS MODAL
+    ================================================= */
+
+    function openServiceModal(service, provider, categoryTitle) {
+
+        if (!serviceModal || !serviceModalContent) {
+            return;
+        }
+
+        const sName = getServiceName(service);
+        const sType = getServiceType(service);
+        const sPricing = getServicePricing(service);
+        const sDesc = service.description || "Detailed cloud service specification.";
+        const sBestFor = service.bestFor || "Enterprise and developer workloads requiring managed cloud capabilities.";
+        const advantages = Array.isArray(service.advantages) && service.advantages.length > 0
+            ? service.advantages
+            : ["Native integration with " + (provider.name || "cloud platform"), "Enterprise security and high availability"];
+        const limitations = Array.isArray(service.limitations) && service.limitations.length > 0
+            ? service.limitations
+            : ["Usage costs scale with resource allocation and data transfer"];
+
+        const advantagesHTML = advantages.map(adv => `
+            <li class="service-adv-item">
+                <i class="fa-solid fa-check"></i>
+                <span>${adv}</span>
+            </li>
+        `).join("");
+
+        const limitationsHTML = limitations.map(lim => `
+            <li class="service-lim-item">
+                <i class="fa-solid fa-triangle-exclamation"></i>
+                <span>${lim}</span>
+            </li>
+        `).join("");
+
+        serviceModalContent.innerHTML = `
+            <div class="service-modal-header">
+                <div class="service-modal-badges">
+                    <span class="service-provider-badge">
+                        <i class="fa-solid ${provider.icon || "fa-cloud"}"></i>
+                        ${provider.shortName || provider.name}
+                    </span>
+                    <span class="service-category-badge">${categoryTitle}</span>
+                </div>
+                <h2>${sName}</h2>
+                <div class="service-meta-strip">
+                    ${sType ? `<span class="service-type-tag"><i class="fa-solid fa-layer-group"></i> ${sType}</span>` : ""}
+                    ${sPricing ? `<span class="service-pricing-tag"><i class="fa-solid fa-tag"></i> ${sPricing}</span>` : ""}
+                </div>
+            </div>
+
+            <div class="service-modal-body">
+                <div class="service-section">
+                    <h4><i class="fa-solid fa-circle-info"></i> Service Overview</h4>
+                    <p class="service-overview-text">${sDesc}</p>
+                </div>
+
+                <div class="service-section">
+                    <h4><i class="fa-solid fa-bullseye"></i> Best For</h4>
+                    <div class="service-best-for-box">
+                        <p>${sBestFor}</p>
+                    </div>
+                </div>
+
+                <div class="service-section">
+                    <h4><i class="fa-solid fa-circle-check"></i> Key Advantages</h4>
+                    <ul class="service-advantages-list">
+                        ${advantagesHTML}
+                    </ul>
+                </div>
+
+                <div class="service-section">
+                    <h4><i class="fa-solid fa-triangle-exclamation"></i> Limitations & Considerations</h4>
+                    <ul class="service-limitations-list">
+                        ${limitationsHTML}
+                    </ul>
+                </div>
+            </div>
+
+            <div class="service-modal-footer">
+                <button class="service-back-btn" id="serviceBackBtn">
+                    <i class="fa-solid fa-arrow-left"></i>
+                    Back to ${provider.shortName || provider.name}
+                </button>
+            </div>
+        `;
+
+        const backBtn = serviceModalContent.querySelector("#serviceBackBtn");
+        if (backBtn) {
+            backBtn.addEventListener("click", () => {
+                serviceModal.classList.remove("show");
+                if (modal) {
+                    modal.classList.add("show");
+                }
+            });
+        }
+
+        if (modal) {
+            modal.classList.remove("show");
+        }
+
+        serviceModal.classList.add("show");
+    }
+
+
+    /* =================================================
+       CLOSE MODALS
+    ================================================= */
+
+    if (modalClose && modal) {
+
+        modalClose.addEventListener("click", () => {
+            modal.classList.remove("show");
+        });
+
+        modal.addEventListener("click", event => {
+            if (event.target === modal) {
+                modal.classList.remove("show");
             }
-        );
+        });
+
+    }
+
+    if (serviceModalClose && serviceModal) {
+
+        serviceModalClose.addEventListener("click", () => {
+            serviceModal.classList.remove("show");
+        });
+
+        serviceModal.addEventListener("click", event => {
+            if (event.target === serviceModal) {
+                serviceModal.classList.remove("show");
+            }
+        });
 
     }
 
@@ -1733,23 +1995,27 @@ document.addEventListener("DOMContentLoaded", () => {
        ESCAPE KEY
     ================================================= */
 
-    document.addEventListener(
-        "keydown",
-        event => {
+    document.addEventListener("keydown", event => {
 
-            if (
-                event.key === "Escape" &&
-                modal
-            ) {
+        if (event.key === "Escape") {
 
-                modal.classList.remove(
-                    "show"
-                );
+            if (serviceModal && serviceModal.classList.contains("show")) {
+
+                serviceModal.classList.remove("show");
+
+                if (modal) {
+                    modal.classList.add("show");
+                }
+
+            } else if (modal && modal.classList.contains("show")) {
+
+                modal.classList.remove("show");
 
             }
 
         }
-    );
+
+    });
 
 
     /* =================================================
@@ -1849,6 +2115,13 @@ document.addEventListener("DOMContentLoaded", () => {
                     behavior: "smooth",
                     block: "center"
                 });
+
+                const viewBtn =
+                    card.querySelector(".view-provider");
+
+                if (viewBtn) {
+                    viewBtn.click();
+                }
 
             }
 
