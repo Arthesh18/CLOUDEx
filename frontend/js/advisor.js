@@ -1430,6 +1430,9 @@ document.addEventListener("DOMContentLoaded", async () => {
             currentFuzzyRequirements = null;
             currentMcdmResult = null;
             currentRecommendation = null;
+            originalRecommendation = null;
+            updatedRecommendation = null;
+            currentRecommendationComparison = null;
             isRecalculated = false;
             recalculatedAt = null;
 
@@ -1589,6 +1592,9 @@ document.addEventListener("DOMContentLoaded", async () => {
     let currentFuzzyRequirements = null;
     let currentMcdmResult = null;
     let currentRecommendation = null;
+    let originalRecommendation = null;
+    let updatedRecommendation = null;
+    let currentRecommendationComparison = null;
 
     const PREFERENCE_DIMENSION_CONFIG = [
         {
@@ -2031,6 +2037,140 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
 
     // =========================================================
+    // ORIGINAL VS UPDATED RECOMMENDATION (FEATURE #17)
+    // =========================================================
+
+    function renderRecommendationComparisonHtml(comparison, mode = "beginner") {
+        if (!comparison) return "";
+
+        if (!comparison.changed) {
+            return `
+                <div class="rec-comparison-panel" id="recComparisonPanel">
+                    <div class="rec-comp-header">
+                        <div class="rec-comp-tag">
+                            <i class="fa-solid fa-code-compare"></i>
+                            <span>Original vs Updated Recommendation</span>
+                        </div>
+                        <span class="rec-comp-status-pill no-change">
+                            <i class="fa-solid fa-minus"></i> No Changes
+                        </span>
+                    </div>
+                    <p class="rec-comp-explanation">${comparison.explanation}</p>
+                </div>
+            `;
+        }
+
+        const orig = comparison.original || {};
+        const upd = comparison.updated || {};
+        const changed = comparison.recommendationChanged;
+        const statusClass = changed ? "changed" : "maintained";
+        const statusLabel = changed ? "Recommendation Changed" : "Recommendation Maintained";
+        const statusIcon = changed ? "fa-arrows-rotate" : "fa-check";
+
+        let movementHtml = "";
+        if (comparison.rankMovement && changed) {
+            const origMov = comparison.rankMovement.originalWinner;
+            const updMov = comparison.rankMovement.updatedWinner;
+
+            movementHtml = `
+                <div class="rec-comp-movement-box">
+                    <div class="rec-comp-movement-item">
+                        <i class="fa-solid fa-arrow-right"></i>
+                        <span><strong>${origMov.providerName}:</strong> Rank #${origMov.originalRank} (${origMov.originalScore}%) → Rank #${origMov.updatedRank} (${origMov.updatedScore}%)</span>
+                    </div>
+                    <div class="rec-comp-movement-item">
+                        <i class="fa-solid fa-arrow-right"></i>
+                        <span><strong>${updMov.providerName}:</strong> Rank #${updMov.originalRank} (${updMov.originalScore}%) → Rank #${updMov.updatedRank} (${updMov.updatedScore}%)</span>
+                    </div>
+                </div>
+            `;
+        }
+
+        let deltasHtml = "";
+        if (Array.isArray(comparison.preferenceChanges) && comparison.preferenceChanges.length > 0) {
+            deltasHtml = `
+                <div class="rec-comp-section">
+                    <div class="rec-comp-section-title">
+                        <i class="fa-solid fa-sliders"></i>
+                        <span>What Changed in Your Priorities</span>
+                    </div>
+                    <div class="rec-comp-deltas-list">
+                        ${comparison.preferenceChanges.map((p) => `
+                            <span class="rec-comp-delta-badge ${p.direction}">
+                                <i class="fa-solid ${p.direction === "increased" ? "fa-arrow-up" : "fa-arrow-down"}"></i>
+                                ${p.summary}
+                            </span>
+                        `).join("")}
+                    </div>
+                </div>
+            `;
+        }
+
+        return `
+            <div class="rec-comparison-panel" id="recComparisonPanel">
+                <div class="rec-comp-header">
+                    <div class="rec-comp-tag">
+                        <i class="fa-solid fa-code-compare"></i>
+                        <span>Original vs Updated Recommendation</span>
+                    </div>
+                    <span class="rec-comp-status-pill ${statusClass}">
+                        <i class="fa-solid ${statusIcon}"></i> ${statusLabel}
+                    </span>
+                </div>
+                <div class="rec-comp-cards-row">
+                    <div class="rec-comp-provider-card original-card">
+                        <span class="rec-comp-card-label">Original Priorities</span>
+                        <span class="rec-comp-card-provider">${orig.provider ? orig.provider.name : "Initial Match"}</span>
+                        <div class="rec-comp-card-metrics">
+                            <span>Rank #${orig.rank || 1}</span>
+                            <span>•</span>
+                            <strong>${orig.matchPercentage || Math.round((orig.score || 0) * 100)}% Fit</strong>
+                        </div>
+                    </div>
+                    <div class="rec-comp-arrow-divider">
+                        <i class="fa-solid fa-arrow-right"></i>
+                    </div>
+                    <div class="rec-comp-provider-card updated-card">
+                        <span class="rec-comp-card-label">Your Updated Priorities</span>
+                        <span class="rec-comp-card-provider">${upd.provider ? upd.provider.name : "Updated Match"}</span>
+                        <div class="rec-comp-card-metrics">
+                            <span>Rank #${upd.rank || 1}</span>
+                            <span>•</span>
+                            <strong>${upd.matchPercentage || Math.round((upd.score || 0) * 100)}% Fit</strong>
+                        </div>
+                    </div>
+                </div>
+                ${movementHtml}
+                ${deltasHtml}
+                <div class="rec-comp-section">
+                    <div class="rec-comp-section-title">
+                        <i class="fa-solid fa-circle-info"></i>
+                        <span>Result</span>
+                    </div>
+                    <p class="rec-comp-explanation">${comparison.explanation}</p>
+                </div>
+            </div>
+        `;
+    }
+
+    function updateRecommendationComparisonDisplay(container, compData, mode) {
+        if (!container) return;
+        const targetElements = container.querySelectorAll
+            ? container.querySelectorAll("#recComparisonContainer")
+            : document.querySelectorAll("#recComparisonContainer");
+
+        targetElements.forEach((slot) => {
+            if (!compData) {
+                slot.style.display = "none";
+                slot.innerHTML = "";
+            } else {
+                slot.innerHTML = renderRecommendationComparisonHtml(compData, mode || currentExperienceMode);
+                slot.style.display = "block";
+            }
+        });
+    }
+
+    // =========================================================
     // HOW CLOUDEx UNDERSTANDS YOUR REQUIREMENTS (FEATURE #14)
     // =========================================================
 
@@ -2196,6 +2336,9 @@ document.addEventListener("DOMContentLoaded", async () => {
                 <div class="comparison-container" id="comparisonContainer" style="${(isRecalculated && updatedPreferences) ? "display: block;" : "display: none;"}">
                     ${comparisonHtml}
                 </div>
+                <div class="rec-comparison-container" id="recComparisonContainer" style="${(isRecalculated && currentRecommendationComparison) ? "display: block;" : "display: none;"}">
+                    ${currentRecommendationComparison ? renderRecommendationComparisonHtml(currentRecommendationComparison, currentMode) : ""}
+                </div>
                 <div class="tradeoffs-container" id="tradeoffsContainer">
                     ${renderTradeoffPanelHtml(initialTradeoffs, currentMode)}
                 </div>
@@ -2334,9 +2477,39 @@ document.addEventListener("DOMContentLoaded", async () => {
         // Refresh trade-offs for recalculated values (Feature #12)
         updateTradeoffsDisplay(container, updatedPreferences, currentExperienceMode);
 
-        // Update or refresh personalized recommendation (Feature #16)
+        // Update or refresh personalized recommendation and comparison (Features #16 & #17)
         if (typeof fetch !== "undefined") {
             const apiBase = "http://localhost:5000";
+
+            // 1. Fetch compare-recommendations (Feature #17)
+            fetch(`${apiBase}/api/advisor/compare-recommendations`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    requirements: (currentFuzzyRequirements && currentFuzzyRequirements.requirementSignals) || {},
+                    originalPreferences: originalFuzzyPreferences || {},
+                    updatedPreferences: updatedPreferences || {},
+                    mode: currentExperienceMode || "beginner"
+                })
+            })
+            .then((res) => res.json())
+            .then((compData) => {
+                if (compData && compData.success) {
+                    currentRecommendationComparison = compData;
+                    if (compData.original && !originalRecommendation) {
+                        originalRecommendation = compData.original;
+                    }
+                    if (compData.updated) {
+                        updatedRecommendation = compData.updated;
+                    }
+                    updateRecommendationComparisonDisplay(container, compData, currentExperienceMode);
+                }
+            })
+            .catch((err) => {
+                console.warn("Could not fetch recommendation comparison:", err);
+            });
+
+            // 2. Fetch recommend for updated weights (Feature #16)
             fetch(`${apiBase}/api/advisor/recommend`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
@@ -2351,6 +2524,7 @@ document.addEventListener("DOMContentLoaded", async () => {
             .then((newRec) => {
                 if (newRec && newRec.success) {
                     currentRecommendation = newRec;
+                    updatedRecommendation = newRec;
                     const recCards = document.querySelectorAll(".final-recommendation-card");
                     recCards.forEach((card) => {
                         const parent = card.parentElement;
@@ -2433,6 +2607,11 @@ document.addEventListener("DOMContentLoaded", async () => {
                 understoodBox.innerHTML = renderUnderstoodRequirementsHtml(currentFuzzyRequirements, mode);
             }
 
+            // Update recommendation comparison for new experience mode depth (Feature #17)
+            if (isRecalculated && currentRecommendationComparison) {
+                updateRecommendationComparisonDisplay(panel, currentRecommendationComparison, mode);
+            }
+
         });
 
         // Refresh personalized recommendation cards for new mode (Feature #16)
@@ -2478,7 +2657,10 @@ document.addEventListener("DOMContentLoaded", async () => {
             },
             getFuzzyRequirements: () => currentFuzzyRequirements,
             getMcdmResult: () => currentMcdmResult,
-            getRecommendation: () => currentRecommendation
+            getRecommendation: () => currentRecommendation,
+            getOriginalRecommendation: () => originalRecommendation,
+            getUpdatedRecommendation: () => updatedRecommendation,
+            getRecommendationComparison: () => currentRecommendationComparison
         };
     }
 
@@ -2897,6 +3079,12 @@ document.addEventListener("DOMContentLoaded", async () => {
 
             if (data.recommendation) {
                 currentRecommendation = data.recommendation;
+                if (!originalRecommendation && !isRecalculated) {
+                    originalRecommendation = data.recommendation;
+                }
+                if (isRecalculated) {
+                    updatedRecommendation = data.recommendation;
+                }
             }
 
             addMessage(

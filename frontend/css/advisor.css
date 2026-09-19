@@ -1526,6 +1526,218 @@ body {
     flex-shrink: 0;
 }
 
+/* =========================================================
+   ORIGINAL VS UPDATED RECOMMENDATION (FEATURE #17)
+   ========================================================= */
+
+.rec-comparison-panel {
+    margin-top: 14px;
+    padding: 16px 18px;
+    background: linear-gradient(135deg, rgba(20, 24, 40, 0.95), rgba(15, 18, 30, 0.95));
+    border: 1px solid rgba(139, 124, 255, 0.35);
+    border-radius: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    box-shadow: 0 6px 24px rgba(0, 0, 0, 0.3);
+    animation: message-in 0.25s ease both;
+}
+
+.rec-comp-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.rec-comp-tag {
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: 1.2px;
+    color: #c084fc;
+    text-transform: uppercase;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.rec-comp-status-pill {
+    font-size: 10.5px;
+    font-weight: 700;
+    padding: 3px 10px;
+    border-radius: 999px;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.rec-comp-status-pill.changed {
+    background: rgba(245, 158, 11, 0.15);
+    border: 1px solid rgba(245, 158, 11, 0.4);
+    color: #fcd34d;
+}
+
+.rec-comp-status-pill.maintained {
+    background: rgba(53, 217, 154, 0.15);
+    border: 1px solid rgba(53, 217, 154, 0.4);
+    color: #a7f3d0;
+}
+
+.rec-comp-status-pill.no-change {
+    background: rgba(148, 163, 184, 0.15);
+    border: 1px solid rgba(148, 163, 184, 0.3);
+    color: #cbd5e1;
+}
+
+.rec-comp-cards-row {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr;
+    align-items: center;
+    gap: 12px;
+}
+
+.rec-comp-provider-card {
+    padding: 12px 14px;
+    border-radius: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.rec-comp-provider-card.original-card {
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.rec-comp-provider-card.updated-card {
+    background: rgba(124, 58, 237, 0.12);
+    border: 1px solid rgba(139, 124, 255, 0.4);
+}
+
+.rec-comp-card-label {
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 0.8px;
+    text-transform: uppercase;
+    color: var(--text-muted);
+}
+
+.rec-comp-provider-card.updated-card .rec-comp-card-label {
+    color: #c084fc;
+}
+
+.rec-comp-card-provider {
+    font-size: 15px;
+    font-weight: 800;
+    color: #ffffff;
+}
+
+.rec-comp-card-metrics {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 11.5px;
+    color: var(--text-muted);
+}
+
+.rec-comp-card-metrics strong {
+    color: #35d99a;
+}
+
+.rec-comp-arrow-divider {
+    font-size: 16px;
+    color: #a78bfa;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.rec-comp-movement-box {
+    padding: 10px 12px;
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 8px;
+    border: 1px dashed rgba(255, 255, 255, 0.1);
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.rec-comp-movement-item {
+    font-size: 11.5px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    color: #cbd5e1;
+}
+
+.rec-comp-movement-item i {
+    color: #a78bfa;
+    font-size: 10px;
+}
+
+.rec-comp-movement-item strong {
+    color: #ffffff;
+}
+
+.rec-comp-section {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.rec-comp-section-title {
+    font-size: 11px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    color: #cbd5e1;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.rec-comp-section-title i {
+    color: #35d99a;
+    font-size: 10px;
+}
+
+.rec-comp-deltas-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+.rec-comp-delta-badge {
+    font-size: 11px;
+    padding: 3px 8px;
+    border-radius: 6px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    color: #e2e8f0;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.rec-comp-delta-badge.increased {
+    border-color: rgba(53, 217, 154, 0.3);
+    color: #a7f3d0;
+}
+
+.rec-comp-delta-badge.decreased {
+    border-color: rgba(245, 158, 11, 0.3);
+    color: #fef08a;
+}
+
+.rec-comp-explanation {
+    margin: 0;
+    font-size: 12px;
+    line-height: 1.5;
+    color: #cbd5e1;
+}
+
 
 /* =========================================================
    TYPING INDICATOR

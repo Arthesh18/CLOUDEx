@@ -273,9 +273,196 @@ function generatePersonalizedRecommendation(options = {}) {
     };
 }
 
+/**
+ * Compare Original vs Updated Recommendation (Feature #17)
+ * Strictly preserves state separation and generates comparative explanations and rank movements.
+ *
+ * @param {Object} options
+ * @param {Object} [options.requirements={}]
+ * @param {Object} [options.originalPreferences={}]
+ * @param {Object} [options.updatedPreferences={}]
+ * @param {string} [options.mode="beginner"]
+ * @returns {Object} Comparison result
+ */
+function compareRecommendations(options = {}) {
+    const {
+        requirements = {},
+        originalPreferences = {},
+        updatedPreferences = {},
+        mode = "beginner"
+    } = options;
+
+    const DIMENSIONS = [
+        { key: "cost", label: "Cost & Budget", beginner: "Cost & Budget", intermediate: "Cost & Budget Sensitivity", expert: "FinOps & Egress Optimization" },
+        { key: "simplicity", label: "Ease of Setup", beginner: "Ease of Setup", intermediate: "Simplicity & Developer Velocity", expert: "Low Infrastructure Overhead" },
+        { key: "performance", label: "Speed & Performance", beginner: "Speed & Performance", intermediate: "Performance & Throughput", expert: "Compute Throughput & IOPS" },
+        { key: "reliability", label: "Reliability & Uptime", beginner: "Reliability & Uptime", intermediate: "High Availability & SLAs", expert: "Enterprise SLA & Fault Tolerance" },
+        { key: "features", label: "Tools & Features", beginner: "Tools & Features", intermediate: "Ecosystem Breadth & Tools", expert: "Enterprise Ecosystem Breadth" },
+        { key: "support", label: "Help & Support", beginner: "Help & Support", intermediate: "Support SLAs & Guidance", expert: "Enterprise Agreement & Direct Support" },
+        { key: "aiGpu", label: "AI & Smart Tech", beginner: "AI & Smart Tech", intermediate: "Dedicated AI/GPU Compute", expert: "Dedicated GPU Compute Acceleration" }
+    ];
+
+    // Detect preference changes across all dimensions
+    const preferenceChanges = [];
+    let hasChanges = false;
+
+    DIMENSIONS.forEach(dim => {
+        const origVal = typeof originalPreferences[dim.key] === "number" ? originalPreferences[dim.key] : 0.5;
+        const updVal = typeof updatedPreferences[dim.key] === "number" ? updatedPreferences[dim.key] : origVal;
+        const delta = Math.round((updVal - origVal) * 100);
+
+        if (Math.abs(delta) >= 2) {
+            hasChanges = true;
+            preferenceChanges.push({
+                dimension: dim.key,
+                label: dim[mode] || dim.label,
+                originalPct: Math.round(origVal * 100),
+                updatedPct: Math.round(updVal * 100),
+                deltaPct: delta,
+                direction: delta > 0 ? "increased" : "decreased",
+                summary: `${dim[mode] || dim.label} ${delta > 0 ? "increased" : "decreased"} (${delta > 0 ? "+" : ""}${delta}%)`
+            });
+        }
+    });
+
+    // Generate both recommendations independently without mutating either
+    const originalRec = generatePersonalizedRecommendation({
+        requirements,
+        preferences: originalPreferences,
+        source: "ai_generated",
+        mode
+    });
+
+    // If no changes were made to preferences
+    if (!hasChanges) {
+        return {
+            success: true,
+            changed: false,
+            recommendationChanged: false,
+            original: {
+                provider: {
+                    id: originalRec.recommendedProvider.id,
+                    name: originalRec.recommendedProvider.name,
+                    shortName: originalRec.recommendedProvider.shortName
+                },
+                score: originalRec.recommendationScore,
+                matchPercentage: originalRec.matchPercentage,
+                rank: 1
+            },
+            updated: {
+                provider: {
+                    id: originalRec.recommendedProvider.id,
+                    name: originalRec.recommendedProvider.name,
+                    shortName: originalRec.recommendedProvider.shortName
+                },
+                score: originalRec.recommendationScore,
+                matchPercentage: originalRec.matchPercentage,
+                rank: 1
+            },
+            preferenceChanges: [],
+            rankMovement: null,
+            explanation: "No preference changes were made, so there is no updated recommendation to compare.",
+            mode
+        };
+    }
+
+    // Evaluate updated recommendation with user-adjusted weights
+    const updatedRec = generatePersonalizedRecommendation({
+        requirements,
+        preferences: updatedPreferences,
+        source: "user_updated",
+        mode
+    });
+
+    const origWinner = originalRec.recommendedProvider;
+    const updWinner = updatedRec.recommendedProvider;
+    const recChanged = origWinner.id !== updWinner.id;
+
+    // Determine rank movement from actual MCDM allRankings
+    const origWinnerInUpdated = updatedRec.allRankings.find(p => p.id === origWinner.id);
+    const origWinnerNewRank = origWinnerInUpdated ? origWinnerInUpdated.rank : 2;
+    const origWinnerNewScore = origWinnerInUpdated ? origWinnerInUpdated.matchPercentage : origWinner.matchPercentage;
+
+    const updWinnerInOriginal = originalRec.allRankings.find(p => p.id === updWinner.id);
+    const updWinnerOldRank = updWinnerInOriginal ? updWinnerInOriginal.rank : 2;
+    const updWinnerOldScore = updWinnerInOriginal ? updWinnerInOriginal.matchPercentage : updWinner.matchPercentage;
+
+    const rankMovement = {
+        originalWinner: {
+            providerId: origWinner.id,
+            providerName: origWinner.name,
+            originalRank: 1,
+            updatedRank: origWinnerNewRank,
+            originalScore: origWinner.matchPercentage,
+            updatedScore: origWinnerNewScore
+        },
+        updatedWinner: {
+            providerId: updWinner.id,
+            providerName: updWinner.name,
+            originalRank: updWinnerOldRank,
+            updatedRank: 1,
+            originalScore: updWinnerOldScore,
+            updatedScore: updWinner.matchPercentage
+        }
+    };
+
+    // Mode-adapted explanation
+    let explanation = "";
+    if (recChanged) {
+        if (mode === "expert") {
+            explanation = `Under your original priorities, ${origWinner.name} held highest aggregate utility (${origWinner.matchPercentage}%). Under your calibrated utility weights, ${updWinner.name} optimized the multi-criteria objective function (${updWinner.matchPercentage}%), moving ${origWinner.name} from Rank #1 to Rank #${origWinnerNewRank}.`;
+        } else if (mode === "intermediate") {
+            explanation = `Your recommendation shifted from ${origWinner.name} (Rank #1 → #${origWinnerNewRank}) to ${updWinner.name} (Rank #${updWinnerOldRank} → #1). This change occurred because your priority adjustments placed higher emphasis on criteria where ${updWinner.name} specializes.`;
+        } else {
+            explanation = `Your recommended provider changed because your priorities changed. Under your original priorities, ${origWinner.name} was recommended (${origWinner.matchPercentage}% fit). Under your updated priorities, ${updWinner.name} emerged as the best fit (${updWinner.matchPercentage}% fit). Neither provider is universally better; each simply fits different priorities.`;
+        }
+    } else {
+        const scoreDelta = updWinner.matchPercentage - origWinner.matchPercentage;
+        const deltaText = scoreDelta === 0 ? "remained exactly at" : (scoreDelta > 0 ? `increased by +${scoreDelta}% to` : `decreased by ${scoreDelta}% to`);
+        if (mode === "expert") {
+            explanation = `Top-ranked provider utility converged on ${origWinner.name} across both parameter profiles. Its aggregate score ${deltaText} ${updWinner.matchPercentage}%, demonstrating high robustness to weight adjustments.`;
+        } else if (mode === "intermediate") {
+            explanation = `Your recommended provider stayed the same. Despite adjusting your criteria, ${origWinner.name} continues to offer the most balanced architectural fit for your workload (fit score ${deltaText} ${updWinner.matchPercentage}%).`;
+        } else {
+            explanation = `Your recommended provider stayed the same. Even with your updated priorities, ${origWinner.name} remains the strongest overall match for your project (fit score ${deltaText} ${updWinner.matchPercentage}%).`;
+        }
+    }
+
+    return {
+        success: true,
+        changed: true,
+        recommendationChanged: recChanged,
+        original: {
+            provider: {
+                id: origWinner.id,
+                name: origWinner.name,
+                shortName: origWinner.shortName
+            },
+            score: origWinner.totalScore,
+            matchPercentage: origWinner.matchPercentage,
+            rank: 1
+        },
+        updated: {
+            provider: {
+                id: updWinner.id,
+                name: updWinner.name,
+                shortName: updWinner.shortName
+            },
+            score: updWinner.totalScore,
+            matchPercentage: updWinner.matchPercentage,
+            rank: 1
+        },
+        preferenceChanges,
+        rankMovement,
+        explanation,
+        mode
+    };
+}
+
 module.exports = {
     generatePersonalizedRecommendation,
     buildPersonalizedWhyRecommended,
     extractStrongestMatches,
-    extractWeakerMatches
+    extractWeakerMatches,
+    compareRecommendations
 };

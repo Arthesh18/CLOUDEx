@@ -87,7 +87,8 @@ const {
     evaluateProvidersMCDM
 } = require("./data/mcdmEngine");
 const {
-    generatePersonalizedRecommendation
+    generatePersonalizedRecommendation,
+    compareRecommendations
 } = require("./data/recommendationEngine");
 
 dotenv.config();
@@ -513,6 +514,37 @@ app.post("/api/advisor/recommend", (req, res) => {
         res.status(500).json({
             success: false,
             message: "Failed to generate personalized recommendation."
+        });
+    }
+});
+
+
+// ==================================================
+// COMPARE RECOMMENDATIONS (FEATURE #17)
+// ==================================================
+
+app.post("/api/advisor/compare-recommendations", (req, res) => {
+    try {
+        const {
+            requirements = {},
+            originalPreferences = {},
+            updatedPreferences = {},
+            mode = "beginner"
+        } = req.body;
+
+        const comparison = compareRecommendations({
+            requirements,
+            originalPreferences,
+            updatedPreferences,
+            mode
+        });
+
+        res.json(comparison);
+    } catch (error) {
+        console.error("Compare recommendations API error:", error.message);
+        res.status(500).json({
+            success: false,
+            message: "Failed to compare recommendations."
         });
     }
 });
