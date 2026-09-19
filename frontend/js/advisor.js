@@ -3212,6 +3212,291 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
 
     // =========================================================
+    // PROGRESSIVE ADVISOR UI HELPERS & DRAWER TOGGLES
+    // =========================================================
+
+    window.CloudExToggleRecSection = function(sectionKey, btnElement) {
+        const card = (btnElement && btnElement.closest(".final-recommendation-card")) || document.getElementById("finalRecommendationCard");
+        if (!card) return;
+
+        const drawer = card.querySelector("#recDrawerContainer") || document.getElementById("recDrawerContainer");
+        if (!drawer) return;
+
+        const targetSection = drawer.querySelector(`#recDrawerSection-${sectionKey}`);
+        if (!targetSection) return;
+
+        const isCurrentlyActive = targetSection.classList.contains("active");
+
+        // Close all sections and clear active state on buttons
+        const allSections = drawer.querySelectorAll(".rec-drawer-section");
+        allSections.forEach((sec) => sec.classList.remove("active"));
+
+        const toolbar = card.querySelector("#recActionToolbar") || document.getElementById("recActionToolbar");
+        if (toolbar) {
+            const allBtns = toolbar.querySelectorAll(".rec-toolbar-btn");
+            allBtns.forEach((b) => b.classList.remove("active"));
+        }
+
+        if (!isCurrentlyActive) {
+            targetSection.classList.add("active");
+            if (btnElement) {
+                btnElement.classList.add("active");
+            }
+            setTimeout(() => {
+                targetSection.scrollIntoView({ behavior: "smooth", block: "nearest" });
+            }, 60);
+        }
+    };
+
+    window.CloudExSubmitQuickChoice = function(choiceText) {
+        const input = document.getElementById("messageInput") || document.getElementById("chatInput");
+        const sendBtn = document.getElementById("sendButton") || document.getElementById("sendBtn");
+        if (!input) return;
+        input.value = choiceText;
+        if (sendBtn) {
+            sendBtn.click();
+        } else {
+            const form = input.closest("form");
+            if (form) {
+                form.dispatchEvent(new Event("submit", { cancelable: true, bubbles: true }));
+            }
+        }
+    };
+
+    function renderQuickChoicesHtml(text, reqs, mode = "beginner") {
+        if (!text || typeof text !== "string") return "";
+        const lower = text.toLowerCase();
+        const chips = [];
+
+        if (lower.includes("how many") || lower.includes("traffic") || lower.includes("users") || lower.includes("visitors") || lower.includes("scale")) {
+            chips.push({ label: "< 1,000 users", value: "Under 1,000 users / starter scale" });
+            chips.push({ label: "1,000 – 50,000 users", value: "1,000 to 50,000 users / moderate traffic" });
+            chips.push({ label: "50,000+ users", value: "Over 50,000 users / high traffic" });
+            chips.push({ label: "I Don't Know / You Decide", value: "I don't know, please pick a safe default for me" });
+        } else if (lower.includes("database") || lower.includes("storage") || lower.includes("postgres") || lower.includes("mysql") || lower.includes("mongodb") || lower.includes("sql")) {
+            chips.push({ label: "Yes, PostgreSQL / MySQL", value: "Yes, I need a relational database (PostgreSQL/MySQL)" });
+            chips.push({ label: "Yes, MongoDB / NoSQL", value: "Yes, I need a MongoDB / NoSQL database" });
+            chips.push({ label: "No database needed", value: "No database needed, static frontend only" });
+            chips.push({ label: "I Don't Know / You Decide", value: "I don't know, please pick a safe default for me" });
+        } else if (lower.includes("budget") || lower.includes("cost") || lower.includes("spending") || lower.includes("free tier") || lower.includes("price") || lower.includes("monthly")) {
+            chips.push({ label: "Lowest cost / Free tier (<$10)", value: "Lowest possible cost or free tier, budget under $10/month" });
+            chips.push({ label: "Moderate ($20 – $100/mo)", value: "Moderate budget around $20 to $100/month" });
+            chips.push({ label: "Flexible / Enterprise", value: "Flexible budget, performance and reliability come first" });
+            chips.push({ label: "I Don't Know / You Decide", value: "I don't know, please pick a safe default for me" });
+        } else if (lower.includes("managed") || lower.includes("control") || lower.includes("serverless") || lower.includes("docker") || lower.includes("virtual server") || lower.includes("droplet") || lower.includes("ec2")) {
+            chips.push({ label: "Managed platform (simple)", value: "I prefer a managed platform like Render or Vercel for simplicity" });
+            chips.push({ label: "Virtual servers (control)", value: "I prefer virtual servers like AWS EC2 or DigitalOcean for full control" });
+            chips.push({ label: "Serverless / Containers", value: "I prefer container-based or serverless deployment" });
+            chips.push({ label: "I Don't Know / You Decide", value: "I don't know, please pick a safe default for me" });
+        } else if (lower.includes("?")) {
+            chips.push({ label: "Yes", value: "Yes" });
+            chips.push({ label: "No", value: "No" });
+            chips.push({ label: "Keep it simple & low cost", value: "I want to keep it simple and low cost" });
+            chips.push({ label: "I Don't Know / You Decide", value: "I don't know, please pick a safe default for me" });
+        }
+
+        if (chips.length === 0) return "";
+
+        return `
+            <div class="chat-quick-choices-row">
+                <span class="quick-choices-label"><i class="fa-solid fa-bolt"></i> Quick choice:</span>
+                ${chips.map((c) => `
+                    <button type="button" class="chat-quick-choice-btn" onclick="window.CloudExSubmitQuickChoice('${c.value.replace(/'/g, "\\'")}')">
+                        ${c.label}
+                    </button>
+                `).join("")}
+            </div>
+        `;
+    }
+
+    function renderUnderstoodExpandedCard(reqs, mode = "beginner") {
+        if (!reqs) {
+            return `
+                <div class="understood-expanded-card">
+                    <p style="color:var(--text-muted);font-size:12px;margin:0;">No specific requirements recorded yet.</p>
+                </div>
+            `;
+        }
+
+        const sigs = reqs.requirementSignals || reqs;
+        const modeKey = ["beginner", "intermediate", "expert"].includes(mode) ? mode : "beginner";
+
+        const items = [];
+        if (sigs.workloadType) items.push({ icon: "fa-laptop-code", label: "Workload Type", val: sigs.workloadType });
+        if (sigs.projectPurpose) items.push({ icon: "fa-bullseye", label: "Project Purpose", val: sigs.projectPurpose });
+        if (sigs.traffic) items.push({ icon: "fa-users", label: "Expected Scale / Users", val: `~${sigs.traffic.replace(/users/i, '').trim()}` });
+        else if (sigs.expectedScale) items.push({ icon: "fa-users", label: "Expected Scale", val: sigs.expectedScale });
+        if (sigs.databaseNeeds) items.push({ icon: "fa-database", label: "Database / Storage", val: sigs.databaseNeeds });
+        if (sigs.costPriority) items.push({ icon: "fa-tag", label: "Cost Priority", val: sigs.costPriority });
+        else if (sigs.budgetSensitivity) items.push({ icon: "fa-tag", label: "Budget Sensitivity", val: sigs.budgetSensitivity });
+        if (sigs.simplicityPreference) items.push({ icon: "fa-wand-magic-sparkles", label: "Simplicity Preference", val: sigs.simplicityPreference });
+        if (sigs.technicalPreference) items.push({ icon: "fa-server", label: "Architecture / Control", val: sigs.technicalPreference });
+
+        const badgesHtml = PREFERENCE_DIMENSION_CONFIG.map((dim) => {
+            let level = "Medium";
+            if (reqs.fuzzyInterpretation && reqs.fuzzyInterpretation[dim.key]) {
+                level = reqs.fuzzyInterpretation[dim.key].linguisticLevel;
+            } else if (userModifiedPreferences && typeof userModifiedPreferences[dim.key] === "number") {
+                level = toLinguisticLabel(userModifiedPreferences[dim.key]);
+            } else if (originalFuzzyPreferences && typeof originalFuzzyPreferences[dim.key] === "number") {
+                level = toLinguisticLabel(originalFuzzyPreferences[dim.key]);
+            }
+            const cssLevel = level.toLowerCase().replace(/\s+/g, "-");
+            const dimLabel = dim[modeKey] || dim.beginner;
+            return `
+                <div class="understood-dim-badge level-${cssLevel}">
+                    <span>${dim.icon} ${dimLabel}:</span>
+                    <strong>${level}</strong>
+                </div>
+            `;
+        }).join("");
+
+        return `
+            <div class="understood-expanded-card">
+                <div class="understood-expanded-title">
+                    <i class="fa-solid fa-brain"></i>
+                    <span>What CLOUDEx Understood From Your Workload</span>
+                </div>
+                <p class="understood-expanded-intro">
+                    CLOUDEx translated your answers and requirements into the following operational parameters:
+                </p>
+                <div class="understood-signals-grid">
+                    ${items.map((it) => `
+                        <div class="understood-signal-item">
+                            <div class="understood-signal-label">
+                                <i class="fa-solid ${it.icon}"></i>
+                                <span>${it.label}</span>
+                            </div>
+                            <div class="understood-signal-val">${it.val}</div>
+                        </div>
+                    `).join("")}
+                </div>
+                <div style="margin-top: 10px;">
+                    <div style="font-size: 11px; font-weight: 700; color: #cbd5e1; margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.5px;">
+                        Inferred Priority Levels:
+                    </div>
+                    <div style="display: flex; flex-wrap: wrap; gap: 6px;">
+                        ${badgesHtml}
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+
+    function renderMyPriorityValuesCard(preferences, mode = "beginner") {
+        const modeKey = ["beginner", "intermediate", "expert"].includes(mode) ? mode : "beginner";
+        const activePrefs = preferences || userModifiedPreferences || updatedPreferences || originalFuzzyPreferences || currentFuzzyPreferences || {};
+
+        const rowsHtml = PREFERENCE_DIMENSION_CONFIG.map((dim) => {
+            const rawVal = typeof activePrefs[dim.key] === "number" ? activePrefs[dim.key] : 0.5;
+            const pct = Math.round(rawVal * 100);
+            const label = dim[modeKey] || dim.beginner;
+            const level = toLinguisticLabel(rawVal);
+            const cssLevel = level.toLowerCase().replace(/\s+/g, "-");
+
+            return `
+                <div class="priority-val-row">
+                    <div class="priority-val-info">
+                        <span class="priority-val-icon">${dim.icon}</span>
+                        <span class="priority-val-name">${label}</span>
+                        <span class="understood-dim-badge level-${cssLevel}" style="margin-left: auto; font-size: 10px;">
+                            <strong>${level}</strong>
+                        </span>
+                        <span class="priority-val-pct" style="min-width: 40px; text-align: right; font-weight: 700; color: #38bdf8;">${pct}%</span>
+                    </div>
+                    <div class="priority-val-bar-bg" style="background: rgba(255,255,255,0.06); height: 6px; border-radius: 3px; overflow: hidden; margin-top: 4px;">
+                        <div class="priority-val-bar-fill" style="background: linear-gradient(90deg, #6366f1, #38bdf8); height: 100%; width: ${pct}%; border-radius: 3px; transition: width 0.3s;"></div>
+                    </div>
+                </div>
+            `;
+        }).join("");
+
+        return `
+            <div class="my-priorities-card">
+                <div class="my-priorities-title">
+                    <i class="fa-solid fa-sliders"></i>
+                    <span>Active Decision Priority Weights</span>
+                </div>
+                <p class="my-priorities-intro">
+                    These normalized weights were evaluated by the Multi-Criteria Decision Making (MCDM) engine to rank all 15 cloud providers.
+                </p>
+                <div class="my-priorities-list" style="display: flex; flex-direction: column; gap: 8px;">
+                    ${rowsHtml}
+                </div>
+                <div style="margin-top: 10px; font-size: 11.5px; color: var(--text-muted); display: flex; align-items: center; gap: 6px;">
+                    <i class="fa-solid fa-circle-info" style="color: #38bdf8;"></i>
+                    <span>To adjust any priority, click <strong>Make Changes &amp; Recalculate</strong> above.</span>
+                </div>
+            </div>
+        `;
+    }
+
+    function renderCompareProvidersCard(rec, mcdmResult) {
+        const allRanked = (rec && rec.allRankings) || (mcdmResult && mcdmResult.rankedProviders) || [];
+        const topThree = allRanked.slice(0, 3);
+        const winnerId = rec && rec.recommendedProvider ? rec.recommendedProvider.id : (topThree[0] ? topThree[0].providerId : null);
+
+        if (topThree.length === 0) {
+            return `
+                <div class="compare-providers-card">
+                    <p style="color:var(--text-muted);font-size:12px;margin:0;">Comparison data not available yet.</p>
+                </div>
+            `;
+        }
+
+        const cardsHtml = topThree.map((item, idx) => {
+            const isWinner = item.providerId === winnerId || idx === 0;
+            const pName = item.providerName || (item.provider && item.provider.name) || item.name || item.providerId;
+            const scorePct = item.matchPercentage || Math.round((item.score || item.recommendationScore || 0) * 100);
+            const rank = idx + 1;
+            const officialUrl = item.officialUrl || (item.provider && item.provider.officialUrl) || (rec && rec.recommendedProvider && rec.recommendedProvider.id === item.providerId ? rec.recommendedProvider.officialUrl : null);
+
+            return `
+                <div class="compare-mini-card ${isWinner ? 'winner-card' : ''}">
+                    <div class="compare-mini-badge ${isWinner ? 'winner' : 'runner'}">
+                        ${isWinner ? '🥇 #1 RECOMMENDED' : `#${rank} ALTERNATIVE`}
+                    </div>
+                    <h4>${pName}</h4>
+                    <div class="compare-mini-score">${scorePct}% Fit Score</div>
+                    ${officialUrl ? `
+                        <div style="margin-top: 4px;">
+                            <a href="${officialUrl}" target="_blank" rel="noopener noreferrer" style="font-size: 11px; color: #38bdf8; text-decoration: none;">
+                                <i class="fa-solid fa-arrow-up-right-from-square"></i> Official site &rarr;
+                            </a>
+                        </div>
+                    ` : ""}
+                </div>
+            `;
+        }).join("");
+
+        return `
+            <div class="compare-providers-card">
+                <div class="compare-providers-title">
+                    <i class="fa-solid fa-layer-group"></i>
+                    <span>Top Provider Comparison</span>
+                </div>
+                <p class="compare-providers-intro">
+                    MCDM evaluated all 15 cloud service providers across your priority weights. Here are the top contenders:
+                </p>
+                <div class="compare-mini-cards-row">
+                    ${cardsHtml}
+                </div>
+                <div style="margin-top: 10px; display: flex; justify-content: flex-end;">
+                    <a href="cloud-explorer.html" class="compare-open-page-btn" title="Explore all 15 cloud providers">
+                        <i class="fa-solid fa-compass"></i> Explore All 15 Providers in Cloud Explorer &rarr;
+                    </a>
+                </div>
+            </div>
+        `;
+    }
+
+    function renderTradeoffDrawerContent(rec, mode = "beginner") {
+        const activePrefs = updatedPreferences || userModifiedPreferences || originalFuzzyPreferences || currentFuzzyPreferences || {};
+        const tradeResult = detectClientTradeoffs(activePrefs, mode);
+        return renderTradeoffPanelHtml(tradeResult, mode);
+    }
+
+    // =========================================================
     // PERSONALIZED FINAL RECOMMENDATION CARD (FEATURE #16)
     // =========================================================
 
@@ -3306,16 +3591,18 @@ document.addEventListener("DOMContentLoaded", async () => {
                         <span class="final-rec-score-label">Fit Score</span>
                     </div>
                 </div>
-                <div class="final-rec-section">
-                    <div class="final-rec-section-title">
-                        <i class="fa-solid fa-circle-check"></i>
-                        <span>Why This Matches You</span>
+                <div class="final-rec-compact-body">
+                    <div class="final-rec-section">
+                        <div class="final-rec-section-title">
+                            <i class="fa-solid fa-circle-check"></i>
+                            <span>Why This Matches You</span>
+                        </div>
+                        ${whyHtml}
+                        ${strongestHtml}
                     </div>
-                    ${whyHtml}
-                    ${strongestHtml}
+                    ${tradeoffHtml}
+                    ${compromiseHtml}
                 </div>
-                ${tradeoffHtml}
-                ${compromiseHtml}
                 <div class="final-rec-footer">
                     <div class="final-rec-method-note">
                         <i class="fa-solid fa-microchip"></i>
@@ -3329,9 +3616,70 @@ document.addEventListener("DOMContentLoaded", async () => {
                         </div>
                     ` : ""}
                 </div>
+
+                <!-- Progressive Disclosure Action Toolbar -->
+                <div class="rec-action-toolbar" id="recActionToolbar">
+                    <button type="button" class="rec-toolbar-btn" data-section="understood" onclick="window.CloudExToggleRecSection('understood', this)">
+                        <i class="fa-solid fa-brain"></i>
+                        <span>What CLOUDEx Understood</span>
+                    </button>
+                    <button type="button" class="rec-toolbar-btn" data-section="assumptions" onclick="window.CloudExToggleRecSection('assumptions', this)">
+                        <i class="fa-solid fa-lightbulb"></i>
+                        <span>Assumptions Made</span>
+                    </button>
+                    <button type="button" class="rec-toolbar-btn" data-section="priorities" onclick="window.CloudExToggleRecSection('priorities', this)">
+                        <i class="fa-solid fa-sliders"></i>
+                        <span>My Priority Values</span>
+                    </button>
+                    <button type="button" class="rec-toolbar-btn" data-section="how-decided" onclick="window.CloudExToggleRecSection('how-decided', this)">
+                        <i class="fa-solid fa-calculator"></i>
+                        <span>How CLOUDEx Decided</span>
+                    </button>
+                    <button type="button" class="rec-toolbar-btn" data-section="tradeoffs" onclick="window.CloudExToggleRecSection('tradeoffs', this)">
+                        <i class="fa-solid fa-scale-balanced"></i>
+                        <span>Trade-Offs</span>
+                    </button>
+                    <button type="button" class="rec-toolbar-btn" data-section="recalculate" onclick="window.CloudExToggleRecSection('recalculate', this)">
+                        <i class="fa-solid fa-arrows-rotate"></i>
+                        <span>Make Changes &amp; Recalculate</span>
+                    </button>
+                    <button type="button" class="rec-toolbar-btn" data-section="compare" onclick="window.CloudExToggleRecSection('compare', this)">
+                        <i class="fa-solid fa-layer-group"></i>
+                        <span>Compare Providers</span>
+                    </button>
+                    ${provider.officialUrl ? `
+                        <a href="${provider.officialUrl}" target="_blank" rel="noopener noreferrer" class="final-rec-official-btn rec-toolbar-btn rec-toolbar-btn-link" title="Visit ${provider.name} Official Website">
+                            <i class="fa-solid fa-arrow-up-right-from-square"></i>
+                            <span>Visit Official Website &rarr;</span>
+                        </a>
+                    ` : ""}
+                </div>
+
+                <!-- Progressive Disclosure Collapsible Drawer -->
+                <div class="rec-drawer-container" id="recDrawerContainer">
+                    <div class="rec-drawer-section" id="recDrawerSection-understood" data-section="understood">
+                        ${renderUnderstoodExpandedCard(currentFuzzyRequirements || rec.requirementsUnderstood, mode)}
+                    </div>
+                    <div class="rec-drawer-section" id="recDrawerSection-assumptions" data-section="assumptions">
+                        ${rec.assumptions ? renderAssumptionsCardHtml(rec.assumptions, mode) : (currentAssumptions ? renderAssumptionsCardHtml(currentAssumptions, mode) : renderAssumptionsCardHtml({ hasAssumptions: false }, mode))}
+                    </div>
+                    <div class="rec-drawer-section" id="recDrawerSection-priorities" data-section="priorities">
+                        ${renderMyPriorityValuesCard(updatedPreferences || userModifiedPreferences || originalFuzzyPreferences || currentFuzzyPreferences || (rec.mcdmResult && rec.mcdmResult.userWeights), mode)}
+                    </div>
+                    <div class="rec-drawer-section" id="recDrawerSection-how-decided" data-section="how-decided">
+                        ${rec.howDecided ? renderHowDecidedHtml(rec.howDecided, mode) : ""}
+                    </div>
+                    <div class="rec-drawer-section" id="recDrawerSection-tradeoffs" data-section="tradeoffs">
+                        ${renderTradeoffDrawerContent(rec, mode)}
+                    </div>
+                    <div class="rec-drawer-section" id="recDrawerSection-recalculate" data-section="recalculate">
+                        ${createInitialPreferencesPanel(updatedPreferences || userModifiedPreferences || originalFuzzyPreferences || currentFuzzyPreferences, mode)}
+                    </div>
+                    <div class="rec-drawer-section" id="recDrawerSection-compare" data-section="compare">
+                        ${renderCompareProvidersCard(rec, currentMcdmResult)}
+                    </div>
+                </div>
             </div>
-            ${rec.assumptions ? renderAssumptionsCardHtml(rec.assumptions, mode) : ""}
-            ${rec.howDecided ? renderHowDecidedHtml(rec.howDecided, mode) : ""}
         `;
     }
 
@@ -3375,23 +3723,25 @@ document.addEventListener("DOMContentLoaded", async () => {
                 ? createProviderActions(text)
                 : "";
 
-        const isRecReady = Boolean(isRecommendationReady) ||
-            Boolean(isRecalculated) ||
-            (typeof text === "string" && (text.includes("🥇") || /my recommendation/i.test(text) || /my pick/i.test(text)));
+        const isRecReady = typeof isRecommendationReady === "boolean"
+            ? (isRecommendationReady || Boolean(isRecalculated))
+            : (Boolean(isRecalculated) || (typeof text === "string" && (text.includes("🥇") || /my recommendation/i.test(text) || /my pick/i.test(text))));
 
         const recommendationHtml =
             (role === "assistant" && isRecReady && (recommendation || currentRecommendation))
                 ? createPersonalizedRecommendationCard(recommendation || currentRecommendation, currentExperienceMode)
                 : "";
 
-        const preferencesHtml =
-            (role === "assistant" && isRecReady && (fuzzyPreferences || currentFuzzyPreferences))
-                ? createInitialPreferencesPanel(fuzzyPreferences || currentFuzzyPreferences, currentExperienceMode)
-                : "";
+        const preferencesHtml = "";
 
         const understoodHtml =
             (role === "assistant" && !isRecReady && (requirementsData || currentFuzzyRequirements))
                 ? renderUnderstoodSummaryCard(requirementsData || currentFuzzyRequirements, currentExperienceMode)
+                : "";
+
+        const quickChoicesHtml =
+            (role === "assistant" && !isRecReady)
+                ? renderQuickChoicesHtml(text, requirementsData || currentFuzzyRequirements, currentExperienceMode)
                 : "";
 
 
@@ -3415,9 +3765,9 @@ document.addEventListener("DOMContentLoaded", async () => {
 
                     ${understoodHtml}
 
-                    ${recommendationHtml}
+                    ${quickChoicesHtml}
 
-                    ${preferencesHtml}
+                    ${recommendationHtml}
 
                     ${actions}
 

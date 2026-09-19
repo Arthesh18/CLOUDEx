@@ -758,6 +758,18 @@ app.post(
 
 
             // ------------------------------------------
+            // CONVERSATIONAL STAGE & MINIMUM QUESTIONS TRACKING
+            // ------------------------------------------
+
+            const priorUserMessages = Array.isArray(conversation)
+                ? conversation.filter(m => m && m.role === "user")
+                : [];
+            const userTurnIndex = priorUserMessages.length; // 0 for Turn 1, 1 for Turn 2, 2+ for Turn 3
+            const isExplicitDemand = /\b(recommend (one|now|right now|immediately)|give me (the|a) recommendation|skip questions?|stop asking)\b/i.test(message);
+            const isDiscoveryStage = userTurnIndex < 2 && !isExplicitDemand && !isRecalculatedPreferences;
+
+
+            // ------------------------------------------
             // EXPERIENCE MODE DIRECTIVE (FEATURE #7)
             // ------------------------------------------
 
@@ -912,25 +924,53 @@ BUDGET & EGRESS REALISM
 ==================================================
 PROGRESSIVE CONVERSATIONAL FLOW & QUESTION STRATEGY
 ==================================================
-- DO NOT prematurely dump a recommendation on Turn 1 when project details are incomplete!
-- When the user provides an open or incomplete starting description (e.g., "I'm a college student building a small web app with Python and React. What cloud should I use?"):
-  1. Warmly acknowledge what they are building in an encouraging, friendly way.
-  2. Briefly state what you understand so far.
-  3. Intelligently ask 1 to 3 simple, non-technical questions to fill the critical missing blanks:
-     * Persistence / Storage: "Will your app need a database to store user accounts, logins, or project data?"
-     * Expected Scale / Users: "Roughly how many people do you expect will use or test it (e.g., just you and friends, or hundreds of classmates)?"
-     * Budget / Cost Tolerance: "Do you have a specific monthly budget, or is your goal strictly 100% free / ultra-low cost?"
-  4. DO NOT output "🥇 MY RECOMMENDATION" or "MY PICK" in this initial turn.
-- ONLY transition to "🥇 MY RECOMMENDATION" when:
-  a) Critical requirements (workload, data/database, scale, and budget) are established (usually turn 2–3); OR
-  b) The user answers with uncertainty or delegation ("I don't know", "You decide", "Whatever is best") — in which case you adopt safe beginner-friendly defaults, disclose them clearly, and proceed without looping; OR
-  c) The user provided comprehensive specifications in their very first message or explicitly demands: "Recommend one right now".
+${isDiscoveryStage ? `
+CRITICAL DIRECTIVE — MANDATORY DISCOVERY STAGE (User Turn ${userTurnIndex + 1} of minimum 2 questions)
+CLOUDEx MUST ASK AT LEAST 2 MEANINGFUL QUESTIONS BEFORE GIVING A FINAL RECOMMENDATION.
+THIS STRICTLY APPLIES ACROSS ALL THREE MODES: BEGINNER, INTERMEDIATE, AND EXPERT!
 
+Current Turn: ${userTurnIndex + 1}.
+UNDER NO CIRCUMSTANCES SHOULD YOU OUTPUT "🥇 MY RECOMMENDATION" OR "MY PICK" ON THIS TURN!
+
+${userTurnIndex === 0 ? `
+TURN 1 INSTRUCTIONS:
+1. Warmly acknowledge what the user is building and state what you understand so far.
+2. DO NOT output "🥇 MY RECOMMENDATION" or "MY PICK" under ANY circumstances on this turn!
+3. Intelligently ask 1 to 2 targeted questions to begin distinguishing between providers.
+   * NEVER ask about details the user already answered in their message!
+   * Adapt to active mode (${experienceMode.toUpperCase()}):
+     - BEGINNER: Use simple, everyday non-technical language. Ask if users will need accounts/logins, what kind of data the app will store (tasks, posts, profiles, files), expected user numbers, or budget preference.
+     - INTERMEDIATE: Ask pragmatic architectural questions (relational vs NoSQL database, Docker containers vs managed PaaS vs Linux VM, predictable vs spiky traffic, object storage for media).
+     - EXPERT: Ask deep architecture/enterprise questions: workload orchestration (K8s/bare metal/serverless), multi-region active-active & SLA targets, GPU training vs inference, VPC topology/peering, compliance (SOC2/GDPR) & data residency.
+` : `
+TURN 2 INSTRUCTIONS:
+1. Acknowledge the user's latest response.
+2. If the user expressed uncertainty ("I don't know", "Not sure", "You decide", "Whatever is best"):
+   - Warmly explain what the concept means in simple, everyday language.
+   - Adopt a safe, conservative default assumption and CLEARLY disclose what you assumed (e.g. "Since your app sounds like it will store user data, I'll temporarily assume you need a small managed database. You can change this later.").
+   - DO NOT STOP OR JUMP TO AN IMMEDIATE RECOMMENDATION ON "I DON'T KNOW"! Continue to confirm the remaining critical question!
+3. Ask the second meaningful question that has not yet been answered (e.g. user scale, database, budget tolerance, or architecture preference).
+4. DO NOT provide the final recommendation on this turn.
+`}
+` : `
+CURRENT STAGE: RECOMMENDATION READY (Turn ${userTurnIndex + 1})
+At least 2 meaningful questions have been asked and answered across the dialogue.
+You may now present the tailored final recommendation concisely using the structured format below.
+`}
+
+${isDiscoveryStage ? `
+==================================================
+MANDATORY CONVERSATION RULE FOR THIS TURN:
+==================================================
+You are currently in the Discovery Stage (Question ${userTurnIndex + 1} of at least 2 required questions).
+You MUST ask a focused clarifying question to understand their needs better.
+DO NOT provide any recommendation or provider selection yet.
+DO NOT use the words "🥇 MY RECOMMENDATION" or "MY PICK" in this response.
+` : `
 ==================================================
 WHEN TO RECOMMEND
 ==================================================
-- When essential requirements are established (usually after 2–3 conversational turns, or immediately if the user provided comprehensive specs upfront), stop asking questions.
-- Transition cleanly: "I have enough details to provide a clear, tailored recommendation for your project."
+- Transition cleanly: "I now have enough details to provide a clear, tailored recommendation for your project."
 - Deliver the structured recommendation concisely.
 
 ==================================================
@@ -965,6 +1005,7 @@ WHY NOT THE OTHERS?
 MY PICK
 
 I recommend [Exact Provider Name] because it delivers the optimal balance of [key benefit 1], [key benefit 2], and [key benefit 3] for your specific project.
+`}
 
 Think technically. Speak simply. Be an empathetic, practical decision partner.
 `;
@@ -1192,8 +1233,9 @@ if (userId && chatId) {
             // PROGRESSIVE RECOMMENDATION READINESS
             // ==================================================
 
+            const hasMinimumQuestions = userTurnIndex >= 2 || isExplicitDemand;
             const isRecommendationText = /(?:🥇\s*)?my recommendation|my pick\b/i.test(reply);
-            const isRecommendationReady = isRecommendationText || Boolean(isRecalculatedPreferences);
+            const isRecommendationReady = (isRecommendationText && hasMinimumQuestions) || Boolean(isRecalculatedPreferences);
 
 
             // ==================================================
@@ -1226,7 +1268,13 @@ if (userId && chatId) {
 
                 isRecommendationReady,
 
-                isRecalculatedPreferences: Boolean(isRecalculatedPreferences)
+                isRecalculatedPreferences: Boolean(isRecalculatedPreferences),
+
+                userTurnIndex,
+
+                hasMinimumQuestions,
+
+                isDiscoveryStage: !hasMinimumQuestions && !isRecalculatedPreferences
 
             });
 

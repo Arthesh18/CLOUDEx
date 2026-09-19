@@ -3477,3 +3477,499 @@ body {
         max-height: calc(100vh - 160px);
     }
 }
+
+/* =========================================================
+   PROGRESSIVE DISCLOSURE UI & COMPACT RECOMMENDATION
+   ========================================================= */
+
+/* Quick choice buttons on discovery turns */
+.chat-quick-choices-row {
+    margin-top: 10px;
+    padding: 10px 14px;
+    background: rgba(139, 124, 255, 0.06);
+    border: 1px dashed rgba(139, 124, 255, 0.3);
+    border-radius: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.quick-choices-label {
+    font-size: 11px;
+    font-weight: 700;
+    color: #a78bfa;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+}
+
+.quick-choices-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.chat-quick-choice-btn {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 999px;
+    padding: 5px 14px;
+    font-size: 12px;
+    color: #e2e8f0;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-family: inherit;
+}
+
+.chat-quick-choice-btn:hover {
+    background: rgba(139, 124, 255, 0.2);
+    border-color: #8b7cff;
+    color: #ffffff;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 8px rgba(139, 124, 255, 0.25);
+}
+
+/* Compact Recommendation Body */
+.final-rec-compact-body {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    padding: 12px 14px;
+    background: rgba(255, 255, 255, 0.02);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 10px;
+}
+
+.final-rec-box-title {
+    font-size: 11.5px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    color: #cbd5e1;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 6px;
+}
+
+.final-rec-fits-box .final-rec-box-title i {
+    color: #35d99a;
+}
+
+.final-rec-compromise-box .final-rec-box-title i {
+    color: #f59e0b;
+}
+
+.final-rec-bullets {
+    margin: 0;
+    padding-left: 0;
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.final-rec-bullets li {
+    font-size: 12.5px;
+    color: #e2e8f0;
+    line-height: 1.45;
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+}
+
+.final-rec-bullets li i {
+    color: #35d99a;
+    font-size: 11px;
+    margin-top: 3px;
+    flex-shrink: 0;
+}
+
+.final-rec-compromise-text {
+    font-size: 12px;
+    color: #fef08a;
+    line-height: 1.45;
+    padding: 6px 10px;
+    background: rgba(245, 158, 11, 0.08);
+    border-left: 3px solid #f59e0b;
+    border-radius: 4px;
+}
+
+.final-rec-why-score-link {
+    font-size: 10px;
+    color: #93c5fd;
+    text-decoration: underline;
+    cursor: pointer;
+    margin-top: 4px;
+    transition: color 0.2s;
+}
+
+.final-rec-why-score-link:hover {
+    color: #ffffff;
+}
+
+/* Progressive Disclosure Action Toolbar */
+.rec-action-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    padding-top: 12px;
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.rec-toolbar-btn {
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 8px;
+    padding: 7px 13px;
+    font-size: 11.5px;
+    font-weight: 600;
+    color: #cbd5e1;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    transition: all 0.2s ease;
+    font-family: inherit;
+    text-decoration: none;
+}
+
+.rec-toolbar-btn i {
+    font-size: 12px;
+    color: #8b7cff;
+}
+
+.rec-toolbar-btn:hover {
+    background: rgba(139, 124, 255, 0.18);
+    border-color: rgba(139, 124, 255, 0.45);
+    color: #ffffff;
+    transform: translateY(-1px);
+}
+
+.rec-toolbar-btn.active {
+    background: linear-gradient(135deg, rgba(139, 124, 255, 0.35), rgba(76, 53, 222, 0.35));
+    border-color: #8b7cff;
+    color: #ffffff;
+    box-shadow: 0 0 12px rgba(139, 124, 255, 0.3);
+}
+
+.rec-toolbar-btn.official-link-btn {
+    margin-left: auto;
+    background: rgba(56, 189, 248, 0.1);
+    border-color: rgba(56, 189, 248, 0.3);
+    color: #38bdf8;
+}
+
+.rec-toolbar-btn.official-link-btn i {
+    color: #38bdf8;
+}
+
+.rec-toolbar-btn.official-link-btn:hover {
+    background: rgba(56, 189, 248, 0.25);
+    border-color: #38bdf8;
+    color: #ffffff;
+}
+
+/* Collapsible Drawer Container */
+.rec-drawer-container {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.rec-drawer-section {
+    animation: fadeInDrawer 0.25s ease-out;
+}
+
+@keyframes fadeInDrawer {
+    from {
+        opacity: 0;
+        transform: translateY(-4px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Understood Expanded Card */
+.understood-expanded-card {
+    padding: 14px 16px;
+    background: rgba(20, 24, 42, 0.95);
+    border: 1px solid rgba(59, 130, 246, 0.3);
+    border-radius: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.understood-expanded-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+    padding-bottom: 8px;
+}
+
+.understood-expanded-title {
+    font-size: 11px;
+    font-weight: 800;
+    color: #93c5fd;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.understood-badge {
+    font-size: 10px;
+    font-weight: 700;
+    padding: 2px 8px;
+    border-radius: 999px;
+    background: rgba(53, 217, 154, 0.15);
+    border: 1px solid rgba(53, 217, 154, 0.3);
+    color: #a7f3d0;
+}
+
+.understood-grid-table {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 10px;
+}
+
+.understood-grid-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 7px 10px;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 6px;
+    font-size: 12px;
+}
+
+.understood-grid-row .grid-label {
+    color: var(--text-muted);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.understood-grid-row .grid-label i {
+    color: #8b7cff;
+    font-size: 11px;
+}
+
+.understood-grid-row .grid-val {
+    color: #ffffff;
+    font-weight: 600;
+}
+
+/* My Priorities Card */
+.my-priorities-card {
+    padding: 14px 16px;
+    background: rgba(20, 24, 42, 0.95);
+    border: 1px solid rgba(139, 124, 255, 0.3);
+    border-radius: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.my-priorities-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.my-priorities-title {
+    font-size: 11px;
+    font-weight: 800;
+    color: #a78bfa;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.my-priorities-notice-box {
+    padding: 8px 12px;
+    background: rgba(59, 130, 246, 0.1);
+    border: 1px solid rgba(59, 130, 246, 0.25);
+    border-radius: 8px;
+    font-size: 11.5px;
+    color: #93c5fd;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.my-priorities-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.my-priority-row {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.my-priority-row-head {
+    display: flex;
+    justify-content: space-between;
+    font-size: 11.5px;
+}
+
+.my-priority-label {
+    color: #cbd5e1;
+    font-weight: 600;
+}
+
+.my-priority-pct {
+    color: #ffffff;
+    font-weight: 700;
+}
+
+.my-priority-bar-track {
+    width: 100%;
+    height: 6px;
+    background: rgba(255, 255, 255, 0.08);
+    border-radius: 999px;
+    overflow: hidden;
+}
+
+.my-priority-bar-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #8b7cff, #38bdf8);
+    border-radius: 999px;
+    transition: width 0.4s ease;
+}
+
+.my-priorities-adjust-btn {
+    background: rgba(139, 124, 255, 0.15);
+    border: 1px solid rgba(139, 124, 255, 0.35);
+    border-radius: 8px;
+    padding: 7px 12px;
+    font-size: 11.5px;
+    font-weight: 600;
+    color: #c4b5fd;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    margin-top: 4px;
+    font-family: inherit;
+    transition: all 0.2s;
+}
+
+.my-priorities-adjust-btn:hover {
+    background: rgba(139, 124, 255, 0.3);
+    color: #ffffff;
+}
+
+/* Compare Providers Mini Card */
+.compare-providers-card {
+    padding: 14px 16px;
+    background: rgba(20, 24, 42, 0.95);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.compare-providers-title {
+    font-size: 11px;
+    font-weight: 800;
+    color: #38bdf8;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.compare-providers-intro {
+    margin: 0;
+    font-size: 12px;
+    color: var(--text-muted);
+}
+
+.compare-mini-cards-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 10px;
+}
+
+.compare-mini-card {
+    padding: 10px 12px;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.compare-mini-card.winner-card {
+    border-color: rgba(53, 217, 154, 0.35);
+    background: rgba(53, 217, 154, 0.04);
+}
+
+.compare-mini-badge {
+    font-size: 9.5px;
+    font-weight: 700;
+    padding: 1px 6px;
+    border-radius: 4px;
+    width: fit-content;
+}
+
+.compare-mini-badge.winner {
+    background: rgba(53, 217, 154, 0.2);
+    color: #35d99a;
+}
+
+.compare-mini-badge.runner {
+    background: rgba(255, 255, 255, 0.1);
+    color: #cbd5e1;
+}
+
+.compare-mini-card h4 {
+    margin: 0;
+    font-size: 14px;
+    color: #ffffff;
+}
+
+.compare-mini-score {
+    font-size: 11.5px;
+    font-weight: 700;
+    color: #38bdf8;
+}
+
+.compare-open-page-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 7px 12px;
+    background: rgba(56, 189, 248, 0.12);
+    border: 1px solid rgba(56, 189, 248, 0.3);
+    border-radius: 8px;
+    color: #38bdf8;
+    font-size: 11.5px;
+    font-weight: 600;
+    text-decoration: none;
+    width: fit-content;
+    transition: all 0.2s;
+}
+
+.compare-open-page-btn:hover {
+    background: rgba(56, 189, 248, 0.25);
+    color: #ffffff;
+}
