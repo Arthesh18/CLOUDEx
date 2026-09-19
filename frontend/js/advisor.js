@@ -125,6 +125,10 @@ document.addEventListener("DOMContentLoaded", async () => {
         if (userInitiated && prevMode !== mode && conversation.length > 0) {
             addSystemNotice(`Switched to ${mode.charAt(0).toUpperCase() + mode.slice(1)} mode — subsequent responses will adapt.`);
         }
+
+        if (typeof updatePreferencesPanelLabels === "function") {
+            updatePreferencesPanelLabels(mode);
+        }
     }
 
     modePills.forEach((pill) => {
@@ -1420,6 +1424,8 @@ document.addEventListener("DOMContentLoaded", async () => {
 
 
             conversation = [];
+            originalFuzzyPreferences = null;
+            userModifiedPreferences = null;
 
 
             showWelcomeMessage();
@@ -1566,52 +1572,130 @@ document.addEventListener("DOMContentLoaded", async () => {
 
 
     // =========================================================
-    // INITIAL CLOUD PREFERENCES PANEL (FEATURE #9)
+    // INITIAL CLOUD PREFERENCES & PRIORITY SLIDERS (FEATURES #9 & #10)
     // =========================================================
 
-    let currentFuzzyPreferences = null;
     let originalFuzzyPreferences = null;
+    let userModifiedPreferences = null;
 
-    function createInitialPreferencesPanel(fuzzyPreferences) {
+    const PREFERENCE_DIMENSION_CONFIG = [
+        {
+            key: "cost",
+            icon: "💰",
+            beginner: "Cost & Budget",
+            intermediate: "Cost & Budget Sensitivity",
+            expert: "FinOps & Egress Optimization"
+        },
+        {
+            key: "simplicity",
+            icon: "⚙️",
+            beginner: "Simplicity & Easy Setup",
+            intermediate: "Simplicity & Managed Services",
+            expert: "Operational Overhead & Managed Abstractions"
+        },
+        {
+            key: "performance",
+            icon: "⚡",
+            beginner: "Speed & Performance",
+            intermediate: "Performance & Throughput",
+            expert: "Compute Throughput & Sub-ms Latency"
+        },
+        {
+            key: "reliability",
+            icon: "🛡️",
+            beginner: "Reliability & Uptime",
+            intermediate: "Reliability & Fault Tolerance",
+            expert: "Multi-AZ Redundancy & 99.99%+ SLA"
+        },
+        {
+            key: "features",
+            icon: "🧰",
+            beginner: "Tools & Features",
+            intermediate: "Ecosystem Breadth & Tools",
+            expert: "Enterprise Ecosystem Breadth"
+        },
+        {
+            key: "support",
+            icon: "💬",
+            beginner: "Help & Support",
+            intermediate: "Support SLAs & Guidance",
+            expert: "Enterprise Agreement & Direct Support"
+        },
+        {
+            key: "aiGpu",
+            icon: "🤖",
+            beginner: "AI & Smart Tech",
+            intermediate: "Dedicated AI/GPU Compute",
+            expert: "Dedicated GPU Compute Acceleration"
+        }
+    ];
+
+    function getPreferenceIntroText(mode) {
+        if (mode === "expert") {
+            return "Calibrate multidimensional utility weights across infrastructure and operational criteria. Sliders reflect current model understanding:";
+        }
+        if (mode === "intermediate") {
+            return "Adjust architectural priorities and operational trade-offs for your workload. Sliders reflect current model understanding:";
+        }
+        return "These sliders show what CloudEx currently thinks is important for your project. Change them if you'd like.";
+    }
+
+    function createInitialPreferencesPanel(fuzzyPreferences, mode = "beginner") {
 
         if (!fuzzyPreferences) {
             return "";
         }
 
-        const dimensions = [
-            { key: "cost", label: "Cost", icon: "💰" },
-            { key: "simplicity", label: "Simplicity", icon: "⚙️" },
-            { key: "performance", label: "Performance", icon: "⚡" },
-            { key: "reliability", label: "Reliability", icon: "🛡️" },
-            { key: "features", label: "Features", icon: "🧰" },
-            { key: "support", label: "Support", icon: "💬" },
-            { key: "aiGpu", label: "AI/GPU", icon: "🤖" }
-        ];
+        if (!originalFuzzyPreferences) {
+            originalFuzzyPreferences = { ...fuzzyPreferences };
+        }
+        if (!userModifiedPreferences) {
+            userModifiedPreferences = { ...fuzzyPreferences };
+        }
+
+        const activeValues = userModifiedPreferences || fuzzyPreferences;
+        const currentMode = mode || currentExperienceMode || "beginner";
+        const introText = getPreferenceIntroText(currentMode);
 
         let rowsHtml = "";
-        dimensions.forEach((dim) => {
-            const val = typeof fuzzyPreferences[dim.key] === "number"
-                ? fuzzyPreferences[dim.key]
-                : 0.5;
-            const pct = Math.round(val * 100);
+        PREFERENCE_DIMENSION_CONFIG.forEach((dim) => {
+            const rawVal = typeof activeValues[dim.key] === "number"
+                ? activeValues[dim.key]
+                : (typeof fuzzyPreferences[dim.key] === "number" ? fuzzyPreferences[dim.key] : 0.5);
+            const pct = Math.round(rawVal * 100);
+            const label = dim[currentMode] || dim.beginner;
+
             rowsHtml += `
                 <div class="preference-row" data-dimension="${dim.key}">
                     <div class="preference-row-header">
-                        <span class="preference-name">${dim.icon} ${dim.label}</span>
+                        <span class="preference-name" data-dim-key="${dim.key}">${dim.icon} ${label}</span>
                         <span class="preference-pct" id="pref-pct-${dim.key}">${pct}%</span>
                     </div>
-                    <div class="preference-track">
-                        <div class="preference-fill" style="width: ${pct}%;"></div>
+                    <div class="slider-wrapper">
+                        <input
+                            type="range"
+                            class="priority-slider"
+                            id="slider-${dim.key}"
+                            data-dimension="${dim.key}"
+                            min="0"
+                            max="100"
+                            value="${pct}"
+                            aria-label="${label}"
+                        />
+                    </div>
+                    <div class="slider-scale-labels">
+                        <span>Less important</span>
+                        <span>More important</span>
                     </div>
                 </div>
             `;
         });
 
         return `
-            <div class="initial-preferences-panel">
+            <div class="initial-preferences-panel" id="initialPreferencesPanel">
                 <div class="preferences-header">
                     <span class="preferences-tag">YOUR INITIAL CLOUD PREFERENCES</span>
-                    <p class="preferences-intro">These are my initial understanding of what matters most to you. You can adjust them if you'd like.</p>
+                    <p class="preferences-intro" id="preferencesIntroText">${introText}</p>
                 </div>
                 <div class="preferences-list">
                     ${rowsHtml}
@@ -1619,6 +1703,102 @@ document.addEventListener("DOMContentLoaded", async () => {
             </div>
         `;
 
+    }
+
+    function setupPreferenceSliders(container) {
+
+        if (!container) {
+            return;
+        }
+
+        const sliders =
+            container.querySelectorAll(".priority-slider");
+
+        sliders.forEach((slider) => {
+
+            slider.addEventListener("input", () => {
+
+                const dimKey =
+                    slider.dataset.dimension;
+
+                const newPct =
+                    parseInt(slider.value, 10);
+
+                const pctLabel =
+                    container.querySelector(`#pref-pct-${dimKey}`);
+
+                if (pctLabel) {
+                    pctLabel.textContent = `${newPct}%`;
+                }
+
+                if (!userModifiedPreferences) {
+                    userModifiedPreferences = originalFuzzyPreferences
+                        ? { ...originalFuzzyPreferences }
+                        : {};
+                }
+
+                userModifiedPreferences[dimKey] =
+                    Math.round((newPct / 100) * 100) / 100;
+
+            });
+
+        });
+
+    }
+
+    function updatePreferencesPanelLabels(mode) {
+
+        const panels =
+            document.querySelectorAll(".initial-preferences-panel");
+
+        panels.forEach((panel) => {
+
+            const introEl =
+                panel.querySelector("#preferencesIntroText");
+
+            if (introEl) {
+                introEl.textContent =
+                    getPreferenceIntroText(mode);
+            }
+
+            PREFERENCE_DIMENSION_CONFIG.forEach((dim) => {
+
+                const nameEl =
+                    panel.querySelector(`.preference-name[data-dim-key="${dim.key}"]`);
+
+                if (nameEl) {
+                    const label =
+                        dim[mode] || dim.beginner;
+                    nameEl.textContent =
+                        `${dim.icon} ${label}`;
+                }
+
+                const sliderEl =
+                    panel.querySelector(`.priority-slider[data-dimension="${dim.key}"]`);
+
+                if (sliderEl) {
+                    sliderEl.setAttribute(
+                        "aria-label",
+                        dim[mode] || dim.beginner
+                    );
+                }
+
+            });
+
+        });
+
+    }
+
+    // Expose preferences accessor for tests and subsequent features
+    function getUserPreferences() {
+        return {
+            original: originalFuzzyPreferences ? { ...originalFuzzyPreferences } : null,
+            modified: userModifiedPreferences ? { ...userModifiedPreferences } : null
+        };
+    }
+
+    if (typeof window !== "undefined") {
+        window.CloudExPreferences = { getUserPreferences };
     }
 
 
@@ -1661,7 +1841,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
         const preferencesHtml =
             (role === "assistant" && fuzzyPreferences && (detectProvider(text) || text.includes("MY RECOMMENDATION") || text.includes("MY PICK")))
-                ? createInitialPreferencesPanel(fuzzyPreferences)
+                ? createInitialPreferencesPanel(fuzzyPreferences, currentExperienceMode)
                 : "";
 
 
@@ -1700,6 +1880,10 @@ document.addEventListener("DOMContentLoaded", async () => {
 
 
         setupProviderButtons(
+            message
+        );
+
+        setupPreferenceSliders(
             message
         );
 
