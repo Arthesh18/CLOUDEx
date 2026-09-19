@@ -3617,7 +3617,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
             addMessage(
                 "assistant",
-                "Sorry, I couldn't connect to Cloudex AI right now. Please make sure the backend is running and try again."
+                error.message || "Sorry, I couldn't connect to Cloudex AI right now. Please make sure the backend is running and try again."
             );
 
         } finally {
