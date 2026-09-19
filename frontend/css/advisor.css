@@ -3676,11 +3676,18 @@ body {
 .rec-drawer-container {
     display: flex;
     flex-direction: column;
-    gap: 12px;
+    gap: 0;
 }
 
+/* ALL drawer sections are hidden by default — only shown when .active */
 .rec-drawer-section {
+    display: none;
+}
+
+.rec-drawer-section.active {
+    display: block;
     animation: fadeInDrawer 0.25s ease-out;
+    margin-top: 12px;
 }
 
 @keyframes fadeInDrawer {

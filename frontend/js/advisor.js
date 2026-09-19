@@ -3600,7 +3600,6 @@ document.addEventListener("DOMContentLoaded", async () => {
                         ${whyHtml}
                         ${strongestHtml}
                     </div>
-                    ${tradeoffHtml}
                     ${compromiseHtml}
                 </div>
                 <div class="final-rec-footer">
@@ -3609,11 +3608,7 @@ document.addEventListener("DOMContentLoaded", async () => {
                         <span>Ranked #1 using Weighted MCDM across all 15 Cloud Service Providers based on your active priority weights.${runnerUpNote}</span>
                     </div>
                     ${provider.officialUrl ? `
-                        <div style="margin-top: 10px; display: flex; justify-content: flex-end;">
-                            <a href="${provider.officialUrl}" target="_blank" rel="noopener noreferrer" class="final-rec-official-btn">
-                                <i class="fa-solid fa-arrow-up-right-from-square"></i> Visit Official Website &rarr;
-                            </a>
-                        </div>
+                        <a href="${provider.officialUrl}" target="_blank" rel="noopener noreferrer" class="final-rec-official-btn" style="display:none;" aria-hidden="true"></a>
                     ` : ""}
                 </div>
 
@@ -3732,18 +3727,24 @@ document.addEventListener("DOMContentLoaded", async () => {
                 ? createPersonalizedRecommendationCard(recommendation || currentRecommendation, currentExperienceMode)
                 : "";
 
-        const preferencesHtml = "";
+        // When the recommendation is ready, do NOT render the raw AI text.
+        // The LLM narrative may reference a different provider than the structured
+        // recommendation engine result. The structured card is the single authoritative source.
+        // During discovery, show the AI's conversational reply text normally.
+        const displayText = (role === "assistant" && isRecReady && recommendationHtml)
+            ? "" // suppress raw AI text when structured card is shown
+            : formatMessage(text);
 
-        const understoodHtml =
-            (role === "assistant" && !isRecReady && (requirementsData || currentFuzzyRequirements))
-                ? renderUnderstoodSummaryCard(requirementsData || currentFuzzyRequirements, currentExperienceMode)
-                : "";
-
+        // Discovery quick-choice chips (only shown during discovery, never when rec is ready)
         const quickChoicesHtml =
             (role === "assistant" && !isRecReady)
                 ? renderQuickChoicesHtml(text, requirementsData || currentFuzzyRequirements, currentExperienceMode)
                 : "";
 
+        // NOTE: understoodHtml (renderUnderstoodSummaryCard) is intentionally removed.
+        // It was showing "What CLOUDEx Understands" on every discovery message.
+        // This information is now ONLY available via the [What CLOUDEx Understood] toolbar button
+        // on the final recommendation card.
 
         message.innerHTML = `
 
@@ -3761,9 +3762,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
                 <div class="message-bubble">
 
-                    ${formatMessage(text)}
-
-                    ${understoodHtml}
+                    ${displayText}
 
                     ${quickChoicesHtml}
 
@@ -3795,6 +3794,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         scrollToBottom();
 
     }
+
 
 
     // =========================================================
