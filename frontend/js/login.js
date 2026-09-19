@@ -111,7 +111,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
                 const response =
                     await fetch(
-                        "http://localhost:5000/api/auth/login",
+                        "https://cloudex-backend-are6.onrender.com/api/auth/login",
                         {
                             method: "POST",
 

@@ -78,7 +78,7 @@ document.addEventListener("DOMContentLoaded", () => {
         try {
 
             const response =
-                await fetch("http://localhost:5000/api/cloud/providers");
+                await fetch("https://cloudex-backend-are6.onrender.com/api/cloud/providers");
 
             if (!response.ok) {
                 throw new Error(

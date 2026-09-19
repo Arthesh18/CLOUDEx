@@ -2,7 +2,7 @@
 // CLOUDEX AI ADVISOR
 // =========================================================
 
-const API_BASE_URL = "http://localhost:5000";
+const API_BASE_URL = "https://cloudex-backend-are6.onrender.com";
 
 let conversation = [];
 let currentChatId = null;
@@ -2547,7 +2547,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
         // Update or refresh personalized recommendation and comparison (Features #16 & #17)
         if (typeof fetch !== "undefined") {
-            const apiBase = "http://localhost:5000";
+            const apiBase = "https://cloudex-backend-are6.onrender.com";
 
             // 1. Fetch compare-recommendations (Feature #17)
             fetch(`${apiBase}/api/advisor/compare-recommendations`, {
@@ -2771,7 +2771,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     async function fetchDecisionGuide(mode = "beginner") {
         try {
-            const apiBase = "http://localhost:5000";
+            const apiBase = "https://cloudex-backend-are6.onrender.com";
             const res = await fetch(`${apiBase}/api/advisor/decision-guide?mode=${mode}`);
             if (res.ok) {
                 return await res.json();
