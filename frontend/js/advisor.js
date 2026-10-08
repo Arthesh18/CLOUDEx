@@ -8,6 +8,15 @@ let conversation = [];
 let currentChatId = null;
 let currentUserId = null;
 
+// Advisor requirement state returned by the backend (known / assumed slots and
+// topics already asked). Sent back every turn so nothing is asked twice.
+let advisorState = null;
+// Structured answer chosen from a quick-choice chip, sent with the next message.
+let pendingSelectedOption = null;
+// True once the user moved a priority slider; slider values are then sent as requirements.
+let sliderPreferencesChanged = false;
+let isSendingMessage = false;
+
 
 // =========================================================
 // INITIALIZE ADVISOR
@@ -81,15 +90,15 @@ document.addEventListener("DOMContentLoaded", async () => {
     const MODE_CONFIGS = {
         beginner: {
             hint: "Plain English • Guided questions • No jargon",
-            placeholder: "Tell Cloudex what you're building (e.g. personal portfolio, student project)..."
+            placeholder: "Describe your project in your own words: what it is, roughly how many people will use it, and what matters most (low cost, 24/7 uptime, simplicity)..."
         },
         intermediate: {
             hint: "Architecture & trade-offs • Containers & DBs • Pragmatic",
-            placeholder: "Describe your stack and architecture needs (e.g. Next.js + Postgres container)..."
+            placeholder: "Describe your workload, stack and constraints (e.g. Next.js + Postgres, ~5k MAU, EU users, needs zero-downtime deploys)..."
         },
         expert: {
             hint: "DevOps & orchestration • Multi-region & SLAs • Deep technical",
-            placeholder: "Specify production requirements (e.g. multi-region K8s, high-IOPS DB, SOC2)..."
+            placeholder: "Specify production requirements (e.g. multi-region K8s, 2k RPS peak, high-IOPS Postgres, SOC2, RTO < 15 min)..."
         }
     };
 
@@ -304,21 +313,87 @@ document.addEventListener("DOMContentLoaded", async () => {
     // BASIC TEXT FORMATTING
     // =====================================================
 
+    function formatInline(text) {
+
+        return text
+            .replace(/`([^`]+)`/g, "<code>$1</code>")
+            .replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>")
+            .replace(/(^|[^*])\*([^*\s][^*]*?)\*(?!\*)/g, "$1<em>$2</em>");
+
+    }
+
+    // Escapes all HTML first, then renders a small safe subset of markdown
+    // (headings, bullet / numbered lists, bold, italics, inline code, paragraphs).
     function formatMessage(text) {
 
         if (!text) {
             return "";
         }
 
-        return text
+        const escaped = String(text)
             .replace(/&/g, "&amp;")
             .replace(/</g, "&lt;")
             .replace(/>/g, "&gt;")
-            .replace(
-                /\*\*(.*?)\*\*/g,
-                "<strong>$1</strong>"
-            )
-            .replace(/\n/g, "<br>");
+            .replace(/"/g, "&quot;");
+
+        const lines = escaped.replace(/\r/g, "").split("\n");
+        const html = [];
+        let listType = null;
+        let paragraph = [];
+
+        const flushParagraph = () => {
+            if (paragraph.length) {
+                html.push(`<p>${paragraph.map(formatInline).join("<br>")}</p>`);
+                paragraph = [];
+            }
+        };
+
+        const closeList = () => {
+            if (listType) {
+                html.push(`</${listType}>`);
+                listType = null;
+            }
+        };
+
+        lines.forEach((rawLine) => {
+            const line = rawLine.trimEnd();
+            const bullet = line.match(/^\s*[-*•]\s+(.*)$/);
+            const numbered = line.match(/^\s*\d+[.)]\s+(.*)$/);
+            const heading = line.match(/^\s*#{1,4}\s+(.*)$/);
+
+            if (!line.trim()) {
+                flushParagraph();
+                closeList();
+                return;
+            }
+
+            if (heading) {
+                flushParagraph();
+                closeList();
+                html.push(`<p class="msg-heading">${formatInline(heading[1])}</p>`);
+                return;
+            }
+
+            if (bullet || numbered) {
+                flushParagraph();
+                const type = bullet ? "ul" : "ol";
+                if (listType !== type) {
+                    closeList();
+                    html.push(`<${type}>`);
+                    listType = type;
+                }
+                html.push(`<li>${formatInline((bullet || numbered)[1])}</li>`);
+                return;
+            }
+
+            closeList();
+            paragraph.push(line);
+        });
+
+        flushParagraph();
+        closeList();
+
+        return html.join("");
 
     }
 
@@ -327,13 +402,59 @@ document.addEventListener("DOMContentLoaded", async () => {
     // SCROLL CHAT
     // =====================================================
 
-    function scrollToBottom() {
+    function isNearBottom() {
+
+        return chatMessages.scrollHeight - chatMessages.scrollTop - chatMessages.clientHeight < 160;
+
+    }
+
+    function scrollToBottom(force = true) {
+
+        if (!force && !isNearBottom()) {
+            updateJumpButton();
+            return;
+        }
 
         chatMessages.scrollTo({
             top: chatMessages.scrollHeight,
             behavior: "smooth"
         });
 
+    }
+
+    // Long answers: show the start of the new message instead of jumping past it.
+    function scrollToMessageStart(element) {
+
+        if (!element) {
+            scrollToBottom();
+            return;
+        }
+
+        const top = element.offsetTop - chatMessages.offsetTop - 12;
+
+        if (element.offsetHeight > chatMessages.clientHeight * 0.8) {
+            chatMessages.scrollTo({ top, behavior: "smooth" });
+        } else {
+            scrollToBottom();
+        }
+
+    }
+
+    const jumpToLatestButton =
+        document.getElementById("jumpToLatest");
+
+    function updateJumpButton() {
+
+        if (jumpToLatestButton) {
+            jumpToLatestButton.classList.toggle("visible", !isNearBottom());
+        }
+
+    }
+
+    chatMessages.addEventListener("scroll", updateJumpButton, { passive: true });
+
+    if (jumpToLatestButton) {
+        jumpToLatestButton.addEventListener("click", () => scrollToBottom(true));
     }
 
 
@@ -702,45 +823,55 @@ document.addEventListener("DOMContentLoaded", async () => {
 
         chatMessages.innerHTML = `
 
-            <div class="message ai-message">
+            <div class="advisor-welcome">
 
-                <div class="message-avatar">
-                    ☁
-                </div>
+                <div class="welcome-icon">☁</div>
 
+                <h2>Describe your project. I'll work out the right cloud.</h2>
 
-                <div class="message-content">
+                <p class="welcome-lead">
+                    Tell me what you're building in your own words. Mention anything you already know and I'll remember it, so I only ask about what's still missing.
+                </p>
 
-                    <div class="message-name">
-                        Cloudex AI
+                <div class="welcome-tips">
+
+                    <div class="welcome-tip">
+                        <span class="welcome-tip-icon"><i class="fa-solid fa-cubes"></i></span>
+                        <div>
+                            <strong>What it is</strong>
+                            <span>An online store, a college project, a mobile app backend…</span>
+                        </div>
                     </div>
 
+                    <div class="welcome-tip">
+                        <span class="welcome-tip-icon"><i class="fa-solid fa-users"></i></span>
+                        <div>
+                            <strong>Who uses it</strong>
+                            <span>Roughly how many people, and where they are</span>
+                        </div>
+                    </div>
 
-                    <div class="message-bubble">
-
-                        <p>
-                            Hey! 👋 I'm your Cloudex AI advisor.
-                        </p>
-
-
-                        <p>
-                            Tell me what you're planning to build in simple words — you don't need any cloud computing knowledge. I'll translate your project needs into the right cloud setup.
-                        </p>
-
-
-                        <p>
-                            I won't recommend a provider immediately — I'll ask you a few simple questions first so the recommendation makes sense for your budget and goals.
-                        </p>
-
-                        <p style="margin-top: 8px; margin-bottom: 0;">
-                            <button type="button" class="decision-guide-trigger-btn" id="openDecisionGuideBtn">
-                                <i class="fa-solid fa-circle-question"></i> How does CLOUDEx make decisions?
-                            </button>
-                        </p>
-
+                    <div class="welcome-tip">
+                        <span class="welcome-tip-icon"><i class="fa-solid fa-scale-balanced"></i></span>
+                        <div>
+                            <strong>What matters most</strong>
+                            <span>Low cost, 24/7 uptime, simplicity, speed, privacy</span>
+                        </div>
                     </div>
 
                 </div>
+
+                <button type="button" class="welcome-example" id="welcomeExampleBtn">
+                    <i class="fa-solid fa-wand-magic-sparkles"></i>
+                    Try an example: “An online store for about 500 customers, open 24/7, on a small budget.”
+                </button>
+
+                <p class="welcome-footnote">
+                    Not sure about something? Just say “I don't know” and I'll pick a sensible default and tell you what I assumed.
+                    <button type="button" class="decision-guide-trigger-btn" id="openDecisionGuideBtn">
+                        <i class="fa-solid fa-circle-question"></i> How does CLOUDEx decide?
+                    </button>
+                </p>
 
             </div>
 
@@ -751,12 +882,131 @@ document.addEventListener("DOMContentLoaded", async () => {
             guideBtn.addEventListener("click", () => openDecisionSystemGuide());
         }
 
+        const exampleBtn = chatMessages.querySelector("#welcomeExampleBtn");
+        if (exampleBtn) {
+            exampleBtn.addEventListener("click", () => {
+                messageInput.value = "I need an e-commerce application for around 500 users. It should be available 24/7 and I want to keep the cost low.";
+                autoResizeInput();
+                messageInput.focus();
+            });
+        }
+
+        renderKnownRequirements();
+
+    }
+
+
+    // =========================================================
+    // KNOWN REQUIREMENTS STRIP
+    // Shows what the Advisor has understood so far (from the
+    // backend requirement state), so users can see it won't re-ask.
+    // =========================================================
+
+    const knownRequirementsEl =
+        document.getElementById("knownRequirements");
+
+    const KNOWN_SLOT_ORDER = [
+        "workloadType", "projectPurpose", "expectedUsers", "budgetSensitivity",
+        "availabilityNeeds", "simplicityPreference", "geographicNeeds", "trafficPattern",
+        "databaseNeeds", "userAccounts", "fileStorageNeeds", "complianceNeeds", "aiGpuNeeds",
+        "databaseType", "deploymentPreference", "architecturePreference", "concurrentUsers",
+        "storageNeeds", "technicalPreference"
+    ];
+
+    const KNOWN_SLOT_SHORT_LABELS = {
+        workloadType: "Use case",
+        projectPurpose: "Purpose",
+        expectedUsers: "Users",
+        budgetSensitivity: "Cost",
+        availabilityNeeds: "Availability",
+        simplicityPreference: "Simplicity",
+        geographicNeeds: "Region",
+        trafficPattern: "Traffic",
+        databaseNeeds: "Database",
+        userAccounts: "Accounts",
+        fileStorageNeeds: "Files",
+        complianceNeeds: "Compliance",
+        aiGpuNeeds: "AI / GPU",
+        databaseType: "DB engine",
+        deploymentPreference: "Deploys",
+        architecturePreference: "Architecture",
+        concurrentUsers: "Concurrency",
+        storageNeeds: "Storage",
+        technicalPreference: "Operations"
+    };
+
+    function shortSlotValue(value) {
+
+        return String(value || "")
+            .replace(/^Cost Priority:\s*/i, "")
+            .replace(/^User said:\s*/i, "")
+            .replace(/\s*\(.*?\)\s*/g, " ")
+            .replace(/"/g, "")
+            .trim()
+            .slice(0, 42);
+
+    }
+
+    function escapeHtml(text) {
+
+        return String(text || "")
+            .replace(/&/g, "&amp;")
+            .replace(/</g, "&lt;")
+            .replace(/>/g, "&gt;")
+            .replace(/"/g, "&quot;");
+
+    }
+
+    function renderKnownRequirements() {
+
+        if (!knownRequirementsEl) {
+            return;
+        }
+
+        const slots = advisorState && advisorState.slots ? advisorState.slots : null;
+        const keys = slots ? KNOWN_SLOT_ORDER.filter((k) => slots[k] && (slots[k].state === "KNOWN" || slots[k].state === "ASSUMED")) : [];
+
+        if (keys.length === 0) {
+            knownRequirementsEl.innerHTML = "";
+            knownRequirementsEl.classList.remove("visible");
+            return;
+        }
+
+        const chips = keys.map((k) => {
+            const slot = slots[k];
+            const assumed = slot.state === "ASSUMED";
+            const title = assumed
+                ? `Assumed: ${slot.value}${slot.reason ? " — " + slot.reason : ""}`
+                : `You told me: ${slot.value}`;
+            return `
+                <span class="known-chip ${assumed ? "assumed" : ""}" title="${escapeHtml(title)}">
+                    <span class="known-chip-label">${KNOWN_SLOT_SHORT_LABELS[k] || k}</span>
+                    ${escapeHtml(shortSlotValue(slot.value))}${assumed ? '<span class="known-chip-flag">assumed</span>' : ""}
+                </span>
+            `;
+        }).join("");
+
+        knownRequirementsEl.innerHTML = `
+            <span class="known-title"><i class="fa-solid fa-brain"></i> Understood so far</span>
+            <div class="known-chips">${chips}</div>
+        `;
+        knownRequirementsEl.classList.add("visible");
+
     }
 
 
     // =========================================================
     // RENDER SAVED CONVERSATION
     // =========================================================
+
+    function stripCardQuestions(text, cards) {
+        let out = String(text || "");
+        cards.forEach((card) => {
+            if (card && card.question && out.includes(card.question)) out = out.replace(card.question, "");
+        });
+        out = out.replace(/[ \t]{2,}/g, " ").replace(/\n{3,}/g, "\n\n").trim();
+        return out || String(text || "");
+    }
 
     function renderConversation() {
 
@@ -778,17 +1028,37 @@ document.addEventListener("DOMContentLoaded", async () => {
         conversation.forEach(
             (message) => {
 
+                const cards = Array.isArray(message.questionCards) && message.questionCards.length
+                    ? message.questionCards
+                    : null;
+
+                // Saved explanation cards are re-rendered; older messages without
+                // them fall back to the plain stored text.
                 addMessage(
                     message.role,
-                    message.content
+                    cards ? stripCardQuestions(message.content, cards) : message.content,
+                    null, null, false, null,
+                    cards ? cards.map((card) => card.slotKey) : null,
+                    cards
                 );
 
             }
         );
 
+        // Cards already answered stay read-only; only the latest unanswered one is clickable
+        const lastMessage = conversation[conversation.length - 1];
+        const cardEls = chatMessages.querySelectorAll(".qx-card");
+        cardEls.forEach((card) => card.classList.add("qx-answered"));
+        if (lastMessage && lastMessage.role === "assistant") {
+            const lastBubble = chatMessages.lastElementChild;
+            if (lastBubble) lastBubble.querySelectorAll(".qx-card").forEach((card) => card.classList.remove("qx-answered"));
+        }
+
+        renderKnownRequirements();
+
 
         setTimeout(
-            scrollToBottom,
+            () => scrollToBottom(true),
             50
         );
 
@@ -1343,6 +1613,12 @@ document.addEventListener("DOMContentLoaded", async () => {
             currentChatId =
                 data.chat._id;
 
+            advisorState =
+                data.chat.advisorState || null;
+
+            pendingSelectedOption = null;
+            sliderPreferencesChanged = false;
+
 
             conversation =
                 Array.isArray(
@@ -1355,7 +1631,10 @@ document.addEventListener("DOMContentLoaded", async () => {
                                 message.role,
 
                             content:
-                                message.content
+                                message.content,
+
+                            questionCards:
+                                Array.isArray(message.questionCards) ? message.questionCards : undefined
 
                         })
                     )
@@ -1435,6 +1714,9 @@ document.addEventListener("DOMContentLoaded", async () => {
 
 
             conversation = [];
+            advisorState = null;
+            pendingSelectedOption = null;
+            sliderPreferencesChanged = false;
             originalFuzzyPreferences = null;
             userModifiedPreferences = null;
             updatedPreferences = null;
@@ -2437,6 +2719,8 @@ document.addEventListener("DOMContentLoaded", async () => {
 
             slider.addEventListener("input", () => {
 
+                sliderPreferencesChanged = true;
+
                 const dimKey =
                     slider.dataset.dimension;
 
@@ -3248,65 +3532,182 @@ document.addEventListener("DOMContentLoaded", async () => {
         }
     };
 
-    window.CloudExSubmitQuickChoice = function(choiceText) {
-        const input = document.getElementById("messageInput") || document.getElementById("chatInput");
-        const sendBtn = document.getElementById("sendButton") || document.getElementById("sendBtn");
-        if (!input) return;
-        input.value = choiceText;
-        if (sendBtn) {
-            sendBtn.click();
-        } else {
-            const form = input.closest("form");
-            if (form) {
-                form.dispatchEvent(new Event("submit", { cancelable: true, bubbles: true }));
-            }
-        }
+    window.CloudExSubmitQuickChoice = function(choiceText, slotKey, choiceLabel) {
+        // Record the structured answer so the backend stores it against the right requirement
+        pendingSelectedOption = slotKey
+            ? { slotKey, value: choiceText, label: choiceLabel || choiceText }
+            : null;
+        sendMessage(choiceText);
     };
 
-    function renderQuickChoicesHtml(text, reqs, mode = "beginner") {
-        if (!text || typeof text !== "string") return "";
-        const lower = text.toLowerCase();
-        const chips = [];
+    const QUICK_CHOICES_BY_SLOT = {
+        expectedUsers: [
+            { label: "< 1,000 users", value: "Under 1,000 users / starter scale" },
+            { label: "1,000 – 50,000 users", value: "1,000 to 50,000 users / moderate traffic" },
+            { label: "50,000+ users", value: "Over 50,000 users / high traffic" }
+        ],
+        databaseNeeds: [
+            { label: "Yes, PostgreSQL / MySQL", value: "Yes, I need a relational database (PostgreSQL/MySQL)" },
+            { label: "Yes, MongoDB / NoSQL", value: "Yes, I need a MongoDB / NoSQL database" },
+            { label: "No database needed", value: "No database needed, static frontend only" }
+        ],
+        budgetSensitivity: [
+            { label: "Lowest cost / Free tier (<$10)", value: "Lowest possible cost or free tier, budget under $10/month" },
+            { label: "Moderate ($25 – $200/mo)", value: "Moderate budget around $25 to $200/month" },
+            { label: "Flexible / Enterprise", value: "Flexible budget, performance and reliability come first" }
+        ],
+        simplicityPreference: [
+            { label: "Managed platform (simple)", value: "I prefer a managed platform that handles the servers for me" },
+            { label: "Virtual servers (control)", value: "I prefer virtual servers like AWS EC2 or DigitalOcean for full control" },
+            { label: "Kubernetes / custom infra", value: "I want Kubernetes or custom infrastructure as code" }
+        ],
+        availabilityNeeds: [
+            { label: "Must be up 24/7", value: "It must be available 24/7 with minimal downtime" },
+            { label: "Occasional downtime is fine", value: "Occasional downtime is acceptable" }
+        ],
+        trafficPattern: [
+            { label: "Steady through the day", value: "Steady traffic throughout the day" },
+            { label: "Spikes (sales, launches)", value: "Traffic spikes during sales or launches" }
+        ],
+        geographicNeeds: [
+            { label: "India", value: "Most users are in India" },
+            { label: "Europe", value: "Most users are in Europe" },
+            { label: "North America", value: "Most users are in North America" },
+            { label: "Global", value: "Users are global / worldwide" }
+        ],
+        userAccounts: [
+            { label: "Yes, users log in", value: "Yes, users need accounts and login" },
+            { label: "No accounts", value: "No accounts or login needed" }
+        ],
+        fileStorageNeeds: [
+            { label: "Yes, file uploads", value: "Yes, users upload photos or files" },
+            { label: "No uploads", value: "No file uploads" }
+        ],
+        complianceNeeds: [
+            { label: "No special rules", value: "No special compliance requirements" },
+            { label: "GDPR / EU data", value: "GDPR applies, data should stay in the EU" },
+            { label: "PCI / HIPAA / SOC2", value: "We need regulatory compliance like PCI DSS, HIPAA or SOC2" }
+        ],
+        aiGpuNeeds: [
+            { label: "Use an AI API", value: "I will call an existing AI API like OpenAI or Groq, no GPUs" },
+            { label: "Need GPUs", value: "Yes, I need dedicated GPUs to train or run models" }
+        ],
+        projectPurpose: [
+            { label: "College project", value: "It's a college project" },
+            { label: "Personal / hobby", value: "It's a personal hobby project" },
+            { label: "Business", value: "It's for a business" }
+        ]
+    };
 
-        if (lower.includes("how many") || lower.includes("traffic") || lower.includes("users") || lower.includes("visitors") || lower.includes("scale")) {
-            chips.push({ label: "< 1,000 users", value: "Under 1,000 users / starter scale" });
-            chips.push({ label: "1,000 – 50,000 users", value: "1,000 to 50,000 users / moderate traffic" });
-            chips.push({ label: "50,000+ users", value: "Over 50,000 users / high traffic" });
-            chips.push({ label: "I Don't Know / You Decide", value: "I don't know, please pick a safe default for me" });
-        } else if (lower.includes("database") || lower.includes("storage") || lower.includes("postgres") || lower.includes("mysql") || lower.includes("mongodb") || lower.includes("sql")) {
-            chips.push({ label: "Yes, PostgreSQL / MySQL", value: "Yes, I need a relational database (PostgreSQL/MySQL)" });
-            chips.push({ label: "Yes, MongoDB / NoSQL", value: "Yes, I need a MongoDB / NoSQL database" });
-            chips.push({ label: "No database needed", value: "No database needed, static frontend only" });
-            chips.push({ label: "I Don't Know / You Decide", value: "I don't know, please pick a safe default for me" });
-        } else if (lower.includes("budget") || lower.includes("cost") || lower.includes("spending") || lower.includes("free tier") || lower.includes("price") || lower.includes("monthly")) {
-            chips.push({ label: "Lowest cost / Free tier (<$10)", value: "Lowest possible cost or free tier, budget under $10/month" });
-            chips.push({ label: "Moderate ($20 – $100/mo)", value: "Moderate budget around $20 to $100/month" });
-            chips.push({ label: "Flexible / Enterprise", value: "Flexible budget, performance and reliability come first" });
-            chips.push({ label: "I Don't Know / You Decide", value: "I don't know, please pick a safe default for me" });
-        } else if (lower.includes("managed") || lower.includes("control") || lower.includes("serverless") || lower.includes("docker") || lower.includes("virtual server") || lower.includes("droplet") || lower.includes("ec2")) {
-            chips.push({ label: "Managed platform (simple)", value: "I prefer a managed platform like Render or Vercel for simplicity" });
-            chips.push({ label: "Virtual servers (control)", value: "I prefer virtual servers like AWS EC2 or DigitalOcean for full control" });
-            chips.push({ label: "Serverless / Containers", value: "I prefer container-based or serverless deployment" });
-            chips.push({ label: "I Don't Know / You Decide", value: "I don't know, please pick a safe default for me" });
-        } else if (lower.includes("?")) {
-            chips.push({ label: "Yes", value: "Yes" });
-            chips.push({ label: "No", value: "No" });
-            chips.push({ label: "Keep it simple & low cost", value: "I want to keep it simple and low cost" });
-            chips.push({ label: "I Don't Know / You Decide", value: "I don't know, please pick a safe default for me" });
+    const DONT_KNOW_CHOICE = { label: "I Don't Know / You Decide", value: "I don't know, please pick a safe default for me" };
+
+    function isSlotResolved(slotKey) {
+        const slot = advisorState && advisorState.slots ? advisorState.slots[slotKey] : null;
+        return Boolean(slot && (slot.state === "KNOWN" || slot.state === "ASSUMED"));
+    }
+
+    function quickChoiceButtonHtml(choice, slotKey) {
+        const value = choice.value.replace(/\\/g, "\\\\").replace(/'/g, "\\'");
+        const label = choice.label.replace(/\\/g, "\\\\").replace(/'/g, "\\'");
+        return `
+            <button type="button" class="chat-quick-choice-btn" onclick="window.CloudExSubmitQuickChoice('${value}', ${slotKey ? `'${slotKey}'` : "null"}, '${label}')">
+                ${choice.label}
+            </button>
+        `;
+    }
+
+    // =========================================================
+    // EXPLAINABLE QUESTIONS
+    // Explanation card for technical questions: concept, what it helps
+    // with, why CLOUDEx asks, then the question and the options with
+    // what each one means. Cards come from the backend for questions the
+    // engine selected (so they never re-ask a known requirement).
+    // =========================================================
+
+    function renderQuestionCardsHtml(cards) {
+        if (!Array.isArray(cards) || cards.length === 0) return "";
+
+        return cards.map((card) => {
+            const hasExplanation = Boolean(card.what || card.helps);
+            const explanationHtml = `
+                <div class="qx-explain ${hasExplanation ? "" : "qx-explain-minimal"}">
+                    <div class="qx-explain-head">
+                        <span class="qx-topic"><i class="fa-solid fa-lightbulb"></i> ${escapeHtml(card.topic)}</span>
+                        ${hasExplanation ? `<span class="qx-title">${escapeHtml(card.title)}</span>` : ""}
+                    </div>
+                    ${card.what ? `<p class="qx-what">${escapeHtml(card.what)}</p>` : ""}
+                    ${card.helps ? `<p class="qx-helps"><span>Helps with:</span> ${escapeHtml(card.helps)}</p>` : ""}
+                    ${card.why ? `<p class="qx-why"><span>Why CLOUDEx asks:</span> ${escapeHtml(card.why)}</p>` : ""}
+                </div>
+            `;
+
+            const optionsHtml = (card.options || []).map((opt) => `
+                <button
+                    type="button"
+                    class="qx-option ${/don't know/i.test(opt.label) ? "qx-option-unsure" : ""}"
+                    data-slot-key="${escapeHtml(card.slotKey)}"
+                    data-value="${escapeHtml(opt.value)}"
+                    data-label="${escapeHtml(opt.label)}"
+                >
+                    <span class="qx-option-label">${escapeHtml(opt.label)}</span>
+                    ${opt.meaning ? `<span class="qx-option-meaning">${escapeHtml(opt.meaning)}</span>` : ""}
+                </button>
+            `).join("");
+
+            return `
+                <div class="qx-card" data-slot-key="${escapeHtml(card.slotKey)}">
+                    ${explanationHtml}
+                    <div class="qx-question">
+                        <i class="fa-solid fa-circle-question"></i>
+                        <span>${formatInline(escapeHtml(card.question))}</span>
+                    </div>
+                    <div class="qx-options">${optionsHtml}</div>
+                </div>
+            `;
+        }).join("");
+    }
+
+    // One delegated listener for every explanation-card option
+    chatMessages.addEventListener("click", (event) => {
+        const option = event.target.closest(".qx-option");
+        if (!option || option.closest(".qx-answered") || isSendingMessage) return;
+        window.CloudExSubmitQuickChoice(option.dataset.value, option.dataset.slotKey, option.dataset.label);
+    });
+
+    // Quick-choice chips. When the backend says which requirement(s) it just asked
+    // about, chips are built for exactly those; otherwise a text heuristic is used,
+    // skipping anything already known.
+    function renderQuickChoicesHtml(text, reqs, mode = "beginner", selectedQuestions = null) {
+        if (!text || typeof text !== "string") return "";
+
+        let groups = [];
+
+        if (Array.isArray(selectedQuestions) && selectedQuestions.length > 0) {
+            groups = selectedQuestions
+                .map((q) => q && q.slotKey)
+                .filter((k) => k && QUICK_CHOICES_BY_SLOT[k]);
+        } else {
+            const lower = text.toLowerCase();
+            const questionText = (lower.match(/[^.!?\n]*\?/g) || []).join(" ");
+            if (!questionText) return "";
+            if (/how many|users|visitors|people/.test(questionText)) groups.push("expectedUsers");
+            else if (/database|postgres|mysql|mongodb|sql/.test(questionText)) groups.push("databaseNeeds");
+            else if (/budget|spend|free tier|price/.test(questionText)) groups.push("budgetSensitivity");
+            else if (/managed|configure servers|virtual server|simple/.test(questionText)) groups.push("simplicityPreference");
+            else if (/24\/7|downtime|availability|uptime/.test(questionText)) groups.push("availabilityNeeds");
+            else if (/where|region|located/.test(questionText)) groups.push("geographicNeeds");
+            groups = groups.filter((k) => !isSlotResolved(k));
         }
 
-        if (chips.length === 0) return "";
+        if (groups.length === 0) return "";
 
-        return `
+        return groups.map((slotKey, index) => `
             <div class="chat-quick-choices-row">
-                <span class="quick-choices-label"><i class="fa-solid fa-bolt"></i> Quick choice:</span>
-                ${chips.map((c) => `
-                    <button type="button" class="chat-quick-choice-btn" onclick="window.CloudExSubmitQuickChoice('${c.value.replace(/'/g, "\\'")}')">
-                        ${c.label}
-                    </button>
-                `).join("")}
+                <span class="quick-choices-label"><i class="fa-solid fa-bolt"></i> ${groups.length > 1 ? `Quick choice ${index + 1}:` : "Quick choice:"}</span>
+                ${QUICK_CHOICES_BY_SLOT[slotKey].map((c) => quickChoiceButtonHtml(c, slotKey)).join("")}
+                ${quickChoiceButtonHtml(DONT_KNOW_CHOICE, slotKey)}
             </div>
-        `;
+        `).join("");
     }
 
     function renderUnderstoodExpandedCard(reqs, mode = "beginner") {
@@ -3688,7 +4089,9 @@ document.addEventListener("DOMContentLoaded", async () => {
         fuzzyPreferences = null,
         recommendation = null,
         isRecommendationReady = false,
-        requirementsData = null
+        requirementsData = null,
+        selectedQuestions = null,
+        questionCards = null
     ) {
 
         const message =
@@ -3736,9 +4139,20 @@ document.addEventListener("DOMContentLoaded", async () => {
             : formatMessage(text);
 
         // Discovery quick-choice chips (only shown during discovery, never when rec is ready)
-        const quickChoicesHtml =
+        // Explanation cards replace the plain chips for the questions they cover
+        const questionCardsHtml =
             (role === "assistant" && !isRecReady)
-                ? renderQuickChoicesHtml(text, requirementsData || currentFuzzyRequirements, currentExperienceMode)
+                ? renderQuestionCardsHtml(questionCards)
+                : "";
+
+        const cardedSlots = new Set((questionCards || []).map((c) => c.slotKey));
+        const chipQuestions = Array.isArray(selectedQuestions)
+            ? selectedQuestions.filter((q) => q && !cardedSlots.has(q.slotKey))
+            : selectedQuestions;
+
+        const quickChoicesHtml =
+            (role === "assistant" && !isRecReady && !(cardedSlots.size > 0 && (!chipQuestions || chipQuestions.length === 0)))
+                ? renderQuickChoicesHtml(text, requirementsData || currentFuzzyRequirements, currentExperienceMode, chipQuestions)
                 : "";
 
         // NOTE: understoodHtml (renderUnderstoodSummaryCard) is intentionally removed.
@@ -3763,6 +4177,8 @@ document.addEventListener("DOMContentLoaded", async () => {
                 <div class="message-bubble">
 
                     ${displayText}
+
+                    ${questionCardsHtml}
 
                     ${quickChoicesHtml}
 
@@ -3791,7 +4207,13 @@ document.addEventListener("DOMContentLoaded", async () => {
         );
 
 
-        scrollToBottom();
+        if (role === "assistant") {
+            scrollToMessageStart(message);
+        } else {
+            scrollToBottom(true);
+        }
+
+        return message;
 
     }
 
@@ -3829,23 +4251,110 @@ document.addEventListener("DOMContentLoaded", async () => {
     // TYPING INDICATOR
     // =========================================================
 
+    const TYPING_STEPS = [
+        "Reading your requirements…",
+        "Checking what I already know…",
+        "Comparing 15 cloud providers…",
+        "Writing my answer…"
+    ];
+
+    let typingStepTimer = null;
+
     function showTyping() {
+
+        const label =
+            typingIndicator.querySelector(".typing-label");
+
+        let step = 0;
+
+        if (label) {
+            label.textContent = TYPING_STEPS[0];
+        }
+
+        clearInterval(typingStepTimer);
+
+        typingStepTimer = setInterval(() => {
+            step = Math.min(step + 1, TYPING_STEPS.length - 1);
+            if (label) {
+                label.textContent = TYPING_STEPS[step];
+            }
+        }, 2200);
 
         typingIndicator.classList.add(
             "active"
         );
 
+        chatMessages.setAttribute("aria-busy", "true");
 
-        scrollToBottom();
+        scrollToBottom(true);
 
     }
 
 
     function hideTyping() {
 
+        clearInterval(typingStepTimer);
+
         typingIndicator.classList.remove(
             "active"
         );
+
+        chatMessages.removeAttribute("aria-busy");
+
+    }
+
+
+    // =========================================================
+    // ERROR STATE (not added to the conversation)
+    // =========================================================
+
+    function showErrorState(errorMessage, failedText, userBubble) {
+
+        const errorEl =
+            document.createElement("div");
+
+        errorEl.className =
+            "message ai-message error-message";
+
+        errorEl.setAttribute("role", "alert");
+
+        errorEl.innerHTML = `
+            <div class="message-avatar">!</div>
+            <div class="message-content">
+                <div class="message-name">Cloudex AI</div>
+                <div class="message-bubble error-bubble">
+                    <p><strong>Your message didn't go through.</strong></p>
+                    <p>${escapeHtml(errorMessage)}</p>
+                    <div class="error-actions">
+                        <button type="button" class="error-retry-btn"><i class="fa-solid fa-rotate-right"></i> Try again</button>
+                        <button type="button" class="error-edit-btn"><i class="fa-solid fa-pen"></i> Edit message</button>
+                    </div>
+                </div>
+            </div>
+        `;
+
+        chatMessages.appendChild(errorEl);
+
+        const removeFailed = () => {
+            errorEl.remove();
+            if (userBubble && userBubble.parentNode) {
+                userBubble.remove();
+            }
+        };
+
+        errorEl.querySelector(".error-retry-btn").addEventListener("click", () => {
+            removeFailed();
+            sendMessage(failedText);
+        });
+
+        errorEl.querySelector(".error-edit-btn").addEventListener("click", () => {
+            removeFailed();
+            messageInput.value = failedText;
+            autoResizeInput();
+            messageInput.focus();
+        });
+
+        scrollToBottom(true);
 
     }
 
@@ -3866,22 +4375,51 @@ document.addEventListener("DOMContentLoaded", async () => {
         }
 
 
+        if (isSendingMessage) {
+
+            return;
+
+        }
+
+
         const cleanMessage =
             message.trim();
 
+        const selectedOptionForTurn =
+            pendingSelectedOption;
 
-        addMessage(
-            "user",
-            cleanMessage
-        );
+        pendingSelectedOption = null;
+
+        isSendingMessage = true;
+
+
+        // Earlier explanation cards become read-only once the user replies
+        // (restored if the send fails, so the user can pick an option again)
+        const cardsLockedForSend = Array.from(chatMessages.querySelectorAll(".qx-card:not(.qx-answered)"));
+        cardsLockedForSend.forEach((card) => card.classList.add("qx-answered"));
+
+        const welcome =
+            chatMessages.querySelector(".advisor-welcome");
+
+        if (welcome) {
+            welcome.remove();
+        }
+
+
+        const userBubble =
+            addMessage(
+                "user",
+                cleanMessage
+            );
 
 
         messageInput.value = "";
 
-        messageInput.style.height =
-            "auto";
+        autoResizeInput();
 
         sendButton.disabled = true;
+
+        sendButton.classList.add("is-loading");
 
         showTyping();
 
@@ -3920,26 +4458,56 @@ document.addEventListener("DOMContentLoaded", async () => {
                                 updatedPreferences || userModifiedPreferences || null,
 
                             isRecalculatedPreferences:
-                                isRecalculated
+                                isRecalculated,
+
+                            // Requirement memory: what the Advisor already knows / asked
+                            advisorState:
+                                advisorState,
+
+                            // Structured answer from a quick-choice chip, if one was clicked
+                            selectedOption:
+                                selectedOptionForTurn,
+
+                            // Slider values count as stated requirements once the user moves them
+                            sliderPreferences:
+                                sliderPreferencesChanged
+                                    ? (updatedPreferences || userModifiedPreferences || null)
+                                    : null
 
                         })
                     }
                 );
 
 
-            const data =
-                await response.json();
+            let data = null;
+
+            try {
+                data = await response.json();
+            } catch (parseError) {
+                data = null;
+            }
 
 
             if (
                 !response.ok ||
+                !data ||
                 !data.success
             ) {
 
                 throw new Error(
-                    data.message ||
-                    "Cloudex AI could not respond."
+                    (data && data.message) ||
+                    `Cloudex AI could not respond (error ${response.status}). Please try again.`
                 );
+
+            }
+
+
+            if (data.advisorState) {
+
+                advisorState =
+                    data.advisorState;
+
+                renderKnownRequirements();
 
             }
 
@@ -3970,7 +4538,10 @@ document.addEventListener("DOMContentLoaded", async () => {
                     role: "assistant",
 
                     content:
-                        data.reply
+                        data.reply,
+
+                    questionCards:
+                        Array.isArray(data.questionCards) && data.questionCards.length ? data.questionCards : undefined
 
                 });
 
@@ -4014,11 +4585,15 @@ document.addEventListener("DOMContentLoaded", async () => {
 
             addMessage(
                 "assistant",
-                data.reply,
+                (Array.isArray(data.questionCards) && data.questionCards.length > 0 && data.displayReply)
+                    ? data.displayReply
+                    : data.reply,
                 data.fuzzyPreferences,
                 data.recommendation,
                 isRecReady,
-                data.fuzzyRequirements || data.requirements
+                data.fuzzyRequirements || data.requirements,
+                data.selectedQuestions || (data.selectedQuestion ? [data.selectedQuestion] : null),
+                data.questionCards || null
             );
 
 
@@ -4041,15 +4616,31 @@ document.addEventListener("DOMContentLoaded", async () => {
 
             hideTyping();
 
+            cardsLockedForSend.forEach((card) => card.classList.remove("qx-answered"));
 
-            addMessage(
-                "assistant",
-                error.message || "Sorry, I couldn't connect to Cloudex AI right now. Please make sure the backend is running and try again."
+            pendingSelectedOption =
+                selectedOptionForTurn;
+
+            const offline =
+                error instanceof TypeError || (typeof navigator !== "undefined" && navigator.onLine === false);
+
+            showErrorState(
+                offline
+                    ? "I couldn't reach the CLOUDEx server. Check your connection and try again."
+                    : (error.message || "Sorry, I couldn't connect to Cloudex AI right now. Please try again."),
+                cleanMessage,
+                userBubble
             );
 
         } finally {
 
+            isSendingMessage = false;
+
             sendButton.disabled = false;
+
+            sendButton.classList.remove("is-loading");
+
+            updateSendState();
 
             messageInput.focus();
 
@@ -4080,20 +4671,39 @@ document.addEventListener("DOMContentLoaded", async () => {
     // =========================================================
     // ENTER TO SEND
     // SHIFT + ENTER = NEW LINE
+    // On touch keyboards Enter adds a new line; use the Send button.
+    // Ctrl/Cmd + Enter always sends.
     // =========================================================
+
+    const isTouchKeyboard =
+        window.matchMedia && window.matchMedia("(pointer: coarse)").matches;
+
+    const inputShortcutHint =
+        document.getElementById("inputShortcutHint");
+
+    if (inputShortcutHint) {
+        inputShortcutHint.innerHTML = isTouchKeyboard
+            ? "Tap <strong>Send</strong> when you're ready"
+            : "<kbd>Enter</kbd> to send · <kbd>Shift</kbd> + <kbd>Enter</kbd> for a new line";
+    }
 
     messageInput.addEventListener(
         "keydown",
         (event) => {
 
-            if (
-                event.key === "Enter" &&
-                !event.shiftKey
-            ) {
+            if (event.key !== "Enter" || event.isComposing || event.keyCode === 229) {
+                return;
+            }
+
+            const forceSend = event.ctrlKey || event.metaKey;
+
+            if (forceSend || (!event.shiftKey && !isTouchKeyboard)) {
 
                 event.preventDefault();
 
-                chatForm.requestSubmit();
+                if (messageInput.value.trim() && !isSendingMessage) {
+                    chatForm.requestSubmit();
+                }
 
             }
 
@@ -4105,22 +4715,58 @@ document.addEventListener("DOMContentLoaded", async () => {
     // AUTO-GROW TEXTAREA
     // =========================================================
 
+    const inputCharCount =
+        document.getElementById("inputCharCount");
+
+    const MAX_MESSAGE_LENGTH = 4000;
+
+    function autoResizeInput() {
+
+        const maxHeight =
+            Math.max(160, Math.round(window.innerHeight * 0.4));
+
+        messageInput.style.height =
+            "auto";
+
+        messageInput.style.height =
+            Math.min(
+                messageInput.scrollHeight + 2,
+                maxHeight
+            ) + "px";
+
+        messageInput.style.overflowY =
+            messageInput.scrollHeight > maxHeight ? "auto" : "hidden";
+
+        updateSendState();
+
+    }
+
+    function updateSendState() {
+
+        const length =
+            messageInput.value.length;
+
+        sendButton.disabled =
+            isSendingMessage || !messageInput.value.trim();
+
+        if (inputCharCount) {
+            inputCharCount.textContent =
+                length > 0 ? `${length.toLocaleString()} / ${MAX_MESSAGE_LENGTH.toLocaleString()}` : "";
+            inputCharCount.classList.toggle("near-limit", length > MAX_MESSAGE_LENGTH * 0.9);
+        }
+
+    }
+
+    messageInput.setAttribute("maxlength", String(MAX_MESSAGE_LENGTH));
+
     messageInput.addEventListener(
         "input",
-        () => {
-
-            messageInput.style.height =
-                "auto";
-
-
-            messageInput.style.height =
-                Math.min(
-                    messageInput.scrollHeight,
-                    130
-                ) + "px";
-
-        }
+        autoResizeInput
     );
+
+    window.addEventListener("resize", autoResizeInput);
+
+    autoResizeInput();
 
 
     // =========================================================
@@ -4275,6 +4921,9 @@ document.addEventListener("DOMContentLoaded", async () => {
             currentChatId =
                 chats[0]._id;
 
+            advisorState =
+                chats[0].advisorState || null;
+
 
             const chatResponse =
                 await fetch(
@@ -4303,7 +4952,10 @@ document.addEventListener("DOMContentLoaded", async () => {
                                     message.role,
 
                                 content:
-                                    message.content
+                                    message.content,
+
+                                questionCards:
+                                    Array.isArray(message.questionCards) ? message.questionCards : undefined
 
                             })
                         )

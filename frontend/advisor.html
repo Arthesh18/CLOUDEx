@@ -298,47 +298,36 @@
                      Messages
                      ================================================= -->
 
+                <div class="chat-messages-wrap">
+
                 <div
                     class="chat-messages"
                     id="chatMessages"
+                    role="log"
+                    aria-live="polite"
+                    aria-label="Conversation with Cloudex AI"
                 >
 
-                    <!-- Welcome Message -->
-                    <div class="message ai-message">
-
-                        <div class="message-avatar">
-                            ☁
-                        </div>
-
-
-                        <div class="message-content">
-
-                            <div class="message-name">
-                                Cloudex AI
-                            </div>
-
-
-                            <div class="message-bubble">
-
-                                <p>
-                                    Hey! 👋 I'm your Cloudex AI advisor.
-                                </p>
-
-
-                                <p>
-                                    Tell me what you're planning to build in simple words — you don't need any cloud computing knowledge. I'll translate your project needs into the right cloud setup.
-                                </p>
-
-
-                                <p>
-                                    I won't recommend a provider immediately — I'll ask you a few simple questions first so the recommendation makes sense for your budget and goals.
-                                </p>
-
-                            </div>
-
-                        </div>
-
+                    <!-- Welcome screen is rendered by js/advisor.js (showWelcomeMessage) -->
+                    <div class="advisor-welcome">
+                        <div class="welcome-icon">☁</div>
+                        <h2>Describe your project. I'll work out the right cloud.</h2>
+                        <p class="welcome-lead">
+                            Tell me what you're building in your own words. Mention anything you already know and I'll remember it, so I only ask about what's still missing.
+                        </p>
                     </div>
+
+                </div>
+
+
+                <button
+                    type="button"
+                    class="jump-to-latest"
+                    id="jumpToLatest"
+                    aria-label="Jump to latest message"
+                >
+                    <i class="fa-solid fa-arrow-down"></i> Latest
+                </button>
 
                 </div>
 
@@ -366,6 +355,8 @@
 
                     </div>
 
+                    <span class="typing-label" aria-live="polite">Reading your requirements…</span>
+
                 </div>
 
 
@@ -376,30 +367,60 @@
 
                 <div class="chat-input-area">
 
-                    <form id="chatForm">
+                    <!-- What the Advisor has understood so far (filled by js/advisor.js) -->
+                    <div
+                        class="known-requirements"
+                        id="knownRequirements"
+                        aria-live="polite"
+                    ></div>
 
-                        <div class="input-wrapper">
+                    <form id="chatForm" class="composer-form">
+
+                        <label for="messageInput" class="sr-only">
+                            Describe your project
+                        </label>
+
+                        <div class="input-wrapper composer">
 
                             <textarea
                                 id="messageInput"
                                 placeholder="Tell Cloudex what you're building..."
-                                rows="1"
+                                rows="3"
                                 autocomplete="off"
+                                spellcheck="true"
+                                enterkeyhint="enter"
                             ></textarea>
 
 
-                            <button
-                                type="submit"
-                                id="sendButton"
-                                class="send-button"
-                                aria-label="Send message"
-                            >
+                            <div class="composer-footer">
 
-                                <span>
-                                    ↑
-                                </span>
+                                <div class="composer-meta">
 
-                            </button>
+                                    <span class="input-shortcut-hint" id="inputShortcutHint">
+                                        <kbd>Enter</kbd> to send · <kbd>Shift</kbd> + <kbd>Enter</kbd> for a new line
+                                    </span>
+
+                                    <span class="input-char-count" id="inputCharCount"></span>
+
+                                </div>
+
+
+                                <button
+                                    type="submit"
+                                    id="sendButton"
+                                    class="send-button"
+                                    aria-label="Send message"
+                                >
+
+                                    <span class="send-label">Send</span>
+
+                                    <i class="fa-solid fa-paper-plane send-icon" aria-hidden="true"></i>
+
+                                    <span class="send-spinner" aria-hidden="true"></span>
+
+                                </button>
+
+                            </div>
 
                         </div>
 
@@ -408,7 +429,7 @@
 
                     <div class="input-hint">
 
-                        Cloudex AI will ask follow-up questions before making a recommendation.
+                        Describe as much or as little as you like. Cloudex only asks about what it still needs.
 
                     </div>
 

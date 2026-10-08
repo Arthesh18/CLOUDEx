@@ -11,6 +11,13 @@ const messageSchema = new mongoose.Schema(
         content: {
             type: String,
             required: true
+        },
+
+        // Optional Advisor explanation cards shown with this reply (UI only;
+        // never sent to the model). Older messages simply don't have it.
+        questionCards: {
+            type: mongoose.Schema.Types.Mixed,
+            default: undefined
         }
     },
     {
@@ -34,6 +41,13 @@ const chatHistorySchema = new mongoose.Schema(
         messages: {
             type: [messageSchema],
             default: []
+        },
+
+        // Advisor requirement state (known/assumed slots, asked topics) so the
+        // Advisor never re-asks something after a reload.
+        advisorState: {
+            type: mongoose.Schema.Types.Mixed,
+            default: null
         }
     },
     {
